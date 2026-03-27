@@ -1,0 +1,14 @@
+# File ini biasanya diperlukan jika Anda menggunakan Shared Hosting (cPanel) dengan Apache
+# Fungsinya untuk meneruskan traffic ke aplikasi Node.js Anda
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Jika hosting Anda menggunakan port tertentu, ganti 5000 dengan PORT Anda
+  # Namun biasanya di cPanel Nodejs Selector, hal ini sudah diatur otomatis oleh server.
+  
+  # Forward semua request ke aplikasi Node.js (jika tidak ada file fisik)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ server.js/$1 [L]
+</IfModule>
