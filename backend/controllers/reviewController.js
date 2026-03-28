@@ -59,12 +59,24 @@ const getReviewById = async (req, res) => {
 // @access  Private (verified member)
 const createReview = async (req, res) => {
   try {
-
+    const { title, content, occasion, season, perfume } = req.body;
+    let rating = req.body.rating;
+    
+    // Parse rating fields bracket notation if form-data didn't map them
+    if (!rating && req.body['rating[longevity]']) {
+      rating = {
+        longevity: Number(req.body['rating[longevity]']),
+        sillage: Number(req.body['rating[sillage]']),
+        valueForMoney: Number(req.body['rating[valueForMoney]']),
+        overall: Number(req.body['rating[overall]'])
+      };
+    }
 
     const review = await Review.create({
       title,
       content,
       author: req.user._id,
+      perfume: perfume || null,
       rating,
       occasion,
       season,
@@ -79,6 +91,7 @@ const createReview = async (req, res) => {
       review,
     });
   } catch (error) {
+    console.error('Create Review Error:', error);
     res.status(500).json({ message: 'Gagal membuat review', error: error.message });
   }
 };
@@ -98,11 +111,16 @@ const updateReview = async (req, res) => {
       return res.status(403).json({ message: 'Tidak memiliki izin' });
     }
 
-    if (review.status === 'approved') {
-      return res.status(400).json({ message: 'Review yang sudah di-approve tidak bisa diedit' });
+    const { title, content, occasion, season } = req.body;
+    let rating = req.body.rating;
+    if (!rating && req.body['rating[longevity]']) {
+      rating = {
+        longevity: Number(req.body['rating[longevity]']),
+        sillage: Number(req.body['rating[sillage]']),
+        valueForMoney: Number(req.body['rating[valueForMoney]']),
+        overall: Number(req.body['rating[overall]'])
+      };
     }
-
-    const { title, content, rating, occasion, season } = req.body;
     review.title = title || review.title;
     review.content = content || review.content;
     review.rating = rating || review.rating;
@@ -110,12 +128,14 @@ const updateReview = async (req, res) => {
     review.season = season || review.season;
     if (req.file) review.image = `/uploads/${req.file.filename}`;
     review.status = 'pending';
+    review.rejectionReason = '';
 
     await review.save();
     await review.populate('author', 'username avatar');
 
     res.json(review);
   } catch (error) {
+    console.error('Update Review Error:', error);
     res.status(500).json({ message: 'Gagal mengupdate review', error: error.message });
   }
 };

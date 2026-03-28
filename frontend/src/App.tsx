@@ -18,8 +18,11 @@ import BlogDetail from './pages/public/BlogDetail';
 
 // Member Pages
 import CreateTopic from './pages/member/CreateTopic';
+import EditTopic from './pages/member/EditTopic';
 import CreateReview from './pages/member/CreateReview';
+import EditReview from './pages/member/EditReview';
 import CreateArticle from './pages/member/CreateArticle';
+import EditArticle from './pages/member/EditArticle';
 import MemberDashboard from './pages/member/MemberDashboard';
 
 // Admin Pages
@@ -61,6 +64,11 @@ function App() {
                 <CreateTopic />
               </ProtectedRoute>
             } />
+            <Route path="/forum/edit/:id" element={
+              <ProtectedRoute>
+                <EditTopic />
+              </ProtectedRoute>
+            } />
 
             {/* Review */}
             <Route path="/review" element={<ReviewList />} />
@@ -70,11 +78,21 @@ function App() {
                 <CreateReview />
               </ProtectedRoute>
             } />
+            <Route path="/review/edit/:id" element={
+              <ProtectedRoute>
+                <EditReview />
+              </ProtectedRoute>
+            } />
             {/* Blog */}
             <Route path="/blog" element={<BlogList />} />
             <Route path="/blog/new" element={
               <ProtectedRoute>
                 <CreateArticle />
+              </ProtectedRoute>
+            } />
+            <Route path="/blog/edit/:id" element={
+              <ProtectedRoute>
+                <EditArticle />
               </ProtectedRoute>
             } />
             <Route path="/blog/:slug" element={<BlogDetail />} />

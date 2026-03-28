@@ -168,7 +168,7 @@ export default function ReviewDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Breadcrumb */}
         <Link to="/review" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +182,7 @@ export default function ReviewDetail() {
           {/* Header image */}
           {review.image && (
             <div className="h-56 sm:h-72 bg-gray-100">
-              <img src={review.image} alt={review.title} className="w-full h-full object-cover" />
+              <img src={`${API_URL.replace('/api', '')}${review.image}`} alt={review.title} className="w-full h-full object-cover" />
             </div>
           )}
 
@@ -197,11 +197,11 @@ export default function ReviewDetail() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                 <span className="text-white text-sm font-bold">
-                  {review.author.username.charAt(0).toUpperCase()}
+                  {(review.author?.username || 'U').charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">{review.author.username}</p>
+                <p className="text-sm font-semibold text-gray-900">{review.author?.username || 'User Terhapus'}</p>
                 <p className="text-xs text-gray-400">{timeAgo(review.createdAt)}</p>
               </div>
             </div>
@@ -232,22 +232,8 @@ export default function ReviewDetail() {
 
           {/* Body */}
           <div className="p-6 sm:p-8">
-            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-              {review.content}
-            </div>
+            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed break-words ql-editor" dangerouslySetInnerHTML={{ __html: review.content }} />
           </div>
-
-          {/* Actions bar */}
-          {(isOwner || isAdmin) && (
-            <div className="px-6 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
-              <button
-                onClick={handleDeleteReview}
-                className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-              >
-                Hapus Review
-              </button>
-            </div>
-          )}
         </article>
 
         {/* Comments section */}

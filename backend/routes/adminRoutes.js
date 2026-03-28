@@ -3,8 +3,9 @@ const router = express.Router();
 const { protect, admin } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const {
-  getPendingReviews, updateReviewStatus,
-  getPendingArticles, updateArticleStatus,
+  getPendingReviews, getOnlineReviews, updateReviewStatus,
+  getPendingArticles, getOnlineArticles, updateArticleStatus,
+  getPendingTopics, getOnlineTopics, updateTopicStatus,
   getUsers, updateUserRole, deleteUser,
   createPerfume, updatePerfume, deletePerfume,
   getDashboardStats,
@@ -18,11 +19,18 @@ router.get('/stats', getDashboardStats);
 
 // Review approval
 router.get('/reviews/pending', getPendingReviews);
+router.get('/reviews/online', getOnlineReviews);
 router.put('/reviews/:id/status', updateReviewStatus);
 
 // Article approval
 router.get('/articles/pending', getPendingArticles);
+router.get('/articles/online', getOnlineArticles);
 router.put('/articles/:id/status', updateArticleStatus);
+
+// Topic approval
+router.get('/topics/pending', getPendingTopics);
+router.get('/topics/online', getOnlineTopics);
+router.put('/topics/:id/status', updateTopicStatus);
 
 // User management
 router.get('/users', getUsers);

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
@@ -9,15 +9,42 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const categories = ['Diskusi Umum', 'Rekomendasi', 'Jual Beli', 'Clone & Inspired', 'Tips & Trik', 'Lainnya'];
 
-export default function CreateTopic() {
+export default function EditTopic() {
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Diskusi Umum');
   const [content, setContent] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const fetchTopic = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${API_URL}/forum/edit/${id}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setTitle(data.title);
+      setCategory(data.category);
+      setContent(data.content);
+      if (data.status === 'rejected' && data.rejectionReason) {
+        setRejectionReason(data.rejectionReason);
+      }
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal memuat topik.';
+      setError(msg || 'Terjadi kesalahan sistem.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, user?.token]);
+
+  useEffect(() => {
+    fetchTopic();
+  }, [fetchTopic]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,35 +55,61 @@ export default function CreateTopic() {
     setSubmitting(true);
     setError('');
     try {
-      await axios.post(
-        `${API_URL}/forum`,
+      await axios.put(
+        `${API_URL}/forum/${id}`,
         { title, content, category },
         { headers: { Authorization: `Bearer ${user?.token}` } }
       );
       navigate('/dashboard');
     } catch (err: unknown) {
-      const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal membuat topik.';
-      setError(msg || 'Gagal membuat topik.');
+      const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal mengupdate topik.';
+      setError(msg || 'Gagal mengupdate topik.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Breadcrumb */}
-        <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6">
+        <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Kembali ke Forum
+          Kembali ke Dashboard
         </Link>
+
+        {rejectionReason && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-6">
+            <div className="flex items-start gap-4 text-red-800">
+              <span className="text-2xl mt-0.5">⚠️</span>
+              <div>
+                <h3 className="font-bold text-lg mb-1">Topik Ditolak Admin</h3>
+                <p className="text-sm opacity-90 leading-relaxed bg-white border border-red-100 rounded-lg p-3 mt-2">
+                  <span className="font-semibold block mb-1">Catatan Revisi:</span>
+                  {rejectionReason}
+                </p>
+                <p className="text-xs font-medium mt-3 text-red-700/80">
+                  Perbaiki tulisan Anda sesuai catatan di atas, kemudian klik "Simpan Revisi" di bawah untuk diperiksa kembali.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900">Buat Topik Baru</h1>
-            <p className="text-sm text-gray-500 mt-1">Mulai diskusi baru di forum komunitas Mewangi.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Edit Topik</h1>
+            <p className="text-sm text-gray-500 mt-1">Perbarui detail diskusi Anda.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
@@ -118,7 +171,7 @@ export default function CreateTopic() {
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <Link
-                to="/forum"
+                to="/dashboard"
                 className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 Batal
@@ -128,7 +181,7 @@ export default function CreateTopic() {
                 disabled={submitting}
                 className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                {submitting ? 'Memposting...' : 'Posting Topik'}
+                {submitting ? 'Menyimpan...' : 'Simpan Revisi'}
               </button>
             </div>
           </form>

@@ -4,12 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-type Tab = 'overview' | 'reviews' | 'articles' | 'users';
+type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users';
 
-interface Stats { totalUsers: number; totalPerfumes: number; pendingReviews: number; pendingArticles: number }
-interface PendingReview { _id: string; title: string;  author: { username: string; email: string };
-  rating: { overall: number }; createdAt: string }
-interface PendingArticle { _id: string; title: string; category: string; author: { username: string; email: string }; createdAt: string }
+interface Stats { totalUsers: number; totalPerfumes: number; pendingReviews: number; pendingArticles: number; pendingTopics: number; totalTopics: number; }
+interface PendingReview { _id: string; title: string; content: string; image?: string; occasion?: string[]; season?: string[]; author: { username: string; email: string };
+  rating: { overall: number; longevity: number; sillage: number; valueForMoney: number }; createdAt: string; status: string; rejectionReason?: string; }
+interface PendingArticle { _id: string; slug: string; title: string; content: string; excerpt?: string; coverImage?: string; category: string; tags?: string[]; author: { username: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
+interface PendingTopic { _id: string; title: string; content: string; category: string; author: { username: string; avatar?: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
 interface UserData { _id: string; username: string; email: string; role: string; isVerified: boolean; createdAt: string }
 
 function formatDate(d: string) {
@@ -21,24 +22,39 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
+  const [onlineReviews, setOnlineReviews] = useState<PendingReview[]>([]);
   const [pendingArticles, setPendingArticles] = useState<PendingArticle[]>([]);
+  const [onlineArticles, setOnlineArticles] = useState<PendingArticle[]>([]);
+  const [pendingTopics, setPendingTopics] = useState<PendingTopic[]>([]);
+  const [onlineTopics, setOnlineTopics] = useState<PendingTopic[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewingItem, setViewingItem] = useState<{ type: 'review', data: PendingReview } | { type: 'article', data: PendingArticle } | { type: 'topic', data: PendingTopic } | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>('');
 
   const headers = { Authorization: `Bearer ${user?.token}` };
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [statsRes, revRes, artRes, usersRes] = await Promise.all([
+      const [statsRes, revReq, revOnl, artReq, artOnl, topReq, topOnl, usersRes] = await Promise.all([
         axios.get(`${API_URL}/admin/stats`, { headers }),
         axios.get(`${API_URL}/admin/reviews/pending`, { headers }),
+        axios.get(`${API_URL}/admin/reviews/online`, { headers }),
         axios.get(`${API_URL}/admin/articles/pending`, { headers }),
+        axios.get(`${API_URL}/admin/articles/online`, { headers }),
+        axios.get(`${API_URL}/admin/topics/pending`, { headers }),
+        axios.get(`${API_URL}/admin/topics/online`, { headers }),
         axios.get(`${API_URL}/admin/users`, { headers }),
       ]);
       setStats(statsRes.data);
-      setPendingReviews(revRes.data);
-      setPendingArticles(artRes.data);
+      setPendingReviews(revReq.data);
+      setOnlineReviews(revOnl.data);
+      setPendingArticles(artReq.data);
+      setOnlineArticles(artOnl.data);
+      setPendingTopics(topReq.data);
+      setOnlineTopics(topOnl.data);
       setUsers(usersRes.data.users);
     } catch (err) {
       console.error('Gagal memuat data admin:', err);
@@ -50,22 +66,56 @@ export default function AdminPanel() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const handleReviewAction = async (id: string, status: 'approved' | 'rejected') => {
-    const rejectionReason = status === 'rejected' ? prompt('Alasan penolakan (opsional):') || '' : '';
+  const handleReviewAction = async (id: string, status: 'approved' | 'rejected', reason: string = '') => {
     try {
-      await axios.put(`${API_URL}/admin/reviews/${id}/status`, { status, rejectionReason }, { headers });
-      setPendingReviews((prev) => prev.filter((r) => r._id !== id));
-      if (stats) setStats({ ...stats, pendingReviews: stats.pendingReviews - 1 });
+      await axios.put(`${API_URL}/admin/reviews/${id}/status`, { status, rejectionReason: reason }, { headers });
+      fetchAll();
+      if (viewingItem?.data._id === id) setViewingItem(null);
     } catch { alert('Gagal mengupdate review.'); }
   };
 
-  const handleArticleAction = async (id: string, status: 'approved' | 'rejected') => {
-    const rejectionReason = status === 'rejected' ? prompt('Alasan penolakan (opsional):') || '' : '';
+  const handleArticleAction = async (id: string, status: 'approved' | 'rejected', reason: string = '') => {
     try {
-      await axios.put(`${API_URL}/admin/articles/${id}/status`, { status, rejectionReason }, { headers });
-      setPendingArticles((prev) => prev.filter((a) => a._id !== id));
-      if (stats) setStats({ ...stats, pendingArticles: stats.pendingArticles - 1 });
+      await axios.put(`${API_URL}/admin/articles/${id}/status`, { status, rejectionReason: reason }, { headers });
+      fetchAll();
+      if (viewingItem?.data._id === id) setViewingItem(null);
     } catch { alert('Gagal mengupdate artikel.'); }
+  };
+
+  const handleTopicAction = async (id: string, status: 'approved' | 'rejected', reason: string = '') => {
+    try {
+      await axios.put(`${API_URL}/admin/topics/${id}/status`, { status, rejectionReason: reason }, { headers });
+      fetchAll();
+      if (viewingItem?.data._id === id) setViewingItem(null);
+    } catch { alert('Gagal mengupdate topik.'); }
+  };
+
+  const handleDeleteReview = async (id: string) => {
+    if (!confirm('Hapus review ini secara permanen?')) return;
+    try {
+      await axios.delete(`${API_URL}/reviews/${id}`, { headers });
+      setOnlineReviews(prev => prev.filter(r => r._id !== id));
+      setStats(prev => prev ? { ...prev, pendingReviews: prev.pendingReviews } : null); // Trigger refresh or just use fetchAll
+      fetchAll();
+    } catch { alert('Gagal menghapus review.'); }
+  };
+
+  const handleDeleteArticle = async (id: string) => {
+    if (!confirm('Hapus artikel ini secara permanen?')) return;
+    try {
+      await axios.delete(`${API_URL}/articles/${id}`, { headers });
+      setOnlineArticles(prev => prev.filter(a => a._id !== id));
+      fetchAll();
+    } catch { alert('Gagal menghapus artikel.'); }
+  };
+
+  const handleDeleteTopic = async (id: string) => {
+    if (!confirm('Hapus topik forum ini secara permanen?')) return;
+    try {
+      await axios.delete(`${API_URL}/forum/${id}`, { headers });
+      setOnlineTopics(prev => prev.filter(t => t._id !== id));
+      fetchAll();
+    } catch { alert('Gagal menghapus topik.'); }
   };
 
   const handleRoleChange = async (id: string, role: string) => {
@@ -87,6 +137,7 @@ export default function AdminPanel() {
     { key: 'overview', label: 'Overview' },
     { key: 'reviews', label: 'Review', count: pendingReviews.length },
     { key: 'articles', label: 'Artikel', count: pendingArticles.length },
+    { key: 'topics', label: 'Topik Forum', count: pendingTopics.length },
     { key: 'users', label: 'Users' },
   ];
 
@@ -123,12 +174,14 @@ export default function AdminPanel() {
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
             {[
               { label: 'Total Users', value: stats?.totalUsers, icon: '👥', color: 'from-blue-500 to-indigo-500' },
               { label: 'Total Parfum', value: stats?.totalPerfumes, icon: '🧴', color: 'from-emerald-500 to-teal-500' },
               { label: 'Review Pending', value: stats?.pendingReviews, icon: '⏳', color: 'from-amber-500 to-orange-500' },
               { label: 'Artikel Pending', value: stats?.pendingArticles, icon: '📝', color: 'from-purple-500 to-pink-500' },
+              { label: 'Total Topik', value: stats?.totalTopics, icon: '💬', color: 'from-indigo-400 to-blue-500' },
+              { label: 'Topik Pending', value: stats?.pendingTopics, icon: '💭', color: 'from-pink-500 to-rose-500' },
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
@@ -145,67 +198,250 @@ export default function AdminPanel() {
 
         {/* Reviews Tab */}
         {activeTab === 'reviews' && (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Review Menunggu Approval ({pendingReviews.length})</h2>
-            </div>
-            {loading ? (
-              <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
-            ) : pendingReviews.length === 0 ? (
-              <div className="p-10 text-center text-sm text-gray-400">Tidak ada review yang menunggu approval. 🎉</div>
-            ) : (
-              <div className="divide-y divide-gray-50">
-                {pendingReviews.map((r) => (
-                  <div key={r._id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
-                      <p className="text-xs text-gray-400">Review Parfum · oleh {r.author.username} · {formatDate(r.createdAt)}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => handleReviewAction(r._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
-                        ✓ Approve
-                      </button>
-                      <button onClick={() => handleReviewAction(r._id, 'rejected')} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
-                        ✕ Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          <div className="space-y-8">
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Dalam Antrean & Revisi ({pendingReviews.length})</h2>
               </div>
-            )}
+              {loading ? (
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : pendingReviews.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-400">Tidak ada review dalam antrean.</div>
+              ) : (
+                <div className="divide-y divide-gray-50">
+                  {pendingReviews.map((r) => (
+                    <div key={r._id} className="flex flex-col px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {r.status === 'rejected' ? <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Revisi</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Pending</span>}
+                            <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
+                          </div>
+                          <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · {formatDate(r.createdAt)}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => setViewingItem({ type: 'review', data: r })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                            👁 Lihat
+                          </button>
+                          <button onClick={() => handleReviewAction(r._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
+                            ✓ Approve
+                          </button>
+                          <button onClick={() => { setRejectingId(r._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                            ✕ Reject
+                          </button>
+                        </div>
+                      </div>
+                      {rejectingId === r._id && (
+                        <div className="mt-4 p-4 bg-red-50/50 border border-red-100 rounded-xl flex flex-col gap-3">
+                          <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
+                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
+                          <div className="flex justify-end gap-2">
+                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button onClick={() => { handleReviewAction(r._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Review Publik / Online ({onlineReviews.length})</h2>
+              </div>
+              {loading ? (
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : onlineReviews.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-400">Belum ada review yang disetujui.</div>
+              ) : (
+                <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
+                  {onlineReviews.map((r) => (
+                    <div key={r._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50 transition-colors">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
+                        <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · Disetujui {formatDate(r.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a href={`/review/${r._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                          🌐 Buka
+                        </a>
+                        <button onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Articles Tab */}
         {activeTab === 'articles' && (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Artikel Menunggu Approval ({pendingArticles.length})</h2>
-            </div>
-            {loading ? (
-              <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
-            ) : pendingArticles.length === 0 ? (
-              <div className="p-10 text-center text-sm text-gray-400">Tidak ada artikel yang menunggu approval. 🎉</div>
-            ) : (
-              <div className="divide-y divide-gray-50">
-                {pendingArticles.map((a) => (
-                  <div key={a._id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{a.title}</p>
-                      <p className="text-xs text-gray-400">{a.category} · oleh {a.author.username} · {formatDate(a.createdAt)}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => handleArticleAction(a._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
-                        ✓ Approve
-                      </button>
-                      <button onClick={() => handleArticleAction(a._id, 'rejected')} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
-                        ✕ Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          <div className="space-y-8">
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Dalam Antrean & Revisi ({pendingArticles.length})</h2>
               </div>
-            )}
+              {loading ? (
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : pendingArticles.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-400">Tidak ada artikel dalam antrean.</div>
+              ) : (
+                <div className="divide-y divide-gray-50">
+                  {pendingArticles.map((a) => (
+                    <div key={a._id} className="flex flex-col px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {a.status === 'rejected' ? <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Revisi</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Pending</span>}
+                            <p className="text-sm font-semibold text-gray-900 truncate">{a.title}</p>
+                          </div>
+                          <p className="text-xs text-gray-400">{a.category} · Oleh {a.author?.username || 'User Terhapus'} · {formatDate(a.createdAt)}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => setViewingItem({ type: 'article', data: a })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                            👁 Lihat
+                          </button>
+                          <button onClick={() => handleArticleAction(a._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
+                            ✓ Approve
+                          </button>
+                          <button onClick={() => { setRejectingId(a._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                            ✕ Reject
+                          </button>
+                        </div>
+                      </div>
+                      {rejectingId === a._id && (
+                        <div className="mt-4 p-4 bg-red-50/50 border border-red-100 rounded-xl flex flex-col gap-3">
+                          <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
+                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
+                          <div className="flex justify-end gap-2">
+                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button onClick={() => { handleArticleAction(a._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Artikel Publik / Online ({onlineArticles.length})</h2>
+              </div>
+              {loading ? (
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : onlineArticles.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-400">Belum ada artikel yang disetujui.</div>
+              ) : (
+                <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
+                  {onlineArticles.map((a) => (
+                    <div key={a._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50 transition-colors">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{a.title}</p>
+                        <p className="text-xs text-gray-400">Oleh {a.author?.username || 'User Terhapus'} · Disetujui {formatDate(a.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                          🌐 Buka
+                        </a>
+                        <button onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Topics Tab */}
+        {activeTab === 'topics' && (
+          <div className="space-y-8">
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Dalam Antrean & Revisi ({pendingTopics.length})</h2>
+              </div>
+              {loading ? (
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : pendingTopics.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-400">Tidak ada topik dalam antrean.</div>
+              ) : (
+                <div className="divide-y divide-gray-50">
+                  {pendingTopics.map((t) => (
+                    <div key={t._id} className="flex flex-col px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {t.status === 'rejected' ? <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Revisi</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Pending</span>}
+                            <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
+                          </div>
+                          <p className="text-xs text-gray-400">{t.category} · Oleh {t.author?.username || 'User Terhapus'} · {formatDate(t.createdAt)}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => setViewingItem({ type: 'topic', data: t })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                            👁 Lihat
+                          </button>
+                          <button onClick={() => handleTopicAction(t._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
+                            ✓ Approve
+                          </button>
+                          <button onClick={() => { setRejectingId(t._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                            ✕ Reject
+                          </button>
+                        </div>
+                      </div>
+                      {rejectingId === t._id && (
+                        <div className="mt-4 p-4 bg-red-50/50 border border-red-100 rounded-xl flex flex-col gap-3">
+                          <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
+                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
+                          <div className="flex justify-end gap-2">
+                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button onClick={() => { handleTopicAction(t._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="font-bold text-gray-900">Topik Publik / Online ({onlineTopics.length})</h2>
+              </div>
+              {loading ? (
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              ) : onlineTopics.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-400">Belum ada topik yang disetujui.</div>
+              ) : (
+                <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
+                  {onlineTopics.map((t) => (
+                    <div key={t._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50 transition-colors">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
+                        <p className="text-xs text-gray-400">Oleh {t.author?.username || 'User Terhapus'} · Disetujui {formatDate(t.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a href={`/forum/${t._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                          🌐 Buka
+                        </a>
+                        <button onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -281,6 +517,151 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+
+      {/* Modal View Detail */}
+      {viewingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm sm:p-6" onClick={() => setViewingItem(null)}>
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+              <h3 className="font-bold text-lg text-gray-900">
+                Detail {viewingItem.type === 'review' ? 'Review' : viewingItem.type === 'article' ? 'Artikel' : 'Topik'}
+              </h3>
+              <button onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto grow">
+              {viewingItem.type === 'review' && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900">{viewingItem.data.title}</h4>
+                    <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
+                  </div>
+                  {viewingItem.data.image && (
+                    <img src={`${API_URL.replace('/api', '')}${viewingItem.data.image}`} alt="Review" className="w-full max-h-80 object-cover rounded-xl border border-gray-100" />
+                  )}
+                  <div className="flex flex-wrap gap-4">
+                    {viewingItem.data.occasion && viewingItem.data.occasion.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Occasion</p>
+                        <div className="flex gap-1 flex-wrap">{viewingItem.data.occasion.map(o => <span key={o} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-xs">{o}</span>)}</div>
+                      </div>
+                    )}
+                    {viewingItem.data.season && viewingItem.data.season.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Season</p>
+                        <div className="flex gap-1 flex-wrap">{viewingItem.data.season.map(s => <span key={s} className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md text-xs">{s}</span>)}</div>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Rating</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                       {(['overall', 'longevity', 'sillage', 'valueForMoney'] as const).map((key) => (
+                         <div key={key} className="bg-gray-50 p-2 rounded-lg text-center">
+                           <p className="text-[10px] text-gray-400 uppercase tracking-wider">{key}</p>
+                           <p className="font-bold text-amber-500">{viewingItem.data.rating?.[key] || 0}/5</p>
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Konten</p>
+                    {/* The content rendering for react-quill HTML content */}
+                    <div className="prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm ql-editor" dangerouslySetInnerHTML={{ __html: viewingItem.data.content }} />
+                  </div>
+                </div>
+              )}
+
+              {viewingItem.type === 'article' && (
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 text-xs font-medium rounded-lg">{(viewingItem.data as PendingArticle).category}</span>
+                    </div>
+                    <h4 className="text-2xl font-bold text-gray-900">{viewingItem.data.title}</h4>
+                    <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
+                  </div>
+                  {(viewingItem.data as PendingArticle).coverImage && (
+                    <img src={`${API_URL.replace('/api', '')}${(viewingItem.data as PendingArticle).coverImage}`} alt="Article" className="w-full max-h-96 object-cover rounded-xl border border-gray-100" />
+                  )}
+                  {(viewingItem.data as PendingArticle).excerpt && (
+                    <div className="p-4 bg-gray-50 border-l-4 border-indigo-500 rounded-r-xl italic text-gray-600 text-sm">
+                      {(viewingItem.data as PendingArticle).excerpt}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Konten</p>
+                    <div className="prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm ql-editor" dangerouslySetInnerHTML={{ __html: viewingItem.data.content }} />
+                  </div>
+                  {(viewingItem.data as PendingArticle).tags && (viewingItem.data as PendingArticle).tags!.length > 0 && (
+                    <div className="flex gap-2 flex-wrap pt-4 border-t border-gray-100">
+                      {(viewingItem.data as PendingArticle).tags!.map(t => <span key={t} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">#{t}</span>)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {viewingItem.type === 'topic' && (
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-lg">{(viewingItem.data as PendingTopic).category}</span>
+                    </div>
+                    <h4 className="text-2xl font-bold text-gray-900">{viewingItem.data.title}</h4>
+                    <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Konten Diskusi</p>
+                    <div className="prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm ql-editor" dangerouslySetInnerHTML={{ __html: viewingItem.data.content }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {rejectingId === viewingItem.data._id ? (
+              <div className="px-6 py-4 bg-red-50 flex flex-col gap-3 shrink-0">
+                 <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
+                 <textarea
+                   value={rejectReason}
+                   onChange={(e) => setRejectReason(e.target.value)}
+                   placeholder="Tulis alasan kenapa tulisan ini ditolak agar member bisa merevisinya..."
+                   className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20"
+                 />
+                 <div className="flex justify-end gap-2 mt-1">
+                    <button onClick={() => setRejectingId(null)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">Batal</button>
+                    <button onClick={() => { 
+                      if (viewingItem.type === 'review') handleReviewAction(viewingItem.data._id, 'rejected', rejectReason);
+                      else if (viewingItem.type === 'article') handleArticleAction(viewingItem.data._id, 'rejected', rejectReason);
+                      else handleTopicAction(viewingItem.data._id, 'rejected', rejectReason);
+                      setRejectingId(null);
+                      setRejectReason('');
+                    }} className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors cursor-pointer shadow-sm">Kirim Penolakan</button>
+                 </div>
+              </div>
+            ) : (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3 shrink-0">
+                <button onClick={() => { setViewingItem(null); setRejectingId(null); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors cursor-pointer">
+                  Tutup
+                </button>
+                <button onClick={() => { setRejectingId(viewingItem.data._id); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
+                  ✕ Reject
+                </button>
+                <button onClick={() => { 
+                    if (viewingItem.type === 'review') handleReviewAction(viewingItem.data._id, 'approved');
+                    else if (viewingItem.type === 'article') handleArticleAction(viewingItem.data._id, 'approved');
+                    else handleTopicAction(viewingItem.data._id, 'approved');
+                    setViewingItem(null);
+                  }} className="px-4 py-2 text-sm font-bold text-white bg-emerald-500 border border-emerald-600 rounded-xl hover:bg-emerald-600 transition-colors cursor-pointer shadow-sm">
+                  ✓ Approve
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

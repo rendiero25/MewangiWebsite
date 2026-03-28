@@ -7,7 +7,7 @@ const ForumComment = require('../models/ForumComment');
 const getTopics = async (req, res) => {
   try {
     const { page = 1, limit = 10, category, search } = req.query;
-    const query = {};
+    const query = { status: 'approved' };
 
     if (category) query.category = category;
     if (search) query.$text = { $search: search };
@@ -36,8 +36,8 @@ const getTopics = async (req, res) => {
 // @access  Public
 const getTopicById = async (req, res) => {
   try {
-    const topic = await ForumTopic.findByIdAndUpdate(
-      req.params.id,
+    const topic = await ForumTopic.findOneAndUpdate(
+      { _id: req.params.id, status: 'approved' },
       { $inc: { views: 1 } },
       { new: true }
     ).populate('author', 'username avatar');
@@ -51,6 +51,24 @@ const getTopicById = async (req, res) => {
       .sort({ createdAt: 1 });
 
     res.json({ topic, comments });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+  }
+};
+
+// @desc    Get topik by ID (untuk admin/author edit via dashboard)
+// @route   GET /api/forum/edit/:id
+// @access  Private
+const getTopicForEdit = async (req, res) => {
+  try {
+    const topic = await ForumTopic.findById(req.params.id);
+    if (!topic) return res.status(404).json({ message: 'Topik tidak ditemukan' });
+    
+    if (topic.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    }
+
+    res.json(topic);
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
   }
@@ -74,6 +92,7 @@ const createTopic = async (req, res) => {
 
     res.status(201).json(topic);
   } catch (error) {
+    console.error('Create Topic Error:', error);
     res.status(500).json({ message: 'Gagal membuat topik', error: error.message });
   }
 };
@@ -97,12 +116,15 @@ const updateTopic = async (req, res) => {
     topic.title = title || topic.title;
     topic.content = content || topic.content;
     topic.category = category || topic.category;
+    topic.status = 'pending';
+    topic.rejectionReason = '';
 
     await topic.save();
     await topic.populate('author', 'username avatar');
 
     res.json(topic);
   } catch (error) {
+    console.error('Update Topic Error:', error);
     res.status(500).json({ message: 'Gagal mengupdate topik', error: error.message });
   }
 };
@@ -196,4 +218,19 @@ const deleteComment = async (req, res) => {
   }
 };
 
-module.exports = { getTopics, getTopicById, createTopic, updateTopic, deleteTopic, addComment, deleteComment };
+// @desc    Get my topics (untuk member dashboard)
+// @route   GET /api/forum/my/list
+// @access  Private
+const getMyTopics = async (req, res) => {
+  try {
+    const topics = await ForumTopic.find({ author: req.user._id })
+      .select('-content')
+      .sort({ createdAt: -1 });
+
+    res.json(topics);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+  }
+};
+
+module.exports = { getTopics, getTopicById, getTopicForEdit, createTopic, updateTopic, deleteTopic, addComment, deleteComment, getMyTopics };

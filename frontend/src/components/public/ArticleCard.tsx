@@ -47,7 +47,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         <div className="h-44 bg-gradient-to-br from-indigo-100 to-blue-50 overflow-hidden">
           {article.coverImage ? (
             <img
-              src={article.coverImage}
+              src={article.coverImage.startsWith('http') ? article.coverImage : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${article.coverImage}`}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
@@ -96,10 +96,10 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center shrink-0">
                 <span className="text-white text-[10px] font-bold">
-                  {article.author.username.charAt(0).toUpperCase()}
+                  {(article.author?.username || 'U').charAt(0).toUpperCase()}
                 </span>
               </div>
-              <span className="font-medium text-gray-600">{article.author.username}</span>
+              <span className="font-medium text-gray-600">{article.author?.username || 'User Terhapus'}</span>
             </div>
             <div className="flex items-center gap-3">
               <span>{timeAgo(article.createdAt)}</span>

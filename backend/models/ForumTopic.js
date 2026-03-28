@@ -16,6 +16,15 @@ const forumTopicSchema = new mongoose.Schema({
     enum: ['Diskusi Umum', 'Rekomendasi', 'Jual Beli', 'Clone & Inspired', 'Tips & Trik', 'Lainnya'],
     default: 'Diskusi Umum',
   },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  },
+  rejectionReason: {
+    type: String,
+    default: '',
+  },
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

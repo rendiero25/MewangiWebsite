@@ -52,6 +52,24 @@ const getArticleBySlug = async (req, res) => {
   }
 };
 
+// @desc    Get artikel by ID (untuk admin/author edit via dashboard)
+// @route   GET /api/articles/edit/:id
+// @access  Private
+const getArticleById = async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ message: 'Artikel tidak ditemukan' });
+    
+    if (article.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    }
+
+    res.json(article);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil artikel', error: error.message });
+  }
+};
+
 // @desc    Buat artikel baru (perlu approval admin)
 // @route   POST /api/articles
 // @access  Private (verified member)
@@ -79,6 +97,7 @@ const createArticle = async (req, res) => {
       article,
     });
   } catch (error) {
+    console.error('Create Article Error:', error);
     res.status(500).json({ message: 'Gagal membuat artikel', error: error.message });
   }
 };
@@ -106,12 +125,14 @@ const updateArticle = async (req, res) => {
     if (tags) article.tags = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim());
     if (req.file) article.coverImage = `/uploads/${req.file.filename}`;
     article.status = status === 'draft' ? 'draft' : 'pending';
+    article.rejectionReason = '';
 
     await article.save();
     await article.populate('author', 'username avatar');
 
     res.json(article);
   } catch (error) {
+    console.error('Update Article Error:', error);
     res.status(500).json({ message: 'Gagal mengupdate artikel', error: error.message });
   }
 };
@@ -154,4 +175,4 @@ const getMyArticles = async (req, res) => {
   }
 };
 
-module.exports = { getArticles, getArticleBySlug, createArticle, updateArticle, deleteArticle, getMyArticles };
+module.exports = { getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles };

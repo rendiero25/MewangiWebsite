@@ -196,11 +196,11 @@ export default function ForumDetail() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <span className="text-white text-sm font-bold">
-                  {topic.author.username.charAt(0).toUpperCase()}
+                  {(topic.author?.username || 'U').charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">{topic.author.username}</p>
+                <p className="text-sm font-semibold text-gray-900">{topic.author?.username || 'User Terhapus'}</p>
                 <p className="text-xs text-gray-400">{timeAgo(topic.createdAt)}</p>
               </div>
             </div>
@@ -208,9 +208,10 @@ export default function ForumDetail() {
 
           {/* Body */}
           <div className="p-6 sm:p-8">
-            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-              {topic.content}
-            </div>
+            <div 
+              className="prose prose-sm max-w-none text-gray-700 leading-relaxed break-words ql-editor"
+              dangerouslySetInnerHTML={{ __html: topic.content }}
+            />
           </div>
 
           {/* Stats & actions bar */}

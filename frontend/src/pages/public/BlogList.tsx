@@ -89,7 +89,7 @@ export default function BlogList() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Search & filters */}
         <div className="mb-6 space-y-4">
           <form onSubmit={handleSearch} className="relative">

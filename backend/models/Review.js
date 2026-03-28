@@ -16,6 +16,10 @@ const reviewSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  perfume: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Perfume',
+  },
   rating: {
     longevity: { type: Number, min: 1, max: 5, required: true },
     sillage: { type: Number, min: 1, max: 5, required: true },

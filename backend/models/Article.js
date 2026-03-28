@@ -55,7 +55,7 @@ const articleSchema = new mongoose.Schema({
 });
 
 // Auto-generate slug from title
-articleSchema.pre('save', function (next) {
+articleSchema.pre('save', function () {
   if (this.isModified('title')) {
     this.slug = this.title
       .toLowerCase()
@@ -66,7 +66,6 @@ articleSchema.pre('save', function (next) {
     // Append timestamp to ensure uniqueness
     this.slug += '-' + Date.now().toString(36);
   }
-  next();
 });
 
 articleSchema.index({ title: 'text', content: 'text' });

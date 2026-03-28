@@ -115,12 +115,12 @@ export default function BlogDetail() {
       {/* Cover image */}
       {article.coverImage && (
         <div className="h-64 sm:h-80 lg:h-96 bg-gray-200 relative">
-          <img src={article.coverImage} alt={article.title} className="w-full h-full object-cover" />
+          <img src={article.coverImage.startsWith('http') ? article.coverImage : `${API_URL.replace('/api', '')}${article.coverImage}`} alt={article.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Breadcrumb */}
         <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-6">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,11 +154,11 @@ export default function BlogDetail() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center">
                 <span className="text-white text-sm font-bold">
-                  {article.author.username.charAt(0).toUpperCase()}
+                  {(article.author?.username || 'U').charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">{article.author.username}</p>
+                <p className="text-sm font-semibold text-gray-900">{article.author?.username || 'User Terhapus'}</p>
                 <p className="text-xs text-gray-400">Penulis</p>
               </div>
             </div>
@@ -166,9 +166,10 @@ export default function BlogDetail() {
 
           {/* Body */}
           <div className="p-6 sm:p-8">
-            <div className="prose prose-sm sm:prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap break-words">
-              {article.content}
-            </div>
+            <div 
+              className="prose prose-sm sm:prose max-w-none text-gray-700 leading-relaxed break-words ql-editor"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
           </div>
 
           {/* Tags */}
@@ -179,18 +180,6 @@ export default function BlogDetail() {
                   #{tag}
                 </span>
               ))}
-            </div>
-          )}
-
-          {/* Actions */}
-          {(isOwner || isAdmin) && (
-            <div className="px-6 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
-              <button
-                onClick={handleDelete}
-                className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-              >
-                Hapus Artikel
-              </button>
             </div>
           )}
         </article>

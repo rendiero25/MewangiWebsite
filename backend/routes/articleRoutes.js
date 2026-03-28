@@ -3,7 +3,7 @@ const router = express.Router();
 const { protect, verified } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const {
-  getArticles, getArticleBySlug, createArticle, updateArticle, deleteArticle, getMyArticles,
+  getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles,
 } = require('../controllers/articleController');
 
 // Public
@@ -11,6 +11,7 @@ router.get('/', getArticles);
 router.get('/:slug', getArticleBySlug);
 
 // Private
+router.get('/edit/:id', protect, getArticleById);
 router.get('/my/list', protect, getMyArticles);
 router.post('/', protect, verified, upload.single('coverImage'), createArticle);
 router.put('/:id', protect, verified, upload.single('coverImage'), updateArticle);

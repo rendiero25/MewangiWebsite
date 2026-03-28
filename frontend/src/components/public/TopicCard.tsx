@@ -51,7 +51,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
           {/* Author avatar */}
           <div className="hidden sm:flex w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary items-center justify-center shrink-0">
             <span className="text-white text-sm font-bold">
-              {topic.author.username.charAt(0).toUpperCase()}
+              {(topic.author?.username || 'U').charAt(0).toUpperCase()}
             </span>
           </div>
 
@@ -91,7 +91,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
-              <span className="font-medium text-gray-600">{topic.author.username}</span>
+              <span className="font-medium text-gray-600">{topic.author?.username || 'User Terhapus'}</span>
               <span>{timeAgo(topic.createdAt)}</span>
               <span className="inline-flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

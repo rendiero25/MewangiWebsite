@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Review = require('../models/Review');
 const Article = require('../models/Article');
 const Perfume = require('../models/Perfume');
+const ForumTopic = require('../models/ForumTopic');
 
 // ==================== APPROVAL ====================
 
@@ -10,11 +11,25 @@ const Perfume = require('../models/Perfume');
 // @access  Private (admin only)
 const getPendingReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ status: 'pending' })
+    const reviews = await Review.find({ status: { $in: ['pending', 'rejected'] } })
       .populate('author', 'username email avatar')
-      .populate('perfume', 'name brand')
       .sort({ createdAt: 1 });
 
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil review', error: error.message });
+  }
+};
+
+// @desc    Get online (approved) reviews
+// @route   GET /api/admin/reviews/online
+// @access  Private (admin only)
+const getOnlineReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ status: 'approved' })
+      .populate('author', 'username email avatar')
+      .sort({ createdAt: -1 })
+      .limit(100);
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil review', error: error.message });
@@ -43,16 +58,6 @@ const updateReviewStatus = async (req, res) => {
     }
     await review.save();
 
-    // Update rating di Perfume jika approved
-    if (status === 'approved') {
-      const approvedReviews = await Review.find({ perfume: review.perfume, status: 'approved' });
-      const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating.overall, 0);
-      await Perfume.findByIdAndUpdate(review.perfume, {
-        averageRating: (totalRating / approvedReviews.length).toFixed(1),
-        totalReviews: approvedReviews.length,
-      });
-    }
-
     res.json({ message: `Review berhasil di-${status}`, review });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengupdate status review', error: error.message });
@@ -64,10 +69,25 @@ const updateReviewStatus = async (req, res) => {
 // @access  Private (admin only)
 const getPendingArticles = async (req, res) => {
   try {
-    const articles = await Article.find({ status: 'pending' })
+    const articles = await Article.find({ status: { $in: ['pending', 'rejected'] } })
       .populate('author', 'username email avatar')
       .sort({ createdAt: 1 });
 
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil artikel', error: error.message });
+  }
+};
+
+// @desc    Get online (approved) articles
+// @route   GET /api/admin/articles/online
+// @access  Private (admin only)
+const getOnlineArticles = async (req, res) => {
+  try {
+    const articles = await Article.find({ status: 'approved' })
+      .populate('author', 'username email avatar')
+      .sort({ createdAt: -1 })
+      .limit(100);
     res.json(articles);
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil artikel', error: error.message });
@@ -99,6 +119,53 @@ const updateArticleStatus = async (req, res) => {
     res.json({ message: `Artikel berhasil di-${status}`, article });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengupdate status artikel', error: error.message });
+  }
+};
+
+// @desc    Get pending topics
+// @route   GET /api/admin/topics/pending
+// @access  Private (admin only)
+const getPendingTopics = async (req, res) => {
+  try {
+    const topics = await ForumTopic.find({ status: { $in: ['pending', 'rejected'] } })
+      .populate('author', 'username email avatar')
+      .sort({ createdAt: 1 });
+    res.json(topics);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+  }
+};
+
+// @desc    Get online (approved) topics
+// @route   GET /api/admin/topics/online
+// @access  Private (admin only)
+const getOnlineTopics = async (req, res) => {
+  try {
+    const topics = await ForumTopic.find({ status: 'approved' })
+      .populate('author', 'username email avatar')
+      .sort({ createdAt: -1 })
+      .limit(100);
+    res.json(topics);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+  }
+};
+
+// @desc    Approve/Reject topic
+// @route   PUT /api/admin/topics/:id/status
+// @access  Private (admin only)
+const updateTopicStatus = async (req, res) => {
+  try {
+    const { status, rejectionReason } = req.body;
+    if (!['approved', 'rejected'].includes(status)) return res.status(400).json({ message: 'Status harus approved atau rejected' });
+    const topic = await ForumTopic.findById(req.params.id);
+    if (!topic) return res.status(404).json({ message: 'Topik tidak ditemukan' });
+    topic.status = status;
+    if (status === 'rejected' && rejectionReason) topic.rejectionReason = rejectionReason;
+    await topic.save();
+    res.json({ message: `Topik berhasil di-${status}`, topic });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengupdate status topik', error: error.message });
   }
 };
 
@@ -262,11 +329,13 @@ const deletePerfume = async (req, res) => {
 // @access  Private (admin only)
 const getDashboardStats = async (req, res) => {
   try {
-    const [totalUsers, totalPerfumes, pendingReviews, pendingArticles] = await Promise.all([
+    const [totalUsers, totalPerfumes, pendingReviews, pendingArticles, pendingTopics, totalTopics] = await Promise.all([
       User.countDocuments(),
       Perfume.countDocuments(),
       Review.countDocuments({ status: 'pending' }),
       Article.countDocuments({ status: 'pending' }),
+      ForumTopic.countDocuments({ status: 'pending' }),
+      ForumTopic.countDocuments({ status: 'approved' }),
     ]);
 
     res.json({
@@ -274,6 +343,8 @@ const getDashboardStats = async (req, res) => {
       totalPerfumes,
       pendingReviews,
       pendingArticles,
+      pendingTopics,
+      totalTopics,
     });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil statistik', error: error.message });
@@ -281,8 +352,9 @@ const getDashboardStats = async (req, res) => {
 };
 
 module.exports = {
-  getPendingReviews, updateReviewStatus,
-  getPendingArticles, updateArticleStatus,
+  getPendingReviews, getOnlineReviews, updateReviewStatus,
+  getPendingArticles, getOnlineArticles, updateArticleStatus,
+  getPendingTopics, getOnlineTopics, updateTopicStatus,
   getUsers, updateUserRole, deleteUser,
   createPerfume, updatePerfume, deletePerfume,
   getDashboardStats,

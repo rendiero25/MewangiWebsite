@@ -52,7 +52,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         {review.image && (
           <div className="h-40 bg-gray-100 overflow-hidden">
             <img
-              src={review.image}
+              src={review.image.startsWith('http') ? review.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${review.image}`}
               alt={review.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
@@ -94,10 +94,10 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-50">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center shrink-0">
               <span className="text-white text-[10px] font-bold">
-                {review.author.username.charAt(0).toUpperCase()}
+                {(review.author?.username || 'U').charAt(0).toUpperCase()}
               </span>
             </div>
-            <span className="font-medium text-gray-600">{review.author.username}</span>
+            <span className="font-medium text-gray-600">{review.author?.username || 'User Terhapus'}</span>
             <span>·</span>
             <span>{timeAgo(review.createdAt)}</span>
           </div>

@@ -25,7 +25,7 @@ function timeAgo(dateStr: string) {
 
 export default function CommentItem({ comment, onDelete }: CommentItemProps) {
   const { user } = useAuth();
-  const isOwner = user && user._id === comment.author._id;
+  const isOwner = user && user._id === comment.author?._id;
   const isAdmin = user && user.role === 'admin';
 
   return (
@@ -33,14 +33,14 @@ export default function CommentItem({ comment, onDelete }: CommentItemProps) {
       {/* Avatar */}
       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center shrink-0">
         <span className="text-white text-xs font-bold">
-          {comment.author.username.charAt(0).toUpperCase()}
+          {(comment.author?.username || 'U').charAt(0).toUpperCase()}
         </span>
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-sm font-semibold text-gray-900">
-            {comment.author.username}
+            {comment.author?.username || 'User Terhapus'}
           </span>
           <span className="text-xs text-gray-400">
             {timeAgo(comment.createdAt)}
