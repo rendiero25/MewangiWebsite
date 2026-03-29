@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../notifications/NotificationBell';
 import Logo from '../../assets/logo.png';
 
 const navLinks = [
@@ -21,7 +22,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
@@ -54,7 +55,9 @@ export default function Navbar() {
           {/* Desktop Right Actions */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <div className="relative">
+              <div className="flex items-center gap-3">
+                <NotificationBell />
+                <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
@@ -120,6 +123,7 @@ export default function Navbar() {
                   </>
                 )}
               </div>
+            </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
@@ -188,6 +192,10 @@ export default function Navbar() {
                   </div>
                 </div>
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
+                <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+                  <span>Notifikasi</span>
+                  <span className="bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">Baru</span>
+                </Link>
                 {user.role === 'admin' && (
                   <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
                 )}

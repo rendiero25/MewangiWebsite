@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -15,6 +16,7 @@ import ReviewList from './pages/public/ReviewList';
 import ReviewDetail from './pages/public/ReviewDetail';
 import BlogList from './pages/public/BlogList';
 import BlogDetail from './pages/public/BlogDetail';
+import About from './pages/public/About';
 
 // Member Pages
 import CreateTopic from './pages/member/CreateTopic';
@@ -24,6 +26,7 @@ import EditReview from './pages/member/EditReview';
 import CreateArticle from './pages/member/CreateArticle';
 import EditArticle from './pages/member/EditArticle';
 import MemberDashboard from './pages/member/MemberDashboard';
+import Notifications from './pages/member/Notifications';
 
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
@@ -45,73 +48,80 @@ function MainLayout() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Main pages (with navbar/footer) */}
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
-            
-            {/* Auth pages */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+      <NotificationProvider>
+        <Router>
+          <Routes>
+            {/* Main pages (with navbar/footer) */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Home />} />
+              
+              {/* Auth pages */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-            {/* Forum */}
-            <Route path="/forum" element={<ForumList />} />
-            <Route path="/forum/:id" element={<ForumDetail />} />
-            <Route path="/forum/new" element={
-              <ProtectedRoute>
-                <CreateTopic />
-              </ProtectedRoute>
-            } />
-            <Route path="/forum/edit/:id" element={
-              <ProtectedRoute>
-                <EditTopic />
-              </ProtectedRoute>
-            } />
+              {/* Forum */}
+              <Route path="/forum" element={<ForumList />} />
+              <Route path="/forum/:id" element={<ForumDetail />} />
+              <Route path="/forum/new" element={
+                <ProtectedRoute>
+                  <CreateTopic />
+                </ProtectedRoute>
+              } />
+              <Route path="/forum/edit/:id" element={
+                <ProtectedRoute>
+                  <EditTopic />
+                </ProtectedRoute>
+              } />
 
-            {/* Review */}
-            <Route path="/review" element={<ReviewList />} />
-            <Route path="/review/:id" element={<ReviewDetail />} />
-            <Route path="/review/new" element={
-              <ProtectedRoute>
-                <CreateReview />
-              </ProtectedRoute>
-            } />
-            <Route path="/review/edit/:id" element={
-              <ProtectedRoute>
-                <EditReview />
-              </ProtectedRoute>
-            } />
-            {/* Blog */}
-            <Route path="/blog" element={<BlogList />} />
-            <Route path="/blog/new" element={
-              <ProtectedRoute>
-                <CreateArticle />
-              </ProtectedRoute>
-            } />
-            <Route path="/blog/edit/:id" element={
-              <ProtectedRoute>
-                <EditArticle />
-              </ProtectedRoute>
-            } />
-            <Route path="/blog/:slug" element={<BlogDetail />} />
-            <Route path="/tentang" element={<div className="min-h-screen flex items-center justify-center text-xl text-gray-400">🔨 Tentang Mewangi — Segera Hadir</div>} />
+              {/* Review */}
+              <Route path="/review" element={<ReviewList />} />
+              <Route path="/review/:id" element={<ReviewDetail />} />
+              <Route path="/review/new" element={
+                <ProtectedRoute>
+                  <CreateReview />
+                </ProtectedRoute>
+              } />
+              <Route path="/review/edit/:id" element={
+                <ProtectedRoute>
+                  <EditReview />
+                </ProtectedRoute>
+              } />
+              {/* Blog */}
+              <Route path="/blog" element={<BlogList />} />
+              <Route path="/blog/new" element={
+                <ProtectedRoute>
+                  <CreateArticle />
+                </ProtectedRoute>
+              } />
+              <Route path="/blog/edit/:id" element={
+                <ProtectedRoute>
+                  <EditArticle />
+                </ProtectedRoute>
+              } />
+              <Route path="/blog/:slug" element={<BlogDetail />} />
+              <Route path="/tentang" element={<About />} />
 
-            {/* Protected Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <MemberDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminPanel />
-              </ProtectedRoute>
-            } />
-          </Route>
-        </Routes>
-      </Router>
+              {/* Protected Routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <MemberDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/notifications" element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminPanel />
+                </ProtectedRoute>
+              } />
+            </Route>
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

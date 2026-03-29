@@ -22,17 +22,24 @@ export default function ReviewList() {
   const { user } = useAuth();
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeOccasion, setActiveOccasion] = useState('Semua');
+  const [activeSeason, setActiveSeason] = useState('Semua');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
+  const occasions = ['Semua', 'Sehari-hari', 'Kantor', 'Kencan', 'Pesta', 'Olahraga', 'Formal'];
+  const seasons = ['Semua', 'Panas', 'Hujan', 'Sejuk', 'Sepanjang Tahun'];
+
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
       const params: Record<string, string | number> = { page, limit: 12 };
       if (search) params.search = search;
+      if (activeOccasion !== 'Semua') params.occasion = activeOccasion;
+      if (activeSeason !== 'Semua') params.season = activeSeason;
 
       const { data } = await axios.get(`${API_URL}/reviews`, { params });
       setReviews(data.reviews);
@@ -43,7 +50,7 @@ export default function ReviewList() {
     } finally {
       setLoading(false);
     }
-  }, [search, page]);
+  }, [search, page, activeOccasion, activeSeason]);
 
   useEffect(() => {
     fetchReviews();
@@ -59,7 +66,7 @@ export default function ReviewList() {
     <div className="min-h-screen bg-gray-50/50">
       {/* Hero header */}
       <div className="bg-gradient-to-br from-amber-50/80 via-white to-primary/5 border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-black mb-2">
@@ -84,20 +91,57 @@ export default function ReviewList() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Search bar */}
-        <form onSubmit={handleSearch} className="relative mb-6">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Cari review parfum..."
-            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all"
-          />
-          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </form>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Search & filters */}
+        <div className="mb-6 space-y-4">
+          <form onSubmit={handleSearch} className="relative">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Cari review parfum..."
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all"
+            />
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </form>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Acara:</span>
+              {occasions.map((occ) => (
+                <button
+                  key={occ}
+                  onClick={() => { setActiveOccasion(occ); setPage(1); }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    activeOccasion === occ
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-300'
+                  }`}
+                >
+                  {occ}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Musim:</span>
+              {seasons.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => { setActiveSeason(s); setPage(1); }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                    activeSeason === s
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* Result count */}
         {!loading && (

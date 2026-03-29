@@ -1,5 +1,7 @@
 const ForumTopic = require('../models/ForumTopic');
 const ForumComment = require('../models/ForumComment');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Get semua topik forum
 // @route   GET /api/forum
@@ -89,6 +91,17 @@ const createTopic = async (req, res) => {
     });
 
     await topic.populate('author', 'username avatar');
+
+    // Notify admins
+    const admins = await User.find({ role: 'admin' });
+    await Promise.all(admins.map(admin => 
+      Notification.create({
+        recipient: admin._id,
+        type: 'system',
+        message: `Topik baru pending: "${topic.title}" oleh ${req.user.username}`,
+        link: `/admin`
+      })
+    ));
 
     res.status(201).json(topic);
   } catch (error) {
@@ -182,6 +195,20 @@ const addComment = async (req, res) => {
     await topic.save();
 
     await comment.populate('author', 'username avatar');
+
+    // Notify topic author (if not the commenter)
+    if (topic.author.toString() !== req.user._id.toString()) {
+      const notification = await Notification.create({
+        recipient: topic.author,
+        sender: req.user._id,
+        type: 'comment_forum',
+        message: `${req.user.username} mengomentari topik Anda: "${topic.title}"`,
+        link: `/forum/${topic._id}`
+      });
+
+      const socket = require('../socket');
+      socket.getIO().to(topic.author.toString()).emit('new_notification', notification);
+    }
 
     res.status(201).json(comment);
   } catch (error) {

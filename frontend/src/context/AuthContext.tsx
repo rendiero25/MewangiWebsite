@@ -41,6 +41,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
+  // Axios Interceptor for Authorization Header
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        if (user?.token) {
+          config.headers.Authorization = `Bearer ${user.token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    return () => axios.interceptors.request.eject(interceptor);
+  }, [user]);
+
   const login = async (email: string, password: string) => {
     const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
     setUser(data);

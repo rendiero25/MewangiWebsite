@@ -66,8 +66,32 @@
 ---
 
 ## Phase 7: Halaman Tambahan & Polish
-- [ ] Halaman Tentang Mewangi
-- [ ] Search & Filtering
-- [ ] Pagination
-- [ ] Responsive design
-- [ ] Final UI polish & testing
+- [x] Halaman Tentang Mewangi (Premium static page)
+- [x] Search & Filtering:
+    - [x] ForumList Search & Filter
+    - [x] ReviewList Search & Filter
+    - [x] BlogList Search & Filter
+- [x] Pagination Backend & Frontend:
+    - [x] ForumList Pagination
+    - [x] ReviewList Pagination
+    - [x] BlogList Pagination
+- [x] Responsive Design Audit & Polish
+- [x] Final UI/UX Polish
+
+---
+
+## Phase 8: Comprehensive Notification System
+- [x] Backend setup:
+    - [x] Notification Model
+    - [x] Notification Routes
+    - [x] Trigger notifications in controllers:
+        - [x] Comment on forum topic (notify author)
+        - [x] Comment on review (notify author)
+        - [x] Article submission (notify admin)
+        - [x] Review submission (notify admin)
+        - [x] Article/Review approval/rejection (notify author)
+- [x] Frontend setup:
+    - [x] Notification Context (with polling)
+    - [x] Notification Bell component in Navbar
+    - [x] Notification Page (/notifications)
+    - [x] Real-time UI updates (Unread badge)

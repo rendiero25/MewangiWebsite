@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import CommentItem from '../../components/public/CommentItem';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -37,13 +38,23 @@ interface ArticleData {
   createdAt: string;
 }
 
+interface CommentData {
+  _id: string;
+  content: string;
+  author: { _id: string; username: string; avatar?: string };
+  createdAt: string;
+}
+
 export default function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [article, setArticle] = useState<ArticleData | null>(null);
+  const [comments, setComments] = useState<CommentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [commentText, setCommentText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const fetchArticle = useCallback(async () => {
@@ -51,6 +62,9 @@ export default function BlogDetail() {
     try {
       const { data } = await axios.get(`${API_URL}/articles/${slug}`);
       setArticle(data);
+      if (data.comments) {
+        setComments(data.comments);
+      }
     } catch {
       setError('Artikel tidak ditemukan.');
     } finally {
@@ -61,6 +75,37 @@ export default function BlogDetail() {
   useEffect(() => {
     fetchArticle();
   }, [fetchArticle]);
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || !article) return;
+    setSubmitting(true);
+    try {
+      const { data } = await axios.post(
+        `${API_URL}/articles/${article._id}/comments`,
+        { content: commentText },
+        { headers: { Authorization: `Bearer ${user?.token}` } }
+      );
+      setComments((prev) => [...prev, data]);
+      setCommentText('');
+    } catch {
+      setError('Gagal mengirim komentar.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('Hapus komentar ini?')) return;
+    try {
+      await axios.delete(`${API_URL}/articles/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+    } catch {
+      setError('Gagal menghapus komentar.');
+    }
+  };
 
   const handleDelete = async () => {
     if (!article || !confirm('Hapus artikel ini?')) return;
@@ -77,7 +122,7 @@ export default function BlogDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50/50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-gray-200 rounded w-24" />
             <div className="h-8 bg-gray-200 rounded w-3/4" />
@@ -129,7 +174,7 @@ export default function BlogDetail() {
           Kembali ke Blog
         </Link>
 
-        <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-10">
           {/* Header */}
           <div className="p-6 sm:p-8 border-b border-gray-100">
             <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -151,15 +196,17 @@ export default function BlogDetail() {
             </h1>
 
             {/* Author */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center">
-                <span className="text-white text-sm font-bold">
-                  {(article.author?.username || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{article.author?.username || 'User Terhapus'}</p>
-                <p className="text-xs text-gray-400">Penulis</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">
+                    {(article.author?.username || 'U').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{article.author?.username || 'User Terhapus'}</p>
+                  <p className="text-xs text-gray-400">Penulis</p>
+                </div>
               </div>
             </div>
           </div>
@@ -183,6 +230,84 @@ export default function BlogDetail() {
             </div>
           )}
         </article>
+
+        {/* Comment Section */}
+        <section className="mt-12 pt-10 border-t border-gray-100">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Komentar <span className="text-gray-400 ml-2 text-lg font-normal">({comments.length})</span>
+            </h2>
+          </div>
+
+          {/* Comment List */}
+          <div className="mb-10">
+            {comments.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.855-1.241L3 21l1.83-5.591C3.83 14.39 3 12.418 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-gray-400 font-medium">Belum ada diskusi di sini</p>
+                <p className="text-gray-400 text-sm mt-1 text-center">Jadilah yang pertama memberikan suara!</p>
+              </div>
+            ) : (
+              <div className="space-y-6 bg-white rounded-2xl border border-gray-100 px-6 shadow-sm overflow-hidden">
+                {comments.map((comment) => (
+                  <CommentItem
+                    key={comment._id}
+                    comment={comment}
+                    onDelete={handleDeleteComment}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Comment Form */}
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Tulis Komentar</h3>
+            {user ? (
+              <form onSubmit={handleAddComment} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+                    <span className="text-indigo-500 text-sm font-bold">
+                      {user.username.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Apa pendapatmu tentang artikel ini?"
+                      rows={3}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all resize-none"
+                    />
+                    <div className="flex justify-end mt-3">
+                      <button
+                        type="submit"
+                        disabled={submitting || !commentText.trim()}
+                        className="px-6 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 transition-all cursor-pointer"
+                      >
+                        {submitting ? 'Mengirim...' : 'Kirim Komentar'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            ) : (
+              <div className="p-6 bg-indigo-50 rounded-2xl text-center border border-indigo-100">
+                <p className="text-indigo-900 text-sm mb-3 font-medium">Masuk untuk ikut berdiskusi</p>
+                <Link
+                  to="/login"
+                  className="inline-block px-6 py-2 rounded-xl bg-white text-indigo-600 border border-indigo-200 text-sm font-semibold hover:bg-indigo-100 transition-all"
+                >
+                  Login Sekarang
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

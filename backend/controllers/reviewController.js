@@ -1,16 +1,20 @@
 const Review = require('../models/Review');
 const ReviewComment = require('../models/ReviewComment');
 const Perfume = require('../models/Perfume');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Get semua review (approved only untuk public)
 // @route   GET /api/reviews
 // @access  Public
 const getReviews = async (req, res) => {
   try {
-    const { page = 1, limit = 10, perfume, search } = req.query;
+    const { page = 1, limit = 10, perfume, search, occasion, season } = req.query;
     const query = { status: 'approved' };
 
     if (perfume) query.perfume = perfume;
+    if (occasion) query.occasion = occasion;
+    if (season) query.season = season;
     if (search) query.$text = { $search: search };
 
     const reviews = await Review.find(query)
@@ -85,6 +89,17 @@ const createReview = async (req, res) => {
     });
 
     await review.populate('author', 'username avatar');
+
+    // Notify admins
+    const admins = await User.find({ role: 'admin' });
+    await Promise.all(admins.map(admin => 
+      Notification.create({
+        recipient: admin._id,
+        type: 'new_review_admin',
+        message: `Review baru pending: "${review.title}" oleh ${req.user.username}`,
+        link: `/admin`
+      })
+    ));
 
     res.status(201).json({
       message: 'Review berhasil dikirim! Menunggu approval admin.',
@@ -182,6 +197,20 @@ const addReviewComment = async (req, res) => {
     });
 
     await comment.populate('author', 'username avatar');
+
+    // Notify review author (if not the commenter)
+    if (review.author.toString() !== req.user._id.toString()) {
+      const notification = await Notification.create({
+        recipient: review.author,
+        sender: req.user._id,
+        type: 'comment_review',
+        message: `${req.user.username} mengomentari review Anda: "${review.title}"`,
+        link: `/review/${review._id}`
+      });
+
+      const socket = require('../socket');
+      socket.getIO().to(review.author.toString()).emit('new_notification', notification);
+    }
 
     res.status(201).json(comment);
   } catch (error) {

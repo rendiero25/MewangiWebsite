@@ -13,6 +13,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const articleRoutes = require('./routes/articleRoutes');
 const perfumeRoutes = require('./routes/perfumeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/perfumes', perfumeRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Static Folder for Frontend Production
 if (process.env.NODE_ENV === 'production') {
@@ -60,6 +62,12 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+const http = require('http');
+const server = http.createServer(app);
+const socket = require('./socket');
+
+socket.init(server);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

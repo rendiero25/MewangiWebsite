@@ -3,6 +3,7 @@ const Review = require('../models/Review');
 const Article = require('../models/Article');
 const Perfume = require('../models/Perfume');
 const ForumTopic = require('../models/ForumTopic');
+const Notification = require('../models/Notification');
 
 // ==================== APPROVAL ====================
 
@@ -57,6 +58,19 @@ const updateReviewStatus = async (req, res) => {
       review.rejectionReason = rejectionReason;
     }
     await review.save();
+
+    // Notify user
+    const notification = await Notification.create({
+      recipient: review.author,
+      type: status === 'approved' ? 'approve_review' : 'reject_review',
+      message: status === 'approved' 
+        ? `Review Anda "${review.title}" telah disetujui!` 
+        : `Review Anda "${review.title}" ditolak. Alasan: ${rejectionReason || 'Tidak ada alasan spesifik'}`,
+      link: `/review/${review._id}`
+    });
+
+    const socket = require('../socket');
+    socket.getIO().to(review.author.toString()).emit('new_notification', notification);
 
     res.json({ message: `Review berhasil di-${status}`, review });
   } catch (error) {
@@ -116,6 +130,19 @@ const updateArticleStatus = async (req, res) => {
     }
     await article.save();
 
+    // Notify user
+    const notification = await Notification.create({
+      recipient: article.author,
+      type: status === 'approved' ? 'approve_article' : 'reject_article',
+      message: status === 'approved' 
+        ? `Artikel Anda "${article.title}" telah disetujui!` 
+        : `Artikel Anda "${article.title}" ditolak. Alasan: ${rejectionReason || 'Tidak ada alasan spesifik'}`,
+      link: `/blog/${article.slug}`
+    });
+
+    const socket = require('../socket');
+    socket.getIO().to(article.author.toString()).emit('new_notification', notification);
+
     res.json({ message: `Artikel berhasil di-${status}`, article });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengupdate status artikel', error: error.message });
@@ -163,6 +190,20 @@ const updateTopicStatus = async (req, res) => {
     topic.status = status;
     if (status === 'rejected' && rejectionReason) topic.rejectionReason = rejectionReason;
     await topic.save();
+
+    // Notify user
+    const notification = await Notification.create({
+      recipient: topic.author,
+      type: status === 'approved' ? 'approve_forum' : 'reject_forum', // Assuming these exist or will be added
+      message: status === 'approved' 
+        ? `Topik Forum Anda "${topic.title}" telah disetujui!` 
+        : `Topik Forum Anda "${topic.title}" ditolak. Alasan: ${rejectionReason || 'Tidak ada alasan spesifik'}`,
+      link: `/forum/${topic._id}`
+    });
+
+    const socket = require('../socket');
+    socket.getIO().to(topic.author.toString()).emit('new_notification', notification);
+
     res.json({ message: `Topik berhasil di-${status}`, topic });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengupdate status topik', error: error.message });

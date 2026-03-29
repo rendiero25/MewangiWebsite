@@ -1,4 +1,7 @@
 const Article = require('../models/Article');
+const ArticleComment = require('../models/ArticleComment');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Get semua artikel (approved only)
 // @route   GET /api/articles
@@ -32,8 +35,6 @@ const getArticles = async (req, res) => {
 };
 
 // @desc    Get artikel by slug
-// @route   GET /api/articles/:slug
-// @access  Public
 const getArticleBySlug = async (req, res) => {
   try {
     const article = await Article.findOneAndUpdate(
@@ -46,7 +47,11 @@ const getArticleBySlug = async (req, res) => {
       return res.status(404).json({ message: 'Artikel tidak ditemukan' });
     }
 
-    res.json(article);
+    const comments = await ArticleComment.find({ article: article._id })
+      .populate('author', 'username avatar')
+      .sort({ createdAt: 1 });
+
+    res.json({ ...article.toObject(), comments });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil artikel', error: error.message });
   }
@@ -89,6 +94,19 @@ const createArticle = async (req, res) => {
     });
 
     await article.populate('author', 'username avatar');
+
+    // Notify admins (only if not draft)
+    if (article.status === 'pending') {
+      const admins = await User.find({ role: 'admin' });
+      await Promise.all(admins.map(admin => 
+        Notification.create({
+          recipient: admin._id,
+          type: 'new_article_admin',
+          message: `Artikel baru pending: "${article.title}" oleh ${req.user.username}`,
+          link: `/admin`
+        })
+      ));
+    }
 
     res.status(201).json({
       message: article.status === 'draft'
@@ -175,4 +193,64 @@ const getMyArticles = async (req, res) => {
   }
 };
 
-module.exports = { getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles };
+// @desc    Tambah komentar ke artikel
+// @route   POST /api/articles/:id/comments
+// @access  Private (verified member)
+const addArticleComment = async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+
+    if (!article || article.status !== 'approved') {
+      return res.status(404).json({ message: 'Artikel tidak ditemukan' });
+    }
+
+    const comment = await ArticleComment.create({
+      content: req.body.content,
+      article: article._id,
+      author: req.user._id,
+    });
+
+    await comment.populate('author', 'username avatar');
+
+    console.log(`[Notification] Triggered for article: ${article._id}. Author: ${article.author}. Commenter: ${req.user._id}`);
+    const notification = await Notification.create({
+      recipient: article.author,
+      sender: req.user._id,
+      type: 'comment_article',
+      message: `${req.user.username} mengomentari artikel Anda: "${article.title}"`,
+      link: `/blog/${article.slug}`
+    });
+
+    const socket = require('../socket');
+    socket.getIO().to(article.author.toString()).emit('new_notification', notification);
+
+    res.status(201).json(comment);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menambah komentar', error: error.message });
+  }
+};
+
+// @desc    Hapus komentar dari artikel
+// @route   DELETE /api/articles/comments/:commentId
+// @access  Private (author / admin)
+const deleteArticleComment = async (req, res) => {
+  try {
+    const comment = await ArticleComment.findById(req.params.commentId);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+    }
+
+    if (comment.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    }
+
+    await ArticleComment.findByIdAndDelete(req.params.commentId);
+
+    res.json({ message: 'Komentar berhasil dihapus' });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menghapus komentar', error: error.message });
+  }
+};
+
+module.exports = { getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles, addArticleComment, deleteArticleComment };
