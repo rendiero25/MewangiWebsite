@@ -28,14 +28,14 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
-              <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl rotate-3 scale-95 border-8 border-white">
+              <div className="aspect-square rounded-xl overflow-hidden shadow-2xl rotate-3 scale-95 border-8 border-white">
                 <img 
                   src="https://images.unsplash.com/photo-1541643600914-78b084683601?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
                   alt="Parfum" 
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute -bottom-6 -left-6 aspect-square w-48 rounded-2xl overflow-hidden shadow-xl -rotate-6 border-4 border-white hidden sm:block">
+              <div className="absolute -bottom-6 -left-6 aspect-square w-48 rounded-xl overflow-hidden shadow-xl -rotate-6 border-4 border-white hidden sm:block">
                 <img 
                   src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
                   alt="Parfum" 
@@ -89,15 +89,15 @@ export default function About() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="p-8 rounded-3xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-8 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
               <div className="text-4xl font-bold text-primary mb-2">Terbuka</div>
               <p className="text-gray-600 uppercase tracking-widest text-sm font-semibold">Semua Genre Parfum</p>
             </div>
-            <div className="p-8 rounded-3xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-8 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
               <div className="text-4xl font-bold text-secondary mb-2">Lokal</div>
               <p className="text-gray-600 uppercase tracking-widest text-sm font-semibold">Dukung Brand Indonesia</p>
             </div>
-            <div className="p-8 rounded-3xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-8 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
               <div className="text-4xl font-bold text-emerald-500 mb-2">Aktif</div>
               <p className="text-gray-600 uppercase tracking-widest text-sm font-semibold">Diskusi Setiap Hari</p>
             </div>
@@ -120,7 +120,7 @@ export default function About() {
           </p>
           <Link 
             to="/register" 
-            className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             Mulai Perjalananmu
           </Link>

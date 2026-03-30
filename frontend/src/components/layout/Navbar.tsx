@@ -9,7 +9,7 @@ const navLinks = [
   { name: 'Forum', path: '/forum' },
   { name: 'Review', path: '/review' },
   { name: 'Blog', path: '/blog' },
-  { name: 'Tentang', path: '/tentang' },
+  { name: 'Tentang Mewangi', path: '/tentang' },
 ];
 
 export default function Navbar() {
@@ -41,7 +41,7 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive(link.path)
                     ? 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:text-primary hover:bg-primary/5'
@@ -58,7 +58,7 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <NotificationBell />
                 <div className="relative">
-                <button
+                <button className="cursor-pointer"
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
                 >
@@ -96,6 +96,16 @@ export default function Navbar() {
                         </svg>
                         Dashboard
                       </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Profil Saya
+                      </Link>
                       {user.role === 'admin' && (
                         <Link
                           to="/admin"
@@ -110,7 +120,7 @@ export default function Navbar() {
                         </Link>
                       )}
                       <hr className="my-1 border-gray-100" />
-                      <button
+                      <button className="cursor-pointer"
                         onClick={() => { logout(); setProfileOpen(false); }}
                         className="cursor-pointer flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
@@ -143,9 +153,9 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
+          <button className="cursor-pointer"
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="md:hidden p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
           >
             {mobileOpen ? (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +179,7 @@ export default function Navbar() {
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive(link.path)
                     ? 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -191,17 +201,17 @@ export default function Navbar() {
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                 </div>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
-                <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
+                <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
                   <span>Notifikasi</span>
                   <span className="bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">Baru</span>
                 </Link>
                 {user.role === 'admin' && (
-                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
                 )}
-                <button
+                <button className="cursor-pointer"
                   onClick={() => { logout(); setMobileOpen(false); }}
-                  className="w-full text-left px-4 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50"
+                  className="w-full text-left px-4 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50"
                 >
                   Keluar
                 </button>

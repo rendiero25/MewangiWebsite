@@ -27,6 +27,7 @@ import CreateArticle from './pages/member/CreateArticle';
 import EditArticle from './pages/member/EditArticle';
 import MemberDashboard from './pages/member/MemberDashboard';
 import Notifications from './pages/member/Notifications';
+import Profile from './pages/public/Profile';
 
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
@@ -111,6 +112,11 @@ function App() {
               <Route path="/notifications" element={
                 <ProtectedRoute>
                   <Notifications />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               } />
               <Route path="/admin" element={

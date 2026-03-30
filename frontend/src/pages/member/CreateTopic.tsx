@@ -53,7 +53,7 @@ export default function CreateTopic() {
           Kembali ke Forum
         </Link>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
             <h1 className="text-2xl font-bold text-gray-900">Buat Topik Baru</h1>
             <p className="text-sm text-gray-500 mt-1">Mulai diskusi baru di forum komunitas Mewangi.</p>

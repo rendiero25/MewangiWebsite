@@ -26,7 +26,7 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
+      <button className="cursor-pointer"
         onClick={() => setOpen(!open)}
         className="relative p-2 text-gray-400 hover:text-primary transition-colors cursor-pointer rounded-full hover:bg-gray-100"
       >
@@ -41,7 +41,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-sm font-bold text-gray-900">Notifikasi</h3>
             {unreadCount > 0 && (
@@ -78,7 +78,7 @@ export default function NotificationBell() {
                           {notification.sender.avatar ? (
                             <img src={notification.sender.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                           ) : (
-                            notification.sender.username.charAt(0).toUpperCase()
+                            notification.sender.username?.[0]?.toUpperCase() || '?'
                           )}
                         </div>
                       ) : (
@@ -102,9 +102,9 @@ export default function NotificationBell() {
                         })}
                       </p>
                     </div>
-                    <button
+                    <button className="cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id); }}
-                      className="absolute right-3 top-4 hidden group-hover:block p-1 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all opacity-0 hover:opacity-100"
+                      className="absolute right-3 top-4 hidden group-hover:block p-1 text-gray-300 hover:text-red-500 rounded-xl hover:bg-red-50 transition-all opacity-0 hover:opacity-100"
                     >
                        {/* Actually just use a more subtle x always visible on hover */}
                     </button>

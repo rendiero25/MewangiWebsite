@@ -42,7 +42,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <Link to={`/blog/${article.slug}`} className="block group">
-      <div className="rounded-2xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
+      <div className="rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
         {/* Cover image */}
         <div className="h-44 bg-gradient-to-br from-indigo-100 to-blue-50 overflow-hidden">
           {article.coverImage ? (

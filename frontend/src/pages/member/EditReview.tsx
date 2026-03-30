@@ -17,7 +17,7 @@ function StarInput({ value, onChange, label }: { value: number; onChange: (v: nu
       <span className="text-sm text-gray-600 w-28 shrink-0">{label}</span>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button
+          <button className="cursor-pointer"
             key={star}
             type="button"
             onMouseEnter={() => setHover(star)}
@@ -160,7 +160,7 @@ export default function EditReview() {
         </Link>
         
         {status === 'rejected' && (
-           <div className="mb-6 px-5 py-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl shadow-sm text-red-800">
+           <div className="mb-6 px-5 py-4 bg-red-50 border-l-4 border-red-500 rounded-xl-r-xl shadow-sm text-red-800">
              <div className="flex items-center gap-2 mb-1">
                <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -176,14 +176,14 @@ export default function EditReview() {
            </div>
         )}
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Edit / Revisi Review</h1>
               <p className="text-sm text-gray-500 mt-1">Perbarui ulasan Anda sebelum diajukan kembali.</p>
             </div>
-            {status === 'pending' && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg uppercase tracking-wider">Menunggu Info</span>}
-            {status === 'approved' && <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg uppercase tracking-wider">Approved</span>}
+            {status === 'pending' && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-xl uppercase tracking-wider">Menunggu Info</span>}
+            {status === 'approved' && <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl uppercase tracking-wider">Approved</span>}
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
@@ -192,7 +192,7 @@ export default function EditReview() {
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Foto Parfum Terkait</p>
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-amber-300 hover:bg-amber-50/30 transition-all">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-lg p-1" />
+                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-xl p-1" />
                 ) : (
                   <div className="text-center">
                     <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +236,7 @@ export default function EditReview() {
               <p className="text-sm font-semibold text-gray-700 mb-2">Occasion</p>
               <div className="flex flex-wrap gap-2">
                 {occasions.map((o) => (
-                  <button
+                  <button className="cursor-pointer"
                     key={o}
                     type="button"
                     onClick={() => toggleTag(o, selectedOccasions, setSelectedOccasions)}
@@ -257,7 +257,7 @@ export default function EditReview() {
               <p className="text-sm font-semibold text-gray-700 mb-2">Season</p>
               <div className="flex flex-wrap gap-2">
                 {seasons.map((s) => (
-                  <button
+                  <button className="cursor-pointer"
                     key={s}
                     type="button"
                     onClick={() => toggleTag(s, selectedSeasons, setSelectedSeasons)}

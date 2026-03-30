@@ -154,14 +154,14 @@ export default function MemberDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* My Reviews */}
-          <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <section className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="font-bold text-gray-900">Review Saya</h2>
               <span className="text-xs text-gray-400">{reviews.length} total</span>
             </div>
             {loading ? (
               <div className="p-6 space-y-3">
-                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
             ) : reviews.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">Belum ada review.</div>
@@ -177,25 +177,25 @@ export default function MemberDashboard() {
                       <StatusBadge status={r.status} />
                     </div>
                     {r.status === 'rejected' && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <strong className="block mb-0.5">Alasan Penolakan:</strong>
                           {r.rejectionReason || 'Tidak ada alasan spesifik.'}
                         </div>
-                        <Link to={`/review/edit/${r._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-lg hover:bg-red-50 transition-colors text-center">
+                        <Link to={`/review/edit/${r._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
                           ✏️ Edit
                         </Link>
                       </div>
                     )}
                     {r.status === 'approved' && (
                       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                        <Link to={`/review/${r._id}`} className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 transition-colors shadow-sm">
+                        <Link to={`/review/${r._id}`} className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl hover:bg-emerald-100 transition-colors shadow-sm">
                           🌐 Buka
                         </Link>
-                        <Link to={`/review/edit/${r._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 transition-colors">
+                        <Link to={`/review/edit/${r._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
-                        <button onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                        <button className="cursor-pointer" onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -207,14 +207,14 @@ export default function MemberDashboard() {
           </section>
 
           {/* My Articles */}
-          <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <section className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="font-bold text-gray-900">Artikel Saya</h2>
               <span className="text-xs text-gray-400">{articles.length} total</span>
             </div>
             {loading ? (
               <div className="p-6 space-y-3">
-                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
             ) : articles.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">Belum ada artikel.</div>
@@ -230,25 +230,25 @@ export default function MemberDashboard() {
                       <StatusBadge status={a.status} />
                     </div>
                     {a.status === 'rejected' && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <strong className="block mb-0.5">Alasan Penolakan:</strong>
                           {a.rejectionReason || 'Tidak ada alasan spesifik.'}
                         </div>
-                        <Link to={`/blog/edit/${a._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-lg hover:bg-red-50 transition-colors text-center">
+                        <Link to={`/blog/edit/${a._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
                           ✏️ Edit
                         </Link>
                       </div>
                     )}
                     {a.status === 'approved' && (
                       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                        <Link to={`/blog/${a.slug}`} className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 transition-colors shadow-sm">
+                        <Link to={`/blog/${a.slug}`} className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl hover:bg-emerald-100 transition-colors shadow-sm">
                           🌐 Buka
                         </Link>
-                        <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 transition-colors">
+                        <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
-                        <button onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                        <button className="cursor-pointer" onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -260,14 +260,14 @@ export default function MemberDashboard() {
           </section>
 
           {/* My Topics */}
-          <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden lg:col-span-2">
+          <section className="bg-white rounded-xl border border-gray-100 overflow-hidden lg:col-span-2">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="font-bold text-gray-900">Topik Forum Saya</h2>
               <span className="text-xs text-gray-400">{topics.length} total</span>
             </div>
             {loading ? (
               <div className="p-6 space-y-3">
-                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
             ) : topics.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">Belum ada topik.</div>
@@ -283,25 +283,25 @@ export default function MemberDashboard() {
                       <StatusBadge status={t.status} />
                     </div>
                     {t.status === 'rejected' && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                           <strong className="block mb-0.5">Alasan Penolakan:</strong>
                           {t.rejectionReason || 'Tidak ada alasan spesifik.'}
                         </div>
-                        <Link to={`/forum/edit/${t._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-lg hover:bg-red-50 transition-colors text-center">
+                        <Link to={`/forum/edit/${t._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
                           ✏️ Edit
                         </Link>
                       </div>
                     )}
                     {t.status === 'approved' && (
                       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                        <Link to={`/forum/${t._id}`} className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg hover:bg-emerald-100 transition-colors shadow-sm">
+                        <Link to={`/forum/${t._id}`} className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl hover:bg-emerald-100 transition-colors shadow-sm">
                           🌐 Buka
                         </Link>
-                        <Link to={`/forum/edit/${t._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-100 transition-colors">
+                        <Link to={`/forum/edit/${t._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
-                        <button onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                        <button className="cursor-pointer" onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>

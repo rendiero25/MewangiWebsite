@@ -89,12 +89,12 @@ export default function EditTopic() {
         </Link>
 
         {rejectionReason && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-6">
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-6">
             <div className="flex items-start gap-4 text-red-800">
               <span className="text-2xl mt-0.5">⚠️</span>
               <div>
                 <h3 className="font-bold text-lg mb-1">Topik Ditolak Admin</h3>
-                <p className="text-sm opacity-90 leading-relaxed bg-white border border-red-100 rounded-lg p-3 mt-2">
+                <p className="text-sm opacity-90 leading-relaxed bg-white border border-red-100 rounded-xl p-3 mt-2">
                   <span className="font-semibold block mb-1">Catatan Revisi:</span>
                   {rejectionReason}
                 </p>
@@ -106,7 +106,7 @@ export default function EditTopic() {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
             <h1 className="text-2xl font-bold text-gray-900">Edit Topik</h1>
             <p className="text-sm text-gray-500 mt-1">Perbarui detail diskusi Anda.</p>

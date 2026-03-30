@@ -9,7 +9,7 @@ const User = require('../models/User');
 // @access  Public
 const getReviews = async (req, res) => {
   try {
-    const { page = 1, limit = 10, perfume, search, occasion, season } = req.query;
+    const { page = 1, limit = 25, perfume, search, occasion, season } = req.query;
     const query = { status: 'approved' };
 
     if (perfume) query.perfume = perfume;
@@ -218,6 +218,95 @@ const addReviewComment = async (req, res) => {
   }
 };
 
+// @desc    Like komentar review
+// @route   POST /api/reviews/comments/:id/like
+// @access  Private
+const likeComment = async (req, res) => {
+  try {
+    const comment = await ReviewComment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+
+    const userId = req.user._id;
+    comment.dislikes = (comment.dislikes || []).filter(id => id.toString() !== userId.toString());
+
+    if ((comment.likes || []).map(id => id.toString()).includes(userId.toString())) {
+      comment.likes = comment.likes.filter(id => id.toString() !== userId.toString());
+    } else {
+      comment.likes = comment.likes || [];
+      comment.likes.push(userId);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, dislikes: comment.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menyukai komentar', error: error.message });
+  }
+};
+
+// @desc    Dislike komentar review
+// @route   POST /api/reviews/comments/:id/dislike
+// @access  Private
+const dislikeComment = async (req, res) => {
+  try {
+    const comment = await ReviewComment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+
+    const userId = req.user._id;
+    comment.likes = (comment.likes || []).filter(id => id.toString() !== userId.toString());
+
+    if ((comment.dislikes || []).map(id => id.toString()).includes(userId.toString())) {
+      comment.dislikes = comment.dislikes.filter(id => id.toString() !== userId.toString());
+    } else {
+      comment.dislikes = comment.dislikes || [];
+      comment.dislikes.push(userId);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, dislikes: comment.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal tidak menyukai komentar', error: error.message });
+  }
+};
+
+// @desc    Get top categories review (occasion)
+// @route   GET /api/reviews/meta/top-categories
+// @access  Public
+const getTopCategories = async (req, res) => {
+  try {
+    const categories = await Review.aggregate([
+      { $match: { status: 'approved' } },
+      { $group: { _id: '$occasion', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+    res.json(categories.map(c => ({ name: c._id, count: c.count })));
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil kategori', error: error.message });
+  }
+};
+
+// @desc    Get related reviews
+// @route   GET /api/reviews/:id/related
+// @access  Public
+const getRelatedReviews = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Review tidak ditemukan' });
+
+    const related = await Review.find({
+      _id: { $ne: review._id },
+      occasion: review.occasion,
+      status: 'approved'
+    })
+    .limit(5)
+    .select('title createdAt');
+
+    res.json(related);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil review terkait', error: error.message });
+  }
+};
+
 // @desc    Get my reviews (untuk member dashboard)
 // @route   GET /api/reviews/my
 // @access  Private
@@ -232,4 +321,30 @@ const getMyReviews = async (req, res) => {
   }
 };
 
-module.exports = { getReviews, getReviewById, createReview, updateReview, deleteReview, addReviewComment, getMyReviews };
+// @desc    Hapus komentar dari review
+// @route   DELETE /api/reviews/comments/:commentId
+// @access  Private (author / admin)
+const deleteReviewComment = async (req, res) => {
+  try {
+    const comment = await ReviewComment.findById(req.params.commentId);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+    }
+
+    if (comment.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    }
+
+    await ReviewComment.findByIdAndDelete(req.params.commentId);
+
+    res.json({ message: 'Komentar berhasil dihapus' });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menghapus komentar', error: error.message });
+  }
+};
+
+module.exports = { 
+  getReviews, getReviewById, createReview, updateReview, deleteReview, addReviewComment, getMyReviews, deleteReviewComment,
+  likeComment, dislikeComment, getTopCategories, getRelatedReviews
+};

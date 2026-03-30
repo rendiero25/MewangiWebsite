@@ -35,7 +35,7 @@ export default function BlogList() {
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string | number> = { page, limit: 12 };
+      const params: Record<string, string | number> = { page, limit: 25 };
       if (activeCategory !== 'Semua') params.category = activeCategory;
       if (search) params.search = search;
 
@@ -107,7 +107,7 @@ export default function BlogList() {
 
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
-              <button
+              <button className="cursor-pointer"
                 key={cat}
                 onClick={() => { setActiveCategory(cat); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
@@ -134,20 +134,20 @@ export default function BlogList() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white border border-gray-100 animate-pulse overflow-hidden">
+              <div key={i} className="rounded-xl bg-white border border-gray-100 animate-pulse overflow-hidden">
                 <div className="h-44 bg-gray-200" />
                 <div className="p-5 space-y-3">
-                  <div className="h-3 bg-gray-200 rounded w-1/4" />
-                  <div className="h-5 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-100 rounded w-full" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded-xl w-1/4" />
+                  <div className="h-5 bg-gray-200 rounded-xl w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded-xl w-full" />
+                  <div className="h-3 bg-gray-100 rounded-xl w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : articles.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-50 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-indigo-50 flex items-center justify-center">
               <svg className="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
               </svg>
@@ -166,10 +166,10 @@ export default function BlogList() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <button
+            <button className="cursor-pointer"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               ← Prev
             </button>
@@ -178,9 +178,9 @@ export default function BlogList() {
               .map((p, idx, arr) => (
                 <span key={p}>
                   {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-gray-400">…</span>}
-                  <button
+                  <button className="cursor-pointer"
                     onClick={() => setPage(p)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
                       page === p
                         ? 'bg-indigo-600 text-white shadow-md'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -190,10 +190,10 @@ export default function BlogList() {
                   </button>
                 </span>
               ))}
-            <button
+            <button className="cursor-pointer"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Next →
             </button>

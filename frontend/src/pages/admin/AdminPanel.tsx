@@ -151,10 +151,10 @@ export default function AdminPanel() {
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-white rounded-xl border border-gray-100 p-1 overflow-x-auto">
           {tabs.map((tab) => (
-            <button
+            <button className="cursor-pointer"
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === tab.key
                   ? 'bg-primary text-white shadow-sm'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -183,7 +183,7 @@ export default function AdminPanel() {
               { label: 'Total Topik', value: stats?.totalTopics, icon: '💬', color: 'from-indigo-400 to-blue-500' },
               { label: 'Topik Pending', value: stats?.pendingTopics, icon: '💭', color: 'from-pink-500 to-rose-500' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
+              <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-xl">{stat.icon}</span>
                   <p className="text-xs text-gray-400 font-medium">{stat.label}</p>
@@ -199,12 +199,12 @@ export default function AdminPanel() {
         {/* Reviews Tab */}
         {activeTab === 'reviews' && (
           <div className="space-y-8">
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Dalam Antrean & Revisi ({pendingReviews.length})</h2>
               </div>
               {loading ? (
-                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : pendingReviews.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-400">Tidak ada review dalam antrean.</div>
               ) : (
@@ -220,13 +220,13 @@ export default function AdminPanel() {
                           <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · {formatDate(r.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button onClick={() => setViewingItem({ type: 'review', data: r })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => setViewingItem({ type: 'review', data: r })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
                             👁 Lihat
                           </button>
-                          <button onClick={() => handleReviewAction(r._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => handleReviewAction(r._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
                             ✓ Approve
                           </button>
-                          <button onClick={() => { setRejectingId(r._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => { setRejectingId(r._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                             ✕ Reject
                           </button>
                         </div>
@@ -234,10 +234,10 @@ export default function AdminPanel() {
                       {rejectingId === r._id && (
                         <div className="mt-4 p-4 bg-red-50/50 border border-red-100 rounded-xl flex flex-col gap-3">
                           <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
-                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
+                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
                           <div className="flex justify-end gap-2">
-                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer">Batal</button>
-                             <button onClick={() => { handleReviewAction(r._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                             <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button className="cursor-pointer" onClick={() => { handleReviewAction(r._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
                           </div>
                         </div>
                       )}
@@ -247,12 +247,12 @@ export default function AdminPanel() {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Review Publik / Online ({onlineReviews.length})</h2>
               </div>
               {loading ? (
-                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : onlineReviews.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-400">Belum ada review yang disetujui.</div>
               ) : (
@@ -264,10 +264,10 @@ export default function AdminPanel() {
                         <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · Disetujui {formatDate(r.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <a href={`/review/${r._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                        <a href={`/review/${r._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
                           🌐 Buka
                         </a>
-                        <button onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                        <button className="cursor-pointer" onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -282,12 +282,12 @@ export default function AdminPanel() {
         {/* Articles Tab */}
         {activeTab === 'articles' && (
           <div className="space-y-8">
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Dalam Antrean & Revisi ({pendingArticles.length})</h2>
               </div>
               {loading ? (
-                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : pendingArticles.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-400">Tidak ada artikel dalam antrean.</div>
               ) : (
@@ -303,13 +303,13 @@ export default function AdminPanel() {
                           <p className="text-xs text-gray-400">{a.category} · Oleh {a.author?.username || 'User Terhapus'} · {formatDate(a.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button onClick={() => setViewingItem({ type: 'article', data: a })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => setViewingItem({ type: 'article', data: a })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
                             👁 Lihat
                           </button>
-                          <button onClick={() => handleArticleAction(a._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => handleArticleAction(a._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
                             ✓ Approve
                           </button>
-                          <button onClick={() => { setRejectingId(a._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => { setRejectingId(a._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                             ✕ Reject
                           </button>
                         </div>
@@ -317,10 +317,10 @@ export default function AdminPanel() {
                       {rejectingId === a._id && (
                         <div className="mt-4 p-4 bg-red-50/50 border border-red-100 rounded-xl flex flex-col gap-3">
                           <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
-                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
+                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
                           <div className="flex justify-end gap-2">
-                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer">Batal</button>
-                             <button onClick={() => { handleArticleAction(a._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                             <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button className="cursor-pointer" onClick={() => { handleArticleAction(a._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
                           </div>
                         </div>
                       )}
@@ -330,12 +330,12 @@ export default function AdminPanel() {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Artikel Publik / Online ({onlineArticles.length})</h2>
               </div>
               {loading ? (
-                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : onlineArticles.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-400">Belum ada artikel yang disetujui.</div>
               ) : (
@@ -347,10 +347,10 @@ export default function AdminPanel() {
                         <p className="text-xs text-gray-400">Oleh {a.author?.username || 'User Terhapus'} · Disetujui {formatDate(a.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                        <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
                           🌐 Buka
                         </a>
-                        <button onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                        <button className="cursor-pointer" onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -365,12 +365,12 @@ export default function AdminPanel() {
         {/* Topics Tab */}
         {activeTab === 'topics' && (
           <div className="space-y-8">
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Dalam Antrean & Revisi ({pendingTopics.length})</h2>
               </div>
               {loading ? (
-                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : pendingTopics.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-400">Tidak ada topik dalam antrean.</div>
               ) : (
@@ -386,13 +386,13 @@ export default function AdminPanel() {
                           <p className="text-xs text-gray-400">{t.category} · Oleh {t.author?.username || 'User Terhapus'} · {formatDate(t.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button onClick={() => setViewingItem({ type: 'topic', data: t })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => setViewingItem({ type: 'topic', data: t })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
                             👁 Lihat
                           </button>
-                          <button onClick={() => handleTopicAction(t._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => handleTopicAction(t._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
                             ✓ Approve
                           </button>
-                          <button onClick={() => { setRejectingId(t._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                          <button className="cursor-pointer" onClick={() => { setRejectingId(t._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                             ✕ Reject
                           </button>
                         </div>
@@ -400,10 +400,10 @@ export default function AdminPanel() {
                       {rejectingId === t._id && (
                         <div className="mt-4 p-4 bg-red-50/50 border border-red-100 rounded-xl flex flex-col gap-3">
                           <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
-                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
+                          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
                           <div className="flex justify-end gap-2">
-                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 cursor-pointer">Batal</button>
-                             <button onClick={() => { handleTopicAction(t._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                             <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button className="cursor-pointer" onClick={() => { handleTopicAction(t._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
                           </div>
                         </div>
                       )}
@@ -413,12 +413,12 @@ export default function AdminPanel() {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100">
                 <h2 className="font-bold text-gray-900">Topik Publik / Online ({onlineTopics.length})</h2>
               </div>
               {loading ? (
-                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+                <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : onlineTopics.length === 0 ? (
                 <div className="p-10 text-center text-sm text-gray-400">Belum ada topik yang disetujui.</div>
               ) : (
@@ -430,10 +430,10 @@ export default function AdminPanel() {
                         <p className="text-xs text-gray-400">Oleh {t.author?.username || 'User Terhapus'} · Disetujui {formatDate(t.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <a href={`/forum/${t._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
+                        <a href={`/forum/${t._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
                           🌐 Buka
                         </a>
-                        <button onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer">
+                        <button className="cursor-pointer" onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -447,12 +447,12 @@ export default function AdminPanel() {
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
               <h2 className="font-bold text-gray-900">Kelola Users ({users.length})</h2>
             </div>
             {loading ? (
-              <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />)}</div>
+              <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />)}</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -484,7 +484,7 @@ export default function AdminPanel() {
                             value={u.role}
                             onChange={(e) => handleRoleChange(u._id, e.target.value)}
                             disabled={u._id === user?._id}
-                            className="px-2 py-1 rounded-lg border border-gray-200 text-xs bg-white disabled:opacity-50 cursor-pointer"
+                            className="px-2 py-1 rounded-xl border border-gray-200 text-xs bg-white disabled:opacity-50 cursor-pointer"
                           >
                             <option value="member">Member</option>
                             <option value="admin">Admin</option>
@@ -500,7 +500,7 @@ export default function AdminPanel() {
                         <td className="px-6 py-3 text-gray-500 text-xs">{formatDate(u.createdAt)}</td>
                         <td className="px-6 py-3 text-right">
                           {u._id !== user?._id && u.role !== 'admin' && (
-                            <button
+                            <button className="cursor-pointer"
                               onClick={() => handleDeleteUser(u._id)}
                               className="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer"
                             >
@@ -521,12 +521,12 @@ export default function AdminPanel() {
       {/* Modal View Detail */}
       {viewingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm sm:p-6" onClick={() => setViewingItem(null)}>
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-lg text-gray-900">
                 Detail {viewingItem.type === 'review' ? 'Review' : viewingItem.type === 'article' ? 'Artikel' : 'Topik'}
               </h3>
-              <button onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              <button className="cursor-pointer" onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                 ✕
               </button>
             </div>
@@ -545,13 +545,13 @@ export default function AdminPanel() {
                     {viewingItem.data.occasion && viewingItem.data.occasion.length > 0 && (
                       <div>
                         <p className="text-xs font-semibold text-gray-500 mb-1">Occasion</p>
-                        <div className="flex gap-1 flex-wrap">{viewingItem.data.occasion.map(o => <span key={o} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-xs">{o}</span>)}</div>
+                        <div className="flex gap-1 flex-wrap">{viewingItem.data.occasion.map(o => <span key={o} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-xl text-xs">{o}</span>)}</div>
                       </div>
                     )}
                     {viewingItem.data.season && viewingItem.data.season.length > 0 && (
                       <div>
                         <p className="text-xs font-semibold text-gray-500 mb-1">Season</p>
-                        <div className="flex gap-1 flex-wrap">{viewingItem.data.season.map(s => <span key={s} className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md text-xs">{s}</span>)}</div>
+                        <div className="flex gap-1 flex-wrap">{viewingItem.data.season.map(s => <span key={s} className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded-xl text-xs">{s}</span>)}</div>
                       </div>
                     )}
                   </div>
@@ -559,7 +559,7 @@ export default function AdminPanel() {
                     <p className="text-xs font-semibold text-gray-500 mb-2">Rating</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                        {(['overall', 'longevity', 'sillage', 'valueForMoney'] as const).map((key) => (
-                         <div key={key} className="bg-gray-50 p-2 rounded-lg text-center">
+                         <div key={key} className="bg-gray-50 p-2 rounded-xl text-center">
                            <p className="text-[10px] text-gray-400 uppercase tracking-wider">{key}</p>
                            <p className="font-bold text-amber-500">{viewingItem.data.rating?.[key] || 0}/5</p>
                          </div>
@@ -579,7 +579,7 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 text-xs font-medium rounded-lg">{(viewingItem.data as PendingArticle).category}</span>
+                      <span className="px-2.5 py-1 bg-indigo-50 text-indigo-600 text-xs font-medium rounded-xl">{(viewingItem.data as PendingArticle).category}</span>
                     </div>
                     <h4 className="text-2xl font-bold text-gray-900">{viewingItem.data.title}</h4>
                     <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
@@ -588,7 +588,7 @@ export default function AdminPanel() {
                     <img src={`${API_URL.replace('/api', '')}${(viewingItem.data as PendingArticle).coverImage}`} alt="Article" className="w-full max-h-96 object-cover rounded-xl border border-gray-100" />
                   )}
                   {(viewingItem.data as PendingArticle).excerpt && (
-                    <div className="p-4 bg-gray-50 border-l-4 border-indigo-500 rounded-r-xl italic text-gray-600 text-sm">
+                    <div className="p-4 bg-gray-50 border-l-4 border-indigo-500 rounded-xl-r-xl italic text-gray-600 text-sm">
                       {(viewingItem.data as PendingArticle).excerpt}
                     </div>
                   )}
@@ -608,7 +608,7 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-lg">{(viewingItem.data as PendingTopic).category}</span>
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-xl">{(viewingItem.data as PendingTopic).category}</span>
                     </div>
                     <h4 className="text-2xl font-bold text-gray-900">{viewingItem.data.title}</h4>
                     <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
@@ -628,11 +628,11 @@ export default function AdminPanel() {
                    value={rejectReason}
                    onChange={(e) => setRejectReason(e.target.value)}
                    placeholder="Tulis alasan kenapa tulisan ini ditolak agar member bisa merevisinya..."
-                   className="w-full px-3 py-2 bg-white border border-red-200 rounded-lg text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20"
+                   className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20"
                  />
                  <div className="flex justify-end gap-2 mt-1">
-                    <button onClick={() => setRejectingId(null)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">Batal</button>
-                    <button onClick={() => { 
+                    <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">Batal</button>
+                    <button className="cursor-pointer" onClick={() => { 
                       if (viewingItem.type === 'review') handleReviewAction(viewingItem.data._id, 'rejected', rejectReason);
                       else if (viewingItem.type === 'article') handleArticleAction(viewingItem.data._id, 'rejected', rejectReason);
                       else handleTopicAction(viewingItem.data._id, 'rejected', rejectReason);
@@ -643,13 +643,13 @@ export default function AdminPanel() {
               </div>
             ) : (
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3 shrink-0">
-                <button onClick={() => { setViewingItem(null); setRejectingId(null); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors cursor-pointer">
+                <button className="cursor-pointer" onClick={() => { setViewingItem(null); setRejectingId(null); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors cursor-pointer">
                   Tutup
                 </button>
-                <button onClick={() => { setRejectingId(viewingItem.data._id); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
+                <button className="cursor-pointer" onClick={() => { setRejectingId(viewingItem.data._id); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
                   ✕ Reject
                 </button>
-                <button onClick={() => { 
+                <button className="cursor-pointer" onClick={() => { 
                     if (viewingItem.type === 'review') handleReviewAction(viewingItem.data._id, 'approved');
                     else if (viewingItem.type === 'article') handleArticleAction(viewingItem.data._id, 'approved');
                     else handleTopicAction(viewingItem.data._id, 'approved');

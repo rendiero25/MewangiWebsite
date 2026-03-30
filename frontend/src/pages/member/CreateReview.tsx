@@ -17,7 +17,7 @@ function StarInput({ value, onChange, label }: { value: number; onChange: (v: nu
       <span className="text-sm text-gray-600 w-28 shrink-0">{label}</span>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button
+          <button className="cursor-pointer"
             key={star}
             type="button"
             onMouseEnter={() => setHover(star)}
@@ -124,7 +124,7 @@ export default function CreateReview() {
           Kembali ke Review
         </Link>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
             <h1 className="text-2xl font-bold text-gray-900">Tulis Review Parfum</h1>
             <p className="text-sm text-gray-500 mt-1">Review kamu akan ditinjau admin sebelum dipublikasikan.</p>
@@ -136,7 +136,7 @@ export default function CreateReview() {
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Foto Parfum Terkait</p>
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-amber-300 hover:bg-amber-50/30 transition-all">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-lg p-1" />
+                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-xl p-1" />
                 ) : (
                   <div className="text-center">
                     <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +180,7 @@ export default function CreateReview() {
               <p className="text-sm font-semibold text-gray-700 mb-2">Occasion</p>
               <div className="flex flex-wrap gap-2">
                 {occasions.map((o) => (
-                  <button
+                  <button className="cursor-pointer"
                     key={o}
                     type="button"
                     onClick={() => toggleTag(o, selectedOccasions, setSelectedOccasions)}
@@ -201,7 +201,7 @@ export default function CreateReview() {
               <p className="text-sm font-semibold text-gray-700 mb-2">Season</p>
               <div className="flex flex-wrap gap-2">
                 {seasons.map((s) => (
-                  <button
+                  <button className="cursor-pointer"
                     key={s}
                     type="button"
                     onClick={() => toggleTag(s, selectedSeasons, setSelectedSeasons)}

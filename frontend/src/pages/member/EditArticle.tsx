@@ -114,7 +114,7 @@ export default function EditArticle() {
         </Link>
         
         {status === 'rejected' && (
-           <div className="mb-6 px-5 py-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl shadow-sm text-red-800">
+           <div className="mb-6 px-5 py-4 bg-red-50 border-l-4 border-red-500 rounded-xl-r-xl shadow-sm text-red-800">
              <div className="flex items-center gap-2 mb-1">
                <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -130,15 +130,15 @@ export default function EditArticle() {
            </div>
         )}
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Edit / Revisi Artikel</h1>
               <p className="text-sm text-gray-500 mt-1">Perbarui artikel Anda. Artikel akan ditinjau kembali oleh admin.</p>
             </div>
-            {status === 'pending' && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg uppercase tracking-wider">Menunggu Info</span>}
-            {status === 'draft' && <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg uppercase tracking-wider">Draft Disimpan</span>}
-            {status === 'approved' && <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg uppercase tracking-wider">Approved</span>}
+            {status === 'pending' && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-xl uppercase tracking-wider">Menunggu Info</span>}
+            {status === 'draft' && <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl uppercase tracking-wider">Draft Disimpan</span>}
+            {status === 'approved' && <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl uppercase tracking-wider">Approved</span>}
           </div>
 
           <form onSubmit={(e) => handleSubmit(e, false)} className="p-6 sm:p-8 space-y-6">
@@ -147,7 +147,7 @@ export default function EditArticle() {
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Cover Image (opsional)</p>
               <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-lg p-1" />
+                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-xl p-1" />
                 ) : (
                   <div className="text-center">
                     <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,7 +250,7 @@ export default function EditArticle() {
               <Link to="/dashboard" className="mr-auto px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                 Batal
               </Link>
-              <button
+              <button className="cursor-pointer"
                 type="button"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={submitting}

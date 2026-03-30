@@ -46,7 +46,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
       to={`/forum/${topic._id}`}
       className="block group"
     >
-      <div className="p-5 sm:p-6 rounded-2xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+      <div className="p-5 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-start gap-4">
           {/* Author avatar */}
           <div className="hidden sm:flex w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary items-center justify-center shrink-0">
@@ -85,9 +85,9 @@ export default function TopicCard({ topic }: TopicCardProps) {
             </h3>
 
             {/* Preview */}
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+            {/* <p className="text-sm text-gray-500 line-clamp-2 mb-3">
               {topic.content.replace(/<[^>]*>/g, '').slice(0, 150)}
-            </p>
+            </p> */}
 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">

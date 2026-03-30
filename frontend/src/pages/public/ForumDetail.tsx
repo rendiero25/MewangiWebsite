@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
+import SidebarDetail from '../../components/public/SidebarDetail';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -14,19 +15,6 @@ const categoryColors: Record<string, string> = {
   'Tips & Trik': 'bg-pink-100 text-pink-700',
   'Lainnya': 'bg-gray-100 text-gray-600',
 };
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Baru saja';
-  if (mins < 60) return `${mins} menit lalu`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} jam lalu`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} hari lalu`;
-  const months = Math.floor(days / 30);
-  return `${months} bulan lalu`;
-}
 
 interface TopicData {
   _id: string;
@@ -46,26 +34,46 @@ interface CommentData {
   content: string;
   author: { _id: string; username: string; avatar?: string };
   createdAt: string;
+  likes?: string[];
+  dislikes?: string[];
+  image?: string;
+  topic?: string;
+}
+
+interface RelatedTopic {
+  _id: string;
+  title: string;
+  slug?: string;
+  createdAt: string;
 }
 
 export default function ForumDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [topic, setTopic] = useState<TopicData | null>(null);
   const [comments, setComments] = useState<CommentData[]>([]);
+  const [relatedTopics, setRelatedTopics] = useState<RelatedTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
+  const [commentImage, setCommentImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showFullContent, setShowFullContent] = useState(false);
 
   const fetchTopic = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${API_URL}/forum/${id}`);
+      const [{ data }, { data: relatedData }] = await Promise.all([
+        axios.get(`${API_URL}/forum/${id}`),
+        axios.get(`${API_URL}/forum/${id}/related`)
+      ]);
       setTopic(data.topic);
       setComments(data.comments);
+      setRelatedTopics(relatedData);
     } catch {
       setError('Topik tidak ditemukan.');
     } finally {
@@ -77,18 +85,36 @@ export default function ForumDetail() {
     fetchTopic();
   }, [fetchTopic]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCommentImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() && !commentImage) return;
     setSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append('content', commentText);
+      if (commentImage) formData.append('image', commentImage);
+
       const { data } = await axios.post(
         `${API_URL}/forum/${id}/comments`,
-        { content: commentText },
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+        formData,
+        { headers: { 
+          Authorization: `Bearer ${user?.token}`,
+          'Content-Type': 'multipart/form-data'
+        } }
       );
       setComments((prev) => [...prev, data]);
       setCommentText('');
+      setCommentImage(null);
+      setImagePreview('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch {
       setError('Gagal mengirim komentar.');
     } finally {
@@ -120,37 +146,21 @@ export default function ForumDetail() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-24" />
-            <div className="h-8 bg-gray-200 rounded w-3/4" />
-            <div className="h-4 bg-gray-100 rounded w-1/3 mt-2" />
-            <div className="mt-6 space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-5/6" />
-              <div className="h-4 bg-gray-100 rounded w-2/3" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
-  if (error && !topic) {
-    return (
-      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">{error}</p>
-          <Link to="/forum" className="text-primary font-medium hover:underline">
-            ← Kembali ke Forum
-          </Link>
-        </div>
+  if (error && !topic) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-sm w-full text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">⚠️</div>
+        <p className="text-gray-900 font-bold mb-2">{error}</p>
+        <Link to="/forum" className="text-primary font-bold hover:underline">Kembali ke Forum</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
   if (!topic) return null;
 
@@ -160,157 +170,170 @@ export default function ForumDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {/* Breadcrumb */}
-        <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali ke Forum
-        </Link>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-2">
+              ← Kembali ke Forum
+            </Link>
 
-        {/* Topic content */}
-        <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          {/* Header */}
-          <div className="p-6 sm:p-8 border-b border-gray-100">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              {topic.isPinned && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  📌 Pinned
-                </span>
-              )}
-              {topic.isClosed && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
-                  🔒 Ditutup
-                </span>
-              )}
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-                {topic.category}
-              </span>
-            </div>
+            <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-8">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colorClass}`}>
+                    {topic.category}
+                  </span>
+                  {topic.isPinned && <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-semibold">📌 Pinned</span>}
+                </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-              {topic.title}
-            </h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">{topic.title}</h1>
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-white text-sm font-bold">
-                  {(topic.author?.username || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{topic.author?.username || 'User Terhapus'}</p>
-                <p className="text-xs text-gray-400">{timeAgo(topic.createdAt)}</p>
-              </div>
-            </div>
-          </div>
+                <div className="flex items-center gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    {topic.author.avatar ? (
+                      <img src={topic.author.avatar.startsWith('http') ? topic.author.avatar : `${API_URL.replace('/api', '')}${topic.author.avatar}`} alt={topic.author.username} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <span className="text-white font-bold">{topic.author.username.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{topic.author.username}</p>
+                    <p className="text-xs text-gray-400">Diposting pada {new Date(topic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                </div>
 
-          {/* Body */}
-          <div className="p-6 sm:p-8">
-            <div 
-              className="prose prose-sm max-w-none text-gray-700 leading-relaxed break-words ql-editor"
-              dangerouslySetInnerHTML={{ __html: topic.content }}
-            />
-          </div>
-
-          {/* Stats & actions bar */}
-          <div className="px-6 sm:px-8 py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span className="inline-flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                {topic.views} dilihat
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                {comments.length} komentar
-              </span>
-            </div>
-
-            {(isOwner || isAdmin) && (
-              <div className="flex items-center gap-2">
-                {isOwner && (
-                  <Link
-                    to={`/forum/${topic._id}/edit`}
-                    className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    Edit
-                  </Link>
+                {showFullContent && (
+                  <div className="mt-6 border-t border-gray-50 pt-6 animate-fadeIn">
+                    <div 
+                      className="prose prose-sm max-w-none text-gray-700 ql-editor"
+                      dangerouslySetInnerHTML={{ __html: topic.content }}
+                    />
+                  </div>
                 )}
-                <button
-                  onClick={handleDeleteTopic}
-                  className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                
+                <button 
+                  onClick={() => setShowFullContent(!showFullContent)}
+                  className={`mt-4 flex items-center gap-2 text-primary font-bold text-xs hover:underline cursor-pointer relative z-10 ${!showFullContent ? 'bg-primary/5 px-4 py-2 rounded-xl transition-all hover:bg-primary/10' : ''}`}
                 >
-                  Hapus
+                  {showFullContent ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                      Sembunyikan Detail Topik
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                      Lihat Detail Topik
+                    </>
+                  )}
                 </button>
               </div>
-            )}
+
+              <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                <div className="flex gap-6 text-xs text-gray-400">
+                  <span className="flex items-center gap-1">👁️ {topic.views} views</span>
+                  <span className="flex items-center gap-1">💬 {comments.length} komentar</span>
+                </div>
+                {(isOwner || isAdmin) && (
+                  <div className="flex gap-2">
+                    {isOwner && <Link to={`/forum/edit/${topic._id}`} className="text-xs font-medium text-gray-600 hover:text-primary">Edit</Link>}
+                    <button onClick={handleDeleteTopic} className="text-xs font-medium text-red-500 cursor-pointer">Hapus</button>
+                  </div>
+                )}
+              </div>
+            </article>
+
+            {/* Chat Section */}
+            <section className="space-y-6">
+              <h2 className="text-xl font-bold text-gray-900">Diskusi ({comments.length})</h2>
+              
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-2">
+                {comments.length === 0 ? (
+                  <p className="text-center text-gray-400 py-10">Belum ada diskusi. Mulai percakapan!</p>
+                ) : (
+                  <>
+                    {(user ? comments : comments.slice(0, 5)).map(c => (
+                      <CommentItem key={c._id} comment={{...c, topic: topic._id}} onDelete={handleDeleteComment} />
+                    ))}
+                    {!user && comments.length > 5 && (
+                      <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 mt-4">
+                        <p className="text-sm text-gray-500 mb-3 font-medium">Hanya 5 komentar terbaru yang ditampilkan.</p>
+                        <Link to="/login" className="inline-block bg-primary text-white px-8 py-2 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all cursor-pointer">
+                          Masuk untuk Melihat Selengkapnya
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Comment Input */}
+              {user && !topic.isClosed ? (
+                <form onSubmit={handleAddComment} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                  {error && <p className="text-red-500 text-xs mb-3 italic">⚠️ {error}</p>}
+                  <div className="relative">
+                    <textarea 
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Tulis balasan Anda..."
+                      rows={3}
+                      className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
+                    />
+                    <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                      <label className="cursor-pointer p-2 text-gray-400 hover:text-primary transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <input type="file" className="hidden" accept="image/*,image/gif" ref={fileInputRef} onChange={handleFileChange} />
+                      </label>
+                      <button 
+                        type="submit" 
+                        disabled={submitting}
+                        className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        {submitting ? '...' : 'Kirim'}
+                      </button>
+                    </div>
+                  </div>
+                  {imagePreview && (
+                    <div className="mt-3 relative w-32 h-32">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl border border-gray-100" />
+                      <button onClick={() => {setCommentImage(null); setImagePreview('');}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg cursor-pointer">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  )}
+                </form>
+              ) : (
+                <div className="p-6 bg-gray-100 rounded-xl text-center text-sm text-gray-500 italic">
+                  {topic.isClosed ? '🔒 Diskusi ini telah ditutup.' : <Link to="/login" className="text-primary font-bold">Masuk</Link>} untuk bergabung dalam diskusi.
+                </div>
+              )}
+            </section>
+
+            {/* Other Discussions */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-bold text-gray-900 px-1">Pembahasan Lainnya</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {relatedTopics.map(t => (
+                  <Link key={t._id} to={`/forum/${t._id}`} className="p-4 bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-md transition-all group">
+                    <p className="text-xs text-primary font-bold mb-1 opacity-60 group-hover:opacity-100 transition-opacity">Related Thread</p>
+                    <h4 className="text-sm font-bold text-gray-800 line-clamp-2">{t.title}</h4>
+                    <p className="text-[10px] text-gray-400 mt-2">{new Date(t.createdAt).toLocaleDateString()}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
           </div>
-        </article>
 
-        {/* Comments section */}
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
-            Komentar ({comments.length})
-          </h2>
+          {/* Sidebar */}
+          <div className="hidden lg:block lg:col-span-1">
+            <SidebarDetail type="forum" />
+          </div>
 
-          {comments.length === 0 ? (
-            <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
-              <p className="text-gray-400 text-sm">Belum ada komentar. Jadilah yang pertama!</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 px-6">
-              {comments.map((comment) => (
-                <CommentItem
-                  key={comment._id}
-                  comment={comment}
-                  onDelete={handleDeleteComment}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Add comment form */}
-          {user && !topic.isClosed ? (
-            <form onSubmit={handleAddComment} className="mt-6 bg-white rounded-2xl border border-gray-100 p-5 sm:p-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Tulis Komentar
-              </label>
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                rows={3}
-                placeholder="Tulis komentarmu di sini..."
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none transition-all"
-              />
-              {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-              <div className="mt-3 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={submitting || !commentText.trim()}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-                >
-                  {submitting ? 'Mengirim...' : 'Kirim Komentar'}
-                </button>
-              </div>
-            </form>
-          ) : !user ? (
-            <div className="mt-6 text-center py-6 bg-white rounded-2xl border border-gray-100">
-              <p className="text-sm text-gray-500">
-                <Link to="/login" className="text-primary font-medium hover:underline">Masuk</Link> untuk berkomentar.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-6 text-center py-6 bg-white rounded-2xl border border-gray-100">
-              <p className="text-sm text-gray-400">🔒 Topik ini sudah ditutup untuk komentar baru.</p>
-            </div>
-          )}
-        </section>
+        </div>
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ export default function ForumList() {
   const fetchTopics = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string | number> = { page, limit: 10 };
+      const params: Record<string, string | number> = { page, limit: 25 };
       if (activeCategory !== 'Semua') params.category = activeCategory;
       if (search) params.search = search;
 
@@ -110,7 +110,7 @@ export default function ForumList() {
           {/* Category pills */}
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
-              <button
+              <button className="cursor-pointer"
                 key={cat}
                 onClick={() => { setActiveCategory(cat); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
@@ -138,20 +138,20 @@ export default function ForumList() {
           {loading ? (
             // Skeleton
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white border border-gray-100 animate-pulse">
+              <div key={i} className="p-6 rounded-xl bg-white border border-gray-100 animate-pulse">
                 <div className="flex gap-4">
                   <div className="hidden sm:block w-10 h-10 rounded-full bg-gray-200" />
                   <div className="flex-1 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded w-1/4" />
-                    <div className="h-5 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded-xl w-1/4" />
+                    <div className="h-5 bg-gray-200 rounded-xl w-3/4" />
+                    <div className="h-3 bg-gray-100 rounded-xl w-1/2" />
                   </div>
                 </div>
               </div>
             ))
           ) : topics.length === 0 ? (
             <div className="text-center py-20">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gray-100 flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -167,10 +167,10 @@ export default function ForumList() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <button
+            <button className="cursor-pointer"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               ← Prev
             </button>
@@ -179,9 +179,9 @@ export default function ForumList() {
               .map((p, idx, arr) => (
                 <span key={p}>
                   {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-gray-400">…</span>}
-                  <button
+                  <button className="cursor-pointer"
                     onClick={() => setPage(p)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
                       page === p
                         ? 'bg-primary text-white shadow-md'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -191,10 +191,10 @@ export default function ForumList() {
                   </button>
                 </span>
               ))}
-            <button
+            <button className="cursor-pointer"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Next →
             </button>

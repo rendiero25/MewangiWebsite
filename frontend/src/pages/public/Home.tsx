@@ -32,13 +32,13 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/register"
-                className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-2xl hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300"
+                className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300"
               >
                 Gabung Sekarang
               </Link>
               <Link
                 to="/forum"
-                className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-gray-700 bg-white border-2 border-gray-200 rounded-2xl hover:border-primary/30 hover:text-primary transition-all duration-300"
+                className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-primary/30 hover:text-primary transition-all duration-300"
               >
                 Jelajahi Forum
               </Link>
@@ -143,10 +143,10 @@ export default function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group p-8 rounded-2xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300"
+                className="group p-8 rounded-xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300"
               >
                 <div
-                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-5 group-hover:scale-110 transition-transform duration-300`}
+                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white mb-5 group-hover:scale-110 transition-transform duration-300`}
                 >
                   {feature.icon}
                 </div>
@@ -207,7 +207,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-20 lg:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-secondary p-10 sm:p-16 text-center">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-secondary p-10 sm:p-16 text-center">
             <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width=%2260%22%20height=%2260%22%20viewBox=%220%200%2060%2060%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill=%22none%22%20fill-rule=%22evenodd%22%3E%3Cg%20fill=%22%23ffffff%22%20fill-opacity=%220.06%22%3E%3Cpath%20d=%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
@@ -219,7 +219,7 @@ export default function Home() {
               </p>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-primary bg-white rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-primary bg-white rounded-xl hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
               >
                 Daftar Sekarang
                 <svg

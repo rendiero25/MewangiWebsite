@@ -79,7 +79,7 @@ export default function CreateArticle() {
           Kembali ke Blog
         </Link>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
             <h1 className="text-2xl font-bold text-gray-900">Tulis Artikel</h1>
             <p className="text-sm text-gray-500 mt-1">Artikel kamu akan ditinjau admin sebelum dipublikasikan. Atau simpan sebagai draft.</p>
@@ -91,7 +91,7 @@ export default function CreateArticle() {
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Cover Image (opsional)</p>
               <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-lg p-1" />
+                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-xl p-1" />
                 ) : (
                   <div className="text-center">
                     <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +194,7 @@ export default function CreateArticle() {
               <Link to="/blog" className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                 Batal
               </Link>
-              <button
+              <button className="cursor-pointer"
                 type="button"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={submitting}

@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
+import SidebarDetail from '../../components/public/SidebarDetail';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -15,26 +16,16 @@ const categoryColors: Record<string, string> = {
   'Lainnya': 'bg-gray-100 text-gray-600',
 };
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
 interface ArticleData {
   _id: string;
   title: string;
   slug: string;
   content: string;
-  excerpt: string;
   coverImage?: string;
   category: string;
   tags: string[];
   author: { _id: string; username: string; avatar?: string };
   views: number;
-  status: string;
   createdAt: string;
 }
 
@@ -42,6 +33,16 @@ interface CommentData {
   _id: string;
   content: string;
   author: { _id: string; username: string; avatar?: string };
+  createdAt: string;
+  likes?: string[];
+  dislikes?: string[];
+  article?: string;
+}
+
+interface RelatedArticle {
+  _id: string;
+  title: string;
+  slug: string;
   createdAt: string;
 }
 
@@ -52,6 +53,7 @@ export default function BlogDetail() {
 
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [comments, setComments] = useState<CommentData[]>([]);
+  const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -62,9 +64,11 @@ export default function BlogDetail() {
     try {
       const { data } = await axios.get(`${API_URL}/articles/${slug}`);
       setArticle(data);
-      if (data.comments) {
-        setComments(data.comments);
-      }
+      if (data.comments) setComments(data.comments);
+      
+      // Fetch related
+      const relatedRes = await axios.get(`${API_URL}/articles/detail/${data._id}/related`);
+      setRelatedArticles(relatedRes.data);
     } catch {
       setError('Artikel tidak ditemukan.');
     } finally {
@@ -102,7 +106,8 @@ export default function BlogDetail() {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       setComments((prev) => prev.filter((c) => c._id !== commentId));
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
       setError('Gagal menghapus komentar.');
     }
   };
@@ -114,42 +119,30 @@ export default function BlogDetail() {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       navigate('/blog');
-    } catch {
+    } catch (err) {
+      console.error('Failed to delete article:', err);
       setError('Gagal menghapus artikel.');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-24" />
-            <div className="h-8 bg-gray-200 rounded w-3/4" />
-            <div className="h-56 bg-gray-200 rounded-2xl" />
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-4 bg-gray-200 rounded w-5/6" />
-              <div className="h-4 bg-gray-100 rounded w-2/3" />
-            </div>
-          </div>
-        </div>
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 font-medium">Memuat Artikel...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error && !article) {
-    return (
-      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">{error}</p>
-          <Link to="/blog" className="text-indigo-600 font-medium hover:underline">← Kembali ke Blog</Link>
-        </div>
+  if (error || !article) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-sm w-full text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">⚠️</div>
+        <p className="text-gray-900 font-bold mb-2">{error || 'Artikel tidak ditemukan'}</p>
+        <Link to="/blog" className="text-primary font-bold hover:underline">Kembali ke Blog</Link>
       </div>
-    );
-  }
-
-  if (!article) return null;
+    </div>
+  );
 
   const isOwner = user && user._id === article.author._id;
   const isAdmin = user && user.role === 'admin';
@@ -157,157 +150,180 @@ export default function BlogDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      {/* Cover image */}
-      {article.coverImage && (
-        <div className="h-64 sm:h-80 lg:h-96 bg-gray-200 relative">
-          <img src={article.coverImage.startsWith('http') ? article.coverImage : `${API_URL.replace('/api', '')}${article.coverImage}`} alt={article.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-8">
+            <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-2 transition-colors">
+              ← Kembali ke Blog
+            </Link>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {/* Breadcrumb */}
-        <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-6">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali ke Blog
-        </Link>
+            <article className="bg-white rounded-xl-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+              {/* Header: 1 Row Layout */}
+              <div className="p-6 sm:p-10 border-b border-gray-100">
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                  {/* Image Left */}
+                  {article.coverImage && (
+                    <div className="w-full md:w-2/5 aspect-[4/3] rounded-xl overflow-hidden shadow-lg">
+                      <img 
+                        src={article.coverImage.startsWith('http') ? article.coverImage : `${API_URL.replace('/api', '')}${article.coverImage}`} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover transition-transform hover:scale-105 duration-700" 
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Data Right */}
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-2">
+                       <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${colorClass}`}>
+                        {article.category}
+                      </span>
+                    </div>
+                    
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
+                      {article.title}
+                    </h1>
 
-        <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-10">
-          {/* Header */}
-          <div className="p-6 sm:p-8 border-b border-gray-100">
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-                {article.category}
-              </span>
-              <span className="text-xs text-gray-400">{formatDate(article.createdAt)}</span>
-              <span className="inline-flex items-center gap-1 text-xs text-gray-400">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                {article.views} views
-              </span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-6">
-              {article.title}
-            </h1>
-
-            {/* Author */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
-                    {(article.author?.username || 'U').charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{article.author?.username || 'User Terhapus'}</p>
-                  <p className="text-xs text-gray-400">Penulis</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Body */}
-          <div className="p-6 sm:p-8">
-            <div 
-              className="prose prose-sm sm:prose max-w-none text-gray-700 leading-relaxed break-words ql-editor"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
-          </div>
-
-          {/* Tags */}
-          {article.tags.length > 0 && (
-            <div className="px-6 sm:px-8 py-4 border-t border-gray-100 flex flex-wrap gap-2">
-              {article.tags.map((tag) => (
-                <span key={tag} className="px-3 py-1 rounded-full bg-gray-50 text-gray-500 text-xs font-medium">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </article>
-
-        {/* Comment Section */}
-        <section className="mt-12 pt-10 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Komentar <span className="text-gray-400 ml-2 text-lg font-normal">({comments.length})</span>
-            </h2>
-          </div>
-
-          {/* Comment List */}
-          <div className="mb-10">
-            {comments.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.855-1.241L3 21l1.83-5.591C3.83 14.39 3 12.418 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <p className="text-gray-400 font-medium">Belum ada diskusi di sini</p>
-                <p className="text-gray-400 text-sm mt-1 text-center">Jadilah yang pertama memberikan suara!</p>
-              </div>
-            ) : (
-              <div className="space-y-6 bg-white rounded-2xl border border-gray-100 px-6 shadow-sm overflow-hidden">
-                {comments.map((comment) => (
-                  <CommentItem
-                    key={comment._id}
-                    comment={comment}
-                    onDelete={handleDeleteComment}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Comment Form */}
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Tulis Komentar</h3>
-            {user ? (
-              <form onSubmit={handleAddComment} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-                    <span className="text-indigo-500 text-sm font-bold">
-                      {user.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <textarea
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Apa pendapatmu tentang artikel ini?"
-                      rows={3}
-                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all resize-none"
-                    />
-                    <div className="flex justify-end mt-3">
-                      <button
-                        type="submit"
-                        disabled={submitting || !commentText.trim()}
-                        className="px-6 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 transition-all cursor-pointer"
-                      >
-                        {submitting ? 'Mengirim...' : 'Kirim Komentar'}
-                      </button>
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100/50">
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+                        {article.author.avatar ? (
+                          <img src={article.author.avatar.startsWith('http') ? article.author.avatar : `${API_URL.replace('/api', '')}${article.author.avatar}`} alt={article.author.username} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-indigo-600 font-bold">{article.author.username.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{article.author.username}</p>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Penulis • {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </form>
-            ) : (
-              <div className="p-6 bg-indigo-50 rounded-2xl text-center border border-indigo-100">
-                <p className="text-indigo-900 text-sm mb-3 font-medium">Masuk untuk ikut berdiskusi</p>
-                <Link
-                  to="/login"
-                  className="inline-block px-6 py-2 rounded-xl bg-white text-indigo-600 border border-indigo-200 text-sm font-semibold hover:bg-indigo-100 transition-all"
-                >
-                  Login Sekarang
-                </Link>
               </div>
+
+              {/* Content Below */}
+              <div className="p-6 sm:p-10">
+                <div 
+                  className="prose prose-lg max-w-none text-gray-700 leading-relaxed ql-editor"
+                  dangerouslySetInnerHTML={{ __html: article.content }}
+                />
+
+                {article.tags.length > 0 && (
+                  <div className="mt-12 flex flex-wrap gap-2">
+                    {article.tags.map(tag => (
+                      <span key={tag} className="px-4 py-1.5 bg-gray-100 text-gray-500 rounded-full text-xs font-bold transition-colors hover:bg-primary/10 hover:text-primary cursor-default">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions Footer */}
+              <div className="px-10 py-6 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center text-xs text-gray-400 font-medium">
+                <div className="flex gap-6">
+                  <span>👁️ {article.views} pembaca</span>
+                  <span>💬 {comments.length} komentar</span>
+                </div>
+                {(isOwner || isAdmin) && (
+                  <div className="flex gap-4">
+                    {isOwner && <Link to={`/blog/edit/${article._id}`} className="text-primary hover:underline">Edit Artikel</Link>}
+                    <button onClick={handleDelete} className="text-red-500 hover:underline cursor-pointer">Hapus</button>
+                  </div>
+                )}
+              </div>
+            </article>
+
+            {/* Comments Section */}
+            <section className="space-y-8 mt-12">
+              <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                Diskusi & Komentar
+                <span className="text-sm font-normal text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{comments.length}</span>
+              </h2>
+
+              <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm">
+                {comments.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400 space-y-2">
+                    <p className="font-bold">Belum ada diskusi.</p>
+                    <p className="text-sm">Jadilah yang pertama untuk berbagi pemikiran!</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y divide-gray-50">
+                      {(user ? comments : comments.slice(0, 5)).map(c => (
+                        <CommentItem key={c._id} comment={{...c, article: article._id}} onDelete={handleDeleteComment} />
+                      ))}
+                    </div>
+                    {!user && comments.length > 5 && (
+                      <div className="text-center py-10 bg-gray-50/50 rounded-[1.5rem] border border-dashed border-gray-200 mt-6">
+                        <p className="text-sm text-gray-500 mb-4 font-medium">Hanya 5 diskusi terbaru yang ditampilkan untuk tamu.</p>
+                        <Link to="/login" className="inline-block bg-primary text-white px-10 py-3 rounded-xl text-sm font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all cursor-pointer">
+                          Masuk untuk Melihat Selengkapnya
+                        </Link>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Comment Input */}
+              {user ? (
+                <form onSubmit={handleAddComment} className="bg-white rounded-xl-[2rem] border border-gray-100 p-8 shadow-md">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4">Tambah Komentar</h3>
+                  <div className="relative">
+                    <textarea 
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Apa pemikiran Anda mengenai topik ini?"
+                      rows={4}
+                      className="w-full p-6 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm leading-relaxed"
+                    />
+                    <div className="absolute bottom-4 right-4">
+                       <button 
+                        type="submit" 
+                        disabled={submitting || !commentText.trim()}
+                        className="bg-primary text-white px-8 py-3 rounded-xl text-sm font-black shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        {submitting ? '...' : 'Kirim Balasan'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <div className="bg-indigo-600 rounded-xl-[2rem] p-10 text-center text-white shadow-xl shadow-indigo-200">
+                  <p className="text-lg font-bold mb-4">Ingin ikut berdiskusi?</p>
+                  <Link to="/login" className="inline-block bg-white text-indigo-600 px-10 py-3 rounded-xl font-black text-sm hover:bg-gray-100 transition-colors">
+                    Masuk Sekarang
+                  </Link>
+                </div>
+              )}
+            </section>
+
+            {/* Related Articles */}
+            {relatedArticles.length > 0 && (
+              <section className="space-y-6 pt-10">
+                <h3 className="text-xl font-black text-gray-900">Pembahasan Lainnya</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {relatedArticles.map(t => (
+                    <Link key={t._id} to={`/blog/${t.slug}`} className="p-6 bg-white rounded-xl border border-gray-100 hover:border-primary/40 hover:shadow-xl transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-2">Baca Selanjutnya</p>
+                      <h4 className="text-base font-bold text-gray-800 line-clamp-2 leading-snug">{t.title}</h4>
+                      <p className="text-[10px] text-gray-400 mt-4 font-medium uppercase tracking-tighter">Diplubish pada {new Date(t.createdAt).toLocaleDateString()}</p>
+                    </Link>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
-        </section>
+
+          {/* Sidebar */}
+          <div className="hidden lg:block lg:col-span-1">
+            <SidebarDetail type="blog" />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -28,8 +28,29 @@ body {
 .ql-editor ol {
   list-style-type: decimal;
   padding-left: 1.5em;
+  margin-bottom: 1.25em !important;
 }
 .ql-editor ul {
   list-style-type: disc;
   padding-left: 1.5em;
+  margin-bottom: 1.25em !important;
+}
+.ql-editor h1, .ql-editor h2, .ql-editor h3 {
+  font-weight: bold;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.ql-editor blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #4b5563;
+  margin-bottom: 1.25em !important;
 }

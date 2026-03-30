@@ -8,10 +8,10 @@ const User = require('../models/User');
 // @access  Public
 const getTopics = async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, search } = req.query;
+    const { page = 1, limit = 25, category, search } = req.query; // Default limit 25
     const query = { status: 'approved' };
 
-    if (category) query.category = category;
+    if (category && category !== 'Semua') query.category = category;
     if (search) query.$text = { $search: search };
 
     const topics = await ForumTopic.find(query)
@@ -187,6 +187,7 @@ const addComment = async (req, res) => {
       topic: topic._id,
       author: req.user._id,
       parentComment: req.body.parentComment || null,
+      image: req.file ? `/uploads/${req.file.filename}` : null,
     });
 
     // Update reply count dan lastReplyAt
@@ -260,4 +261,97 @@ const getMyTopics = async (req, res) => {
   }
 };
 
-module.exports = { getTopics, getTopicById, getTopicForEdit, createTopic, updateTopic, deleteTopic, addComment, deleteComment, getMyTopics };
+// @desc    Like komentar
+// @route   POST /api/forum/comments/:id/like
+// @access  Private
+const likeComment = async (req, res) => {
+  try {
+    const comment = await ForumComment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+
+    const userId = req.user._id;
+    comment.dislikes = (comment.dislikes || []).filter(id => id.toString() !== userId.toString());
+
+    if ((comment.likes || []).map(id => id.toString()).includes(userId.toString())) {
+      comment.likes = comment.likes.filter(id => id.toString() !== userId.toString());
+    } else {
+      comment.likes = comment.likes || [];
+      comment.likes.push(userId);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, dislikes: comment.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menyukai komentar', error: error.message });
+  }
+};
+
+// @desc    Dislike komentar
+// @route   POST /api/forum/comments/:id/dislike
+// @access  Private
+const dislikeComment = async (req, res) => {
+  try {
+    const comment = await ForumComment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+
+    const userId = req.user._id;
+    comment.likes = (comment.likes || []).filter(id => id.toString() !== userId.toString());
+
+    if ((comment.dislikes || []).map(id => id.toString()).includes(userId.toString())) {
+      comment.dislikes = comment.dislikes.filter(id => id.toString() !== userId.toString());
+    } else {
+      comment.dislikes = comment.dislikes || [];
+      comment.dislikes.push(userId);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, dislikes: comment.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal tidak menyukai komentar', error: error.message });
+  }
+};
+
+// @desc    Get top categories forum
+// @route   GET /api/forum/meta/top-categories
+// @access  Public
+const getTopCategories = async (req, res) => {
+  try {
+    const categories = await ForumTopic.aggregate([
+      { $match: { status: 'approved' } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+    res.json(categories.map(c => ({ name: c._id, count: c.count })));
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil kategori', error: error.message });
+  }
+};
+
+// @desc    Get related topics
+// @route   GET /api/forum/:id/related
+// @access  Public
+const getRelatedTopics = async (req, res) => {
+  try {
+    const topic = await ForumTopic.findById(req.params.id);
+    if (!topic) return res.status(404).json({ message: 'Topik tidak ditemukan' });
+
+    const related = await ForumTopic.find({
+      _id: { $ne: topic._id },
+      category: topic.category,
+      status: 'approved'
+    })
+    .limit(5)
+    .select('title createdAt');
+
+    res.json(related);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil topik terkait', error: error.message });
+  }
+};
+
+module.exports = { 
+  getTopics, getTopicById, getTopicForEdit, createTopic, updateTopic, deleteTopic, 
+  addComment, deleteComment, getMyTopics,
+  likeComment, dislikeComment, getTopCategories, getRelatedTopics
+};

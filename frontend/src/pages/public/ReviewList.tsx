@@ -36,7 +36,7 @@ export default function ReviewList() {
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string | number> = { page, limit: 12 };
+      const params: Record<string, string | number> = { page, limit: 25 };
       if (search) params.search = search;
       if (activeOccasion !== 'Semua') params.occasion = activeOccasion;
       if (activeSeason !== 'Semua') params.season = activeSeason;
@@ -111,7 +111,7 @@ export default function ReviewList() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Acara:</span>
               {occasions.map((occ) => (
-                <button
+                <button className="cursor-pointer"
                   key={occ}
                   onClick={() => { setActiveOccasion(occ); setPage(1); }}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
@@ -127,7 +127,7 @@ export default function ReviewList() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Musim:</span>
               {seasons.map((s) => (
-                <button
+                <button className="cursor-pointer"
                   key={s}
                   onClick={() => { setActiveSeason(s); setPage(1); }}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
@@ -155,19 +155,19 @@ export default function ReviewList() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white border border-gray-100 animate-pulse overflow-hidden">
+              <div key={i} className="rounded-xl bg-white border border-gray-100 animate-pulse overflow-hidden">
                 <div className="h-40 bg-gray-200" />
                 <div className="p-5 space-y-3">
-                  <div className="h-3 bg-gray-200 rounded w-2/3" />
-                  <div className="h-4 bg-gray-200 rounded w-full" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded-xl w-2/3" />
+                  <div className="h-4 bg-gray-200 rounded-xl w-full" />
+                  <div className="h-3 bg-gray-100 rounded-xl w-1/2" />
                 </div>
               </div>
             ))}
           </div>
         ) : reviews.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-amber-50 flex items-center justify-center">
               <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
@@ -186,10 +186,10 @@ export default function ReviewList() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <button
+            <button className="cursor-pointer"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               ← Prev
             </button>
@@ -198,9 +198,9 @@ export default function ReviewList() {
               .map((p, idx, arr) => (
                 <span key={p}>
                   {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-gray-400">…</span>}
-                  <button
+                  <button className="cursor-pointer"
                     onClick={() => setPage(p)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                    className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
                       page === p
                         ? 'bg-amber-500 text-white shadow-md'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -210,10 +210,10 @@ export default function ReviewList() {
                   </button>
                 </span>
               ))}
-            <button
+            <button className="cursor-pointer"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Next →
             </button>

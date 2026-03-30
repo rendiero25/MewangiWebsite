@@ -31,7 +31,7 @@ const VerifyEmail = () => {
   return (
     <div className="py-16 sm:py-24 flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md text-center">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white rounded-xl shadow-lg p-8">
           {status === 'loading' && (
             <>
               <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>

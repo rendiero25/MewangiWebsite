@@ -47,7 +47,7 @@ function StarRating({ value }: { value: number }) {
 export default function ReviewCard({ review }: ReviewCardProps) {
   return (
     <Link to={`/review/${review._id}`} className="block group">
-      <div className="rounded-2xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden">
+      <div className="rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden">
         {/* Image banner */}
         {review.image && (
           <div className="h-40 bg-gray-100 overflow-hidden">

@@ -8,10 +8,10 @@ const User = require('../models/User');
 // @access  Public
 const getArticles = async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, search } = req.query;
+    const { page = 1, limit = 25, category, search } = req.query;
     const query = { status: 'approved' };
 
-    if (category) query.category = category;
+    if (category && category !== 'Semua') query.category = category;
     if (search) query.$text = { $search: search };
 
     const articles = await Article.find(query)
@@ -230,6 +230,95 @@ const addArticleComment = async (req, res) => {
   }
 };
 
+// @desc    Like komentar artikel
+// @route   POST /api/articles/comments/:id/like
+// @access  Private
+const likeComment = async (req, res) => {
+  try {
+    const comment = await ArticleComment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+
+    const userId = req.user._id;
+    comment.dislikes = (comment.dislikes || []).filter(id => id.toString() !== userId.toString());
+
+    if ((comment.likes || []).map(id => id.toString()).includes(userId.toString())) {
+      comment.likes = comment.likes.filter(id => id.toString() !== userId.toString());
+    } else {
+      comment.likes = comment.likes || [];
+      comment.likes.push(userId);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, dislikes: comment.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menyukai komentar', error: error.message });
+  }
+};
+
+// @desc    Dislike komentar artikel
+// @route   POST /api/articles/comments/:id/dislike
+// @access  Private
+const dislikeComment = async (req, res) => {
+  try {
+    const comment = await ArticleComment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+
+    const userId = req.user._id;
+    comment.likes = (comment.likes || []).filter(id => id.toString() !== userId.toString());
+
+    if ((comment.dislikes || []).map(id => id.toString()).includes(userId.toString())) {
+      comment.dislikes = comment.dislikes.filter(id => id.toString() !== userId.toString());
+    } else {
+      comment.dislikes = comment.dislikes || [];
+      comment.dislikes.push(userId);
+    }
+
+    await comment.save();
+    res.json({ likes: comment.likes, dislikes: comment.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal tidak menyukai komentar', error: error.message });
+  }
+};
+
+// @desc    Get top categories artikel
+// @route   GET /api/articles/meta/top-categories
+// @access  Public
+const getTopCategories = async (req, res) => {
+  try {
+    const categories = await Article.aggregate([
+      { $match: { status: 'approved' } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+    res.json(categories.map(c => ({ name: c._id, count: c.count })));
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil kategori', error: error.message });
+  }
+};
+
+// @desc    Get related articles
+// @route   GET /api/articles/detail/:id/related
+// @access  Public
+const getRelatedArticles = async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ message: 'Artikel tidak ditemukan' });
+
+    const related = await Article.find({
+      _id: { $ne: article._id },
+      category: article.category,
+      status: 'approved'
+    })
+    .limit(5)
+    .select('title slug createdAt');
+
+    res.json(related);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil artikel terkait', error: error.message });
+  }
+};
+
 // @desc    Hapus komentar dari artikel
 // @route   DELETE /api/articles/comments/:commentId
 // @access  Private (author / admin)
@@ -253,4 +342,8 @@ const deleteArticleComment = async (req, res) => {
   }
 };
 
-module.exports = { getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles, addArticleComment, deleteArticleComment };
+module.exports = { 
+  getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, 
+  getMyArticles, addArticleComment, deleteArticleComment,
+  likeComment, dislikeComment, getTopCategories, getRelatedArticles
+};

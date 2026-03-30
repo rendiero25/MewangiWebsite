@@ -32,10 +32,10 @@ export default function Notifications() {
           )}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {notifications.length === 0 ? (
             <div className="py-20 text-center">
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
@@ -55,15 +55,15 @@ export default function Notifications() {
                 >
                   <div className="flex-shrink-0">
                     {notification.sender ? (
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-sm">
                         {notification.sender.avatar ? (
-                          <img src={notification.sender.avatar} alt="Avatar" className="w-full h-full rounded-2xl object-cover" />
+                          <img src={notification.sender.avatar} alt="Avatar" className="w-full h-full rounded-xl object-cover" />
                         ) : (
                           notification.sender.username.charAt(0).toUpperCase()
                         )}
                       </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400">
+                      <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -91,7 +91,7 @@ export default function Notifications() {
                     {!notification.isRead && (
                       <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-sm shadow-primary/40" />
                     )}
-                    <button
+                    <button className="cursor-pointer"
                       onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id); }}
                       className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                       title="Hapus"

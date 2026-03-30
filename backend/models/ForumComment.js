@@ -20,6 +20,18 @@ const forumCommentSchema = new mongoose.Schema({
     ref: 'ForumComment',
     default: null,
   },
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  dislikes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  image: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

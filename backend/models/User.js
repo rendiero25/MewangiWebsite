@@ -38,6 +38,22 @@ const userSchema = new mongoose.Schema({
     default: '',
     maxlength: [500, 'Bio maksimal 500 karakter'],
   },
+  gender: {
+    type: String,
+    enum: ['Pria', 'Wanita', 'Lainnya', ''],
+    default: '',
+  },
+  birthday: {
+    type: Date,
+  },
+  location: {
+    type: String,
+    default: '',
+  },
+  website: {
+    type: String,
+    default: '',
+  },
   isVerified: {
     type: Boolean,
     default: false,
