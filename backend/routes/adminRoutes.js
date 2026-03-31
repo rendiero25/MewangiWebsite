@@ -7,6 +7,7 @@ const {
   getPendingArticles, getOnlineArticles, updateArticleStatus,
   getPendingTopics, getOnlineTopics, updateTopicStatus,
   getUsers, updateUserRole, deleteUser,
+  banUser, unbanUser,
   createPerfume, updatePerfume, deletePerfume,
   getDashboardStats,
 } = require('../controllers/adminController');
@@ -36,6 +37,8 @@ router.put('/topics/:id/status', updateTopicStatus);
 router.get('/users', getUsers);
 router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
+router.post('/users/:id/ban', banUser);
+router.post('/users/:id/unban', unbanUser);
 
 // Perfume management
 router.post('/perfumes', upload.single('image'), createPerfume);

@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
+import Breadcrumbs from '../../components/public/Breadcrumbs';
+import ReportModal from '../../components/public/ReportModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -20,12 +22,16 @@ interface TopicData {
   _id: string;
   title: string;
   content: string;
-  category: string;
+  category: { name: string; slug: string; icon?: string };
   author: { _id: string; username: string; avatar?: string };
   views: number;
   replyCount: number;
   isPinned: boolean;
   isClosed: boolean;
+  isFeatured?: boolean;
+  isAnnouncement?: boolean;
+  likes: string[];
+  dislikes: string[];
   createdAt: string;
 }
 
@@ -38,6 +44,11 @@ interface CommentData {
   dislikes?: string[];
   image?: string;
   topic?: string;
+  quote?: {
+    _id: string;
+    content: string;
+    author: { username: string };
+  };
 }
 
 interface RelatedTopic {
@@ -63,6 +74,12 @@ export default function ForumDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showFullContent, setShowFullContent] = useState(false);
+  const [quotedComment, setQuotedComment] = useState<CommentData | null>(null);
+  const [topicLikes, setTopicLikes] = useState<string[]>([]);
+  const [topicDislikes, setTopicDislikes] = useState<string[]>([]);
+  const [reacting, setReacting] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   const fetchTopic = useCallback(async () => {
     setLoading(true);
@@ -72,6 +89,8 @@ export default function ForumDetail() {
         axios.get(`${API_URL}/forum/${id}/related`)
       ]);
       setTopic(data.topic);
+      setTopicLikes(data.topic.likes || []);
+      setTopicDislikes(data.topic.dislikes || []);
       setComments(data.comments);
       setRelatedTopics(relatedData);
     } catch {
@@ -101,6 +120,7 @@ export default function ForumDetail() {
       const formData = new FormData();
       formData.append('content', commentText);
       if (commentImage) formData.append('image', commentImage);
+      if (quotedComment) formData.append('quote', quotedComment._id);
 
       const { data } = await axios.post(
         `${API_URL}/forum/${id}/comments`,
@@ -114,6 +134,7 @@ export default function ForumDetail() {
       setCommentText('');
       setCommentImage(null);
       setImagePreview('');
+      setQuotedComment(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch {
       setError('Gagal mengirim komentar.');
@@ -146,6 +167,38 @@ export default function ForumDetail() {
     }
   };
 
+  const handleLikeTopic = async () => {
+    if (!user) return;
+    setReacting(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/forum/${id}/like`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setTopicLikes(data.likes);
+      setTopicDislikes(data.dislikes);
+    } catch (err) {
+      console.error('Failed to like topic:', err);
+    } finally {
+      setReacting(false);
+    }
+  };
+
+  const handleDislikeTopic = async () => {
+    if (!user) return;
+    setReacting(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/forum/${id}/dislike`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setTopicLikes(data.likes);
+      setTopicDislikes(data.dislikes);
+    } catch (err) {
+      console.error('Failed to dislike topic:', err);
+    } finally {
+      setReacting(false);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -166,7 +219,8 @@ export default function ForumDetail() {
 
   const isOwner = user && user._id === topic.author._id;
   const isAdmin = user && user.role === 'admin';
-  const colorClass = categoryColors[topic.category] || categoryColors['Lainnya'];
+  const categorySlug = (topic.category?.slug || 'lainnya') as keyof typeof categoryColors;
+  const colorClass = categoryColors[categorySlug] || categoryColors['Lainnya'];
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -175,15 +229,29 @@ export default function ForumDetail() {
           
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-8">
-            <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-2">
-              ← Kembali ke Forum
-            </Link>
+            <Breadcrumbs 
+              items={[
+                { label: 'Forum', to: '/forum' },
+                { label: topic.category?.name || 'Kategori', to: `/forum?category=${topic.category?.slug}` },
+                { label: topic.title }
+              ]} 
+            />
 
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-8">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
+                  {topic.isAnnouncement && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold ring-1 ring-emerald-200">
+                      📢 Pengumuman
+                    </span>
+                  )}
+                  {topic.isFeatured && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-bold ring-1 ring-amber-200">
+                      ⭐ Featured
+                    </span>
+                  )}
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colorClass}`}>
-                    {topic.category}
+                    {topic.category?.name || 'Kategori'}
                   </span>
                   {topic.isPinned && <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-semibold">📌 Pinned</span>}
                 </div>
@@ -191,7 +259,7 @@ export default function ForumDetail() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-6">{topic.title}</h1>
 
                 <div className="flex items-center gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
                     {topic.author.avatar ? (
                       <img src={topic.author.avatar.startsWith('http') ? topic.author.avatar : `${API_URL.replace('/api', '')}${topic.author.avatar}`} alt={topic.author.username} className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -229,21 +297,90 @@ export default function ForumDetail() {
                     </>
                   )}
                 </button>
-              </div>
 
+                {/* Reaction Bar for Topic */}
+                <div className="flex items-center gap-4 pt-6 mt-6 border-t border-gray-100">
+                  <div className="flex items-center bg-gray-100 rounded-full px-1">
+                    <button 
+                      onClick={handleLikeTopic}
+                      disabled={reacting || !user}
+                      className={`p-2 rounded-full transition-all cursor-pointer ${
+                        user && topicLikes.includes(user._id) 
+                          ? 'text-primary bg-primary/10 font-bold' 
+                          : 'text-gray-400 hover:text-primary hover:bg-primary/5'
+                      }`}
+                      title="Suka"
+                    >
+                      <svg className={`w-5 h-5 ${user && topicLikes.includes(user._id) ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.708C19.743 10 20.5 10.895 20.5 12c0 .285-.06.559-.165.81l-2.484 5.962C17.653 19.345 16.94 20 16.14 20H13M14 10V5a2 2 0 00-2-2h-3L4.444 8.222C4.153 8.514 4 8.91 4 9.322V19a2 2 0 002 2h3.585c.613 0 1.2-.243 1.633-.677L14 17" />
+                      </svg>
+                    </button>
+                    <span className="text-sm font-bold text-gray-700 min-w-6 text-center">
+                      {topicLikes.length - topicDislikes.length}
+                    </span>
+                    <button 
+                      onClick={handleDislikeTopic}
+                      disabled={reacting || !user}
+                      className={`p-2 rounded-full transition-all cursor-pointer ${
+                        user && topicDislikes.includes(user._id) 
+                          ? 'text-red-500 bg-red-100 font-bold' 
+                          : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                      }`}
+                      title="Tidak Suka"
+                    >
+                      <svg className={`w-5 h-5 ${user && topicDislikes.includes(user._id) ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.292C4.257 14 3.5 13.105 3.5 12c0-.285.06-.559.165-.81l2.484-5.962C6.347 4.655 7.06 4 7.86 4H11M10 14v5a2 2 0 002 2h3l4.556-5.222C20.847 15.486 21 15.09 21 14.678V5a2 2 0 00-2-2h-3.585a2.307 2.307 0 00-1.633.677L10 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 flex gap-4 text-gray-400 text-xs font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      {topic.replyCount} Balasan
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      {topic.views} Dilihat
+                    </span>
+                  </div>
+                </div>
+              </div>
               <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
                 <div className="flex gap-6 text-xs text-gray-400">
                   <span className="flex items-center gap-1">👁️ {topic.views} views</span>
                   <span className="flex items-center gap-1">💬 {comments.length} komentar</span>
                 </div>
-                {(isOwner || isAdmin) && (
-                  <div className="flex gap-2">
-                    {isOwner && <Link to={`/forum/edit/${topic._id}`} className="text-xs font-medium text-gray-600 hover:text-primary">Edit</Link>}
-                    <button onClick={handleDeleteTopic} className="text-xs font-medium text-red-500 cursor-pointer">Hapus</button>
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  {user && !isOwner && (
+                    <button 
+                      onClick={() => setReportModalOpen(true)}
+                      className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      🚩 Laporkan
+                    </button>
+                  )}
+                  {(isOwner || isAdmin) && (
+                    <div className="flex gap-2">
+                      {isOwner && <Link to={`/forum/edit/${topic._id}`} className="text-xs font-medium text-gray-600 hover:text-primary">Edit</Link>}
+                      <button onClick={handleDeleteTopic} className="text-xs font-medium text-red-500 cursor-pointer">Hapus</button>
+                    </div>
+                  )}
+                </div>
               </div>
             </article>
+
+            <ReportModal 
+              isOpen={reportModalOpen}
+              onClose={() => setReportModalOpen(false)}
+              targetType="Topic"
+              targetId={topic._id}
+            />
 
             {/* Chat Section */}
             <section className="space-y-6">
@@ -255,7 +392,16 @@ export default function ForumDetail() {
                 ) : (
                   <>
                     {(user ? comments : comments.slice(0, 5)).map(c => (
-                      <CommentItem key={c._id} comment={{...c, topic: topic._id}} onDelete={handleDeleteComment} />
+                      <CommentItem 
+                        key={c._id} 
+                        comment={{...c, topic: topic._id}} 
+                        onDelete={handleDeleteComment} 
+                        onQuote={(qc) => {
+                          setQuotedComment(qc);
+                          commentInputRef.current?.focus();
+                          commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }}
+                      />
                     ))}
                     {!user && comments.length > 5 && (
                       <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 mt-4">
@@ -273,11 +419,23 @@ export default function ForumDetail() {
               {user && !topic.isClosed ? (
                 <form onSubmit={handleAddComment} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
                   {error && <p className="text-red-500 text-xs mb-3 italic">⚠️ {error}</p>}
+                  {quotedComment && (
+                    <div className="mb-3 p-3 bg-gray-50 border-l-4 border-primary rounded-r-xl flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] font-bold text-primary mb-1">Membalas @{quotedComment.author.username}</p>
+                        <div className="text-xs text-gray-500 line-clamp-1 italic" dangerouslySetInnerHTML={{ __html: quotedComment.content }} />
+                      </div>
+                      <button onClick={() => setQuotedComment(null)} className="text-gray-400 hover:text-red-500 transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  )}
                   <div className="relative">
                     <textarea 
+                      ref={commentInputRef}
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Tulis balasan Anda..."
+                      placeholder={quotedComment ? `Balas @${quotedComment.author.username}...` : "Tulis balasan Anda..."}
                       rows={3}
                       className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
                     />

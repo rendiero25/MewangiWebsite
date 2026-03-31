@@ -10,6 +10,8 @@ import Home from './pages/public/Home';
 import Login from './pages/public/Login';
 import Register from './pages/public/Register';
 import VerifyEmail from './pages/public/VerifyEmail';
+import ForgotPassword from './pages/public/ForgotPassword';
+import ResetPassword from './pages/public/ResetPassword';
 import ForumList from './pages/public/ForumList';
 import ForumDetail from './pages/public/ForumDetail';
 import ReviewList from './pages/public/ReviewList';
@@ -28,6 +30,8 @@ import EditArticle from './pages/member/EditArticle';
 import MemberDashboard from './pages/member/MemberDashboard';
 import Notifications from './pages/member/Notifications';
 import Profile from './pages/public/Profile';
+import PublicProfile from './pages/public/PublicProfile';
+import DirectMessages from './pages/public/DirectMessages';
 
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
@@ -60,6 +64,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email/:token" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
 
               {/* Forum */}
               <Route path="/forum" element={<ForumList />} />
@@ -119,6 +125,12 @@ function App() {
                   <Profile />
                 </ProtectedRoute>
               } />
+              <Route path="/messages" element={
+                <ProtectedRoute>
+                  <DirectMessages />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile/:id" element={<PublicProfile />} />
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminPanel />

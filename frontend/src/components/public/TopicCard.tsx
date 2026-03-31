@@ -5,24 +5,31 @@ interface TopicCardProps {
     _id: string;
     title: string;
     content: string;
-    category: string;
+    category: { name: string; slug: string; icon?: string };
     author: { username: string; avatar?: string };
+    tags: string[];
+    prefix?: string;
+    type: string;
     views: number;
     replyCount: number;
+    likes: string[];
+    dislikes: string[];
     isPinned: boolean;
     isClosed: boolean;
+    isFeatured: boolean;
+    isAnnouncement: boolean;
     createdAt: string;
     lastReplyAt: string;
   };
 }
 
 const categoryColors: Record<string, string> = {
-  'Diskusi Umum': 'bg-blue-100 text-blue-700',
-  'Rekomendasi': 'bg-emerald-100 text-emerald-700',
-  'Jual Beli': 'bg-amber-100 text-amber-700',
-  'Clone & Inspired': 'bg-purple-100 text-purple-700',
-  'Tips & Trik': 'bg-pink-100 text-pink-700',
-  'Lainnya': 'bg-gray-100 text-gray-600',
+  'diskusi-umum': 'bg-blue-100 text-blue-700',
+  'rekomendasi': 'bg-emerald-100 text-emerald-700',
+  'jual-beli': 'bg-amber-100 text-amber-700',
+  'clone-inspired': 'bg-purple-100 text-purple-700',
+  'tips-trik': 'bg-pink-100 text-pink-700',
+  'lainnya': 'bg-gray-100 text-gray-600',
 };
 
 function timeAgo(dateStr: string) {
@@ -39,7 +46,8 @@ function timeAgo(dateStr: string) {
 }
 
 export default function TopicCard({ topic }: TopicCardProps) {
-  const colorClass = categoryColors[topic.category] || categoryColors['Lainnya'];
+  const categorySlug = (topic.category?.slug || 'lainnya') as keyof typeof categoryColors;
+  const colorClass = categoryColors[categorySlug] || categoryColors['lainnya'];
 
   return (
     <Link
@@ -49,7 +57,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
       <div className="p-5 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-start gap-4">
           {/* Author avatar */}
-          <div className="hidden sm:flex w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary items-center justify-center shrink-0">
+          <div className="hidden sm:flex w-10 h-10 rounded-full bg-linear-to-br from-primary to-secondary items-center justify-center shrink-0">
             <span className="text-white text-sm font-bold">
               {(topic.author?.username || 'U').charAt(0).toUpperCase()}
             </span>
@@ -58,6 +66,16 @@ export default function TopicCard({ topic }: TopicCardProps) {
           <div className="flex-1 min-w-0">
             {/* Top row: badges */}
             <div className="flex flex-wrap items-center gap-2 mb-2">
+              {topic.isAnnouncement && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold ring-1 ring-emerald-200">
+                  📢 Pengumuman
+                </span>
+              )}
+              {topic.isFeatured && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-bold ring-1 ring-amber-200">
+                  ⭐ Featured
+                </span>
+              )}
               {topic.isPinned && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -74,20 +92,27 @@ export default function TopicCard({ topic }: TopicCardProps) {
                   Ditutup
                 </span>
               )}
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-                {topic.category}
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors[topic.category?.slug] || categoryColors['lainnya']}`}>
+                {topic.category?.name || 'Kategori'}
               </span>
             </div>
 
             {/* Title */}
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-1.5">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-1.5 flex items-center gap-2">
+              {topic.prefix && <span className="text-primary/70 font-bold shrink-0">{topic.prefix}</span>}
               {topic.title}
             </h3>
 
-            {/* Preview */}
-            {/* <p className="text-sm text-gray-500 line-clamp-2 mb-3">
-              {topic.content.replace(/<[^>]*>/g, '').slice(0, 150)}
-            </p> */}
+            {/* Tags */}
+            {topic.tags && topic.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {topic.tags.map(tag => (
+                  <span key={tag} className="text-[10px] bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-100 group-hover:border-primary/20 group-hover:text-primary/60 transition-colors">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
@@ -105,6 +130,12 @@ export default function TopicCard({ topic }: TopicCardProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 {topic.replyCount}
+              </span>
+              <span className={`inline-flex items-center gap-1 ${(topic.likes.length - topic.dislikes.length) > 0 ? 'text-primary' : (topic.likes.length - topic.dislikes.length) < 0 ? 'text-red-500' : ''}`}>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.708C19.743 10 20.5 10.895 20.5 12c0 .285-.06.559-.165.81l-2.484 5.962C17.653 19.345 16.94 20 16.14 20H13M14 10V5a2 2 0 00-2-2h-3L4.444 8.222C4.153 8.514 4 8.91 4 9.322V19a2 2 0 002 2h3.585c.613 0 1.2-.243 1.633-.677L14 17" />
+                </svg>
+                {topic.likes.length - topic.dislikes.length}
               </span>
             </div>
           </div>

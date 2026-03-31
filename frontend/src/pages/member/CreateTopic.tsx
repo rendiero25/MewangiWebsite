@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -7,17 +7,41 @@ import 'react-quill-new/dist/quill.snow.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const categories = ['Diskusi Umum', 'Rekomendasi', 'Jual Beli', 'Clone & Inspired', 'Tips & Trik', 'Lainnya'];
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+}
 
 export default function CreateTopic() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Diskusi Umum');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [category, setCategory] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [prefix, setPrefix] = useState('');
+  const [type, setType] = useState('normal');
+  const [loadingCats, setLoadingCats] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/categories`);
+        setCategories(data);
+        if (data.length > 0) setCategory(data[0]._id);
+      } catch (err) {
+        console.error('Gagal memuat kategori:', err);
+      } finally {
+        setLoadingCats(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +52,20 @@ export default function CreateTopic() {
     setSubmitting(true);
     setError('');
     try {
+      const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
       await axios.post(
         `${API_URL}/forum`,
-        { title, content, category },
+        { 
+          title, 
+          content, 
+          category, 
+          tags: tagArray,
+          prefix,
+          type
+        },
         { headers: { Authorization: `Bearer ${user?.token}` } }
       );
-      navigate('/dashboard');
+      navigate('/forum');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal membuat topik.';
       setError(msg || 'Gagal membuat topik.');
@@ -77,21 +109,75 @@ export default function CreateTopic() {
               <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
             </div>
 
-            {/* Category */}
-            <div>
-              <label htmlFor="topic-category" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Kategori
-              </label>
-              <select
-                id="topic-category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+            {/* Prefix & Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Prefix
+                </label>
+                <select
+                  value={prefix}
+                  onChange={(e) => setPrefix(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">Tanpa Prefix</option>
+                  <option value="[QUESTION]">❓ [QUESTION]</option>
+                  <option value="[SOLVED]">✅ [SOLVED]</option>
+                  <option value="[TUTORIAL]">📖 [TUTORIAL]</option>
+                  <option value="[WTS]">💰 [WTS] - Jual</option>
+                  <option value="[WTB]">🔎 [WTB] - Beli</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="topic-category" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Kategori
+                </label>
+                <select
+                  id="topic-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={loadingCats}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer disabled:opacity-50"
+                >
+                  {loadingCats ? (
+                    <option>Memuat kategori...</option>
+                  ) : (
+                    categories.map((cat) => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Tags & Type */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Tags (pisahkan dengan koma)
+                </label>
+                <input
+                  type="text"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="parfum, lokal, review..."
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Tipe Thread
+                </label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                >
+                  <option value="normal">Normal</option>
+                  <option value="question">Question (Q&A)</option>
+                  <option value="poll">Poll (Voting)</option>
+                </select>
+              </div>
             </div>
 
             {/* Content */}
@@ -126,7 +212,7 @@ export default function CreateTopic() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {submitting ? 'Memposting...' : 'Posting Topik'}
               </button>

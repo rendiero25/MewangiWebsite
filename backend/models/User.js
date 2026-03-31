@@ -54,6 +54,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  lastActive: {
+    type: Date,
+    default: Date.now,
+  },
+  statistik: {
+    posts: { type: Number, default: 0 },
+    threads: { type: Number, default: 0 },
+    reactions: { type: Number, default: 0 },
+    reputation: { type: Number, default: 0 },
+  },
+  socialLinks: {
+    facebook: { type: String, default: '' },
+    twitter: { type: String, default: '' },
+    instagram: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    tiktok: { type: String, default: '' },
+  },
   isVerified: {
     type: Boolean,
     default: false,
@@ -62,6 +79,35 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   verificationTokenExpire: {
+    type: Date,
+  },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  loginAttempts: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  lockUntil: {
+    type: Number,
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
+  banReason: {
+    type: String,
+    default: '',
+  },
+  banExpires: {
     type: Date,
   },
 }, {

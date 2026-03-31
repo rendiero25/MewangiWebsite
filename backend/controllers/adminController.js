@@ -288,6 +288,70 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// @desc    Ban/Suspend user
+// @route   POST /api/admin/users/:id/ban
+// @access  Private (admin only)
+const banUser = async (req, res) => {
+  try {
+    const { reason, duration } = req.body; // duration in days, 0 for permanent
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({ message: 'Tidak bisa memblokir admin' });
+    }
+
+    user.isBanned = true;
+    user.banReason = reason || 'Pelanggaran aturan komunitas';
+    
+    if (duration > 0) {
+      user.banExpires = new Date(Date.now() + duration * 24 * 60 * 60 * 1000);
+    } else {
+      user.banExpires = null; // Permanent
+    }
+
+    await user.save();
+
+    // Notify user via notification
+    await Notification.create({
+      recipient: user._id,
+      type: 'system',
+      message: `Akun Anda telah diblokir. Alasan: ${user.banReason}. ${duration > 0 ? `Berakhir pada ${user.banExpires.toLocaleDateString('id-ID')}` : 'Pemblokiran permanen.'}`,
+      link: '#'
+    });
+
+    res.json({ message: 'User berhasil diblokir', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal memblokir user', error: error.message });
+  }
+};
+
+// @desc    Unban user
+// @route   POST /api/admin/users/:id/unban
+// @access  Private (admin only)
+const unbanUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    user.isBanned = false;
+    user.banReason = '';
+    user.banExpires = null;
+
+    await user.save();
+
+    res.json({ message: 'Blokir user berhasil dibuka', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal membuka blokir user', error: error.message });
+  }
+};
+
 // ==================== PERFUME MANAGEMENT ====================
 
 // @desc    Create perfume
@@ -397,6 +461,7 @@ module.exports = {
   getPendingArticles, getOnlineArticles, updateArticleStatus,
   getPendingTopics, getOnlineTopics, updateTopicStatus,
   getUsers, updateUserRole, deleteUser,
+  banUser, unbanUser,
   createPerfume, updatePerfume, deletePerfume,
   getDashboardStats,
 };

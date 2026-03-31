@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { MdChat } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
 import NotificationBell from '../notifications/NotificationBell';
 import Logo from '../../assets/logo.png';
@@ -27,7 +28,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <img src={Logo} alt="Logo" className="w-40" />
-            {/* <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+            {/* <div className="w-9 h-9 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
               <span className="text-white font-bold text-lg">M</span>
             </div>
             <span className="text-xl font-bold text-black tracking-tight">
@@ -56,13 +57,20 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-3">
+                <Link 
+                  to="/messages" 
+                  className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block"
+                  title="Pesan"
+                >
+                  <MdChat size={22} />
+                </Link>
                 <NotificationBell />
                 <div className="relative">
-                <button className="cursor-pointer"
+                <button
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
                     <span className="text-white text-xs font-bold">
                       {user.username.charAt(0).toUpperCase()}
                     </span>
@@ -120,7 +128,7 @@ export default function Navbar() {
                         </Link>
                       )}
                       <hr className="my-1 border-gray-100" />
-                      <button className="cursor-pointer"
+                      <button
                         onClick={() => { logout(); setProfileOpen(false); }}
                         className="cursor-pointer flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
@@ -144,7 +152,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
                 >
                   Daftar
                 </Link>
@@ -153,9 +161,9 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="cursor-pointer"
+          <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
+            className="cursor-pointer md:hidden p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
           >
             {mobileOpen ? (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +201,7 @@ export default function Navbar() {
             {user ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-3 px-4 py-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
                     <span className="text-white text-sm font-bold">{user.username.charAt(0).toUpperCase()}</span>
                   </div>
                   <div>
@@ -209,9 +217,9 @@ export default function Navbar() {
                 {user.role === 'admin' && (
                   <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
                 )}
-                <button className="cursor-pointer"
+                <button
                   onClick={() => { logout(); setMobileOpen(false); }}
-                  className="w-full text-left px-4 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50"
+                  className="cursor-pointer w-full text-left px-4 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50"
                 >
                   Keluar
                 </button>
@@ -219,7 +227,7 @@ export default function Navbar() {
             ) : (
               <div className="flex gap-2">
                 <Link to="/login" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50">Masuk</Link>
-                <Link to="/register" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl">Daftar</Link>
+                <Link to="/register" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl">Daftar</Link>
               </div>
             )}
           </div>

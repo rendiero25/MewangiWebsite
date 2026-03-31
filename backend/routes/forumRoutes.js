@@ -23,6 +23,9 @@ router.delete('/:id', protect, deleteTopic);
 // Comments
 const upload = require('../middleware/upload');
 router.post('/:id/comments', protect, verified, upload.single('image'), addComment);
+// Reactions
+router.post('/:id/like', protect, likeTopic);
+router.post('/:id/dislike', protect, dislikeTopic);
 router.post('/comments/:id/like', protect, likeComment);
 router.post('/comments/:id/dislike', protect, dislikeComment);
 router.delete('/comments/:commentId', protect, deleteComment);

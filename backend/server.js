@@ -15,12 +15,26 @@ const articleRoutes = require('./routes/articleRoutes');
 const perfumeRoutes = require('./routes/perfumeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-
-const app = express();
-const PORT = process.env.PORT || 5000;
+const categoryRoutes = require('./routes/categoryRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const rateLimit = require('express-rate-limit');
 
 // Connect to MongoDB
 connectDB();
+
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' }
+});
+
+const app = express();
+app.use('/api/', apiLimiter);
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
@@ -43,6 +57,9 @@ app.use('/api/articles', articleRoutes);
 app.use('/api/perfumes', perfumeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Static Folder for Frontend Production
 if (process.env.NODE_ENV === 'production') {

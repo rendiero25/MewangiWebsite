@@ -20,6 +20,15 @@ const forumCommentSchema = new mongoose.Schema({
     ref: 'ForumComment',
     default: null,
   },
+  mentions: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  quote: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ForumComment',
+    default: null,
+  },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

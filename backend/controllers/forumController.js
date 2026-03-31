@@ -1,22 +1,79 @@
-const ForumTopic = require('../models/ForumTopic');
-const ForumComment = require('../models/ForumComment');
-const Notification = require('../models/Notification');
-const User = require('../models/User');
+const mongoose = require("mongoose");
+const ForumTopic = require("../models/ForumTopic");
+const ForumComment = require("../models/ForumComment");
+const Category = require("../models/Category");
+const Notification = require("../models/Notification");
+const User = require("../models/User");
+const { filterBadWords } = require("../utils/moderation");
 
 // @desc    Get semua topik forum
 // @route   GET /api/forum
 // @access  Public
 const getTopics = async (req, res) => {
   try {
-    const { page = 1, limit = 25, category, search } = req.query; // Default limit 25
-    const query = { status: 'approved' };
+    const {
+      page = 1,
+      limit = 25,
+      category,
+      search,
+      tag,
+      prefix,
+      type,
+      sort = "latest",
+      startDate,
+      endDate,
+      userId,
+    } = req.query;
 
-    if (category && category !== 'Semua') query.category = category;
+    const query = { status: "approved" };
+
+    // Filter Kategori
+    if (category && category !== "Semua") {
+      const cat = await Category.findOne({
+        $or: [
+          { _id: mongoose.isValidObjectId(category) ? category : null },
+          { slug: category },
+        ],
+      });
+      if (cat) query.category = cat._id;
+    }
+
+    // Full-text search
     if (search) query.$text = { $search: search };
 
-    const topics = await ForumTopic.find(query)
-      .populate('author', 'username avatar')
-      .sort({ isPinned: -1, lastReplyAt: -1 })
+    // Advanced search filters
+    if (tag) query.tags = tag;
+    if (prefix) query.prefix = prefix;
+    if (type) query.type = type;
+    if (userId) query.author = userId;
+
+    // Date range filter
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) query.createdAt.$lte = new Date(endDate);
+    }
+
+    // Sorting logic
+    let sortObj = {};
+    if (sort === "popular") {
+      sortObj = { views: -1, createdAt: -1 };
+    } else if (sort === "replies") {
+      sortObj = { replyCount: -1, createdAt: -1 };
+    } else if (sort === "relevance" && search) {
+      sortObj = { score: { $meta: "textScore" } };
+    } else {
+      // Latest/Default: Pinned & Announcement first, then latest
+      sortObj = { isPinned: -1, isAnnouncement: -1, lastReplyAt: -1 };
+    }
+
+    const topics = await ForumTopic.find(
+      query,
+      sort === "relevance" ? { score: { $meta: "textScore" } } : {},
+    )
+      .populate("author", "username avatar")
+      .populate("category", "name slug icon")
+      .sort(sortObj)
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
@@ -29,7 +86,9 @@ const getTopics = async (req, res) => {
       total,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil topik", error: error.message });
   }
 };
 
@@ -39,22 +98,27 @@ const getTopics = async (req, res) => {
 const getTopicById = async (req, res) => {
   try {
     const topic = await ForumTopic.findOneAndUpdate(
-      { _id: req.params.id, status: 'approved' },
+      { _id: req.params.id, status: "approved" },
       { $inc: { views: 1 } },
-      { new: true }
-    ).populate('author', 'username avatar');
+      { new: true },
+    )
+      .populate("author", "username avatar")
+      .populate("category", "name slug");
 
     if (!topic) {
-      return res.status(404).json({ message: 'Topik tidak ditemukan' });
+      return res.status(404).json({ message: "Topik tidak ditemukan" });
     }
 
     const comments = await ForumComment.find({ topic: topic._id })
-      .populate('author', 'username avatar')
+      .populate("author", "username avatar")
+      .populate("quote", "content author")
       .sort({ createdAt: 1 });
 
     res.json({ topic, comments });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil topik", error: error.message });
   }
 };
 
@@ -64,15 +128,21 @@ const getTopicById = async (req, res) => {
 const getTopicForEdit = async (req, res) => {
   try {
     const topic = await ForumTopic.findById(req.params.id);
-    if (!topic) return res.status(404).json({ message: 'Topik tidak ditemukan' });
-    
-    if (topic.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    if (!topic)
+      return res.status(404).json({ message: "Topik tidak ditemukan" });
+
+    if (
+      topic.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Tidak memiliki izin" });
     }
 
     res.json(topic);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil topik", error: error.message });
   }
 };
 
@@ -81,32 +151,50 @@ const getTopicForEdit = async (req, res) => {
 // @access  Private (verified member)
 const createTopic = async (req, res) => {
   try {
-    const { title, content, category } = req.body;
-
-    const topic = await ForumTopic.create({
+    const {
       title,
       content,
       category,
+      tags,
+      prefix,
+      type,
+      isAnnouncement,
+      isFeatured,
+    } = req.body;
+
+    const topic = await ForumTopic.create({
+      title: filterBadWords(title),
+      content: filterBadWords(content),
+      category,
+      tags: tags || [],
+      prefix: prefix || "",
+      type: type || "normal",
+      isAnnouncement: isAnnouncement || false,
+      isFeatured: isFeatured || false,
       author: req.user._id,
     });
 
-    await topic.populate('author', 'username avatar');
+    await topic.populate("author", "username avatar");
 
     // Notify admins
-    const admins = await User.find({ role: 'admin' });
-    await Promise.all(admins.map(admin => 
-      Notification.create({
-        recipient: admin._id,
-        type: 'system',
-        message: `Topik baru pending: "${topic.title}" oleh ${req.user.username}`,
-        link: `/admin`
-      })
-    ));
+    const admins = await User.find({ role: "admin" });
+    await Promise.all(
+      admins.map((admin) =>
+        Notification.create({
+          recipient: admin._id,
+          type: "system",
+          message: `Topik baru pending: "${topic.title}" oleh ${req.user.username}`,
+          link: `/admin`,
+        }),
+      ),
+    );
 
     res.status(201).json(topic);
   } catch (error) {
-    console.error('Create Topic Error:', error);
-    res.status(500).json({ message: 'Gagal membuat topik', error: error.message });
+    console.error("Create Topic Error:", error);
+    res
+      .status(500)
+      .json({ message: "Gagal membuat topik", error: error.message });
   }
 };
 
@@ -118,27 +206,53 @@ const updateTopic = async (req, res) => {
     const topic = await ForumTopic.findById(req.params.id);
 
     if (!topic) {
-      return res.status(404).json({ message: 'Topik tidak ditemukan' });
+      return res.status(404).json({ message: "Topik tidak ditemukan" });
     }
 
-    if (topic.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    if (
+      topic.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Tidak memiliki izin" });
     }
 
-    const { title, content, category } = req.body;
-    topic.title = title || topic.title;
-    topic.content = content || topic.content;
+    const {
+      title,
+      content,
+      category,
+      tags,
+      prefix,
+      isPinned,
+      isClosed,
+      isAnnouncement,
+      isFeatured,
+    } = req.body;
+    topic.title = title ? filterBadWords(title) : topic.title;
+    topic.content = content ? filterBadWords(content) : topic.content;
     topic.category = category || topic.category;
-    topic.status = 'pending';
-    topic.rejectionReason = '';
+    topic.tags = tags || topic.tags;
+    topic.prefix = prefix || topic.prefix;
+
+    if (req.user.role === "admin") {
+      topic.isPinned = isPinned !== undefined ? isPinned : topic.isPinned;
+      topic.isClosed = isClosed !== undefined ? isClosed : topic.isClosed;
+      topic.isAnnouncement =
+        isAnnouncement !== undefined ? isAnnouncement : topic.isAnnouncement;
+      topic.isFeatured =
+        isFeatured !== undefined ? isFeatured : topic.isFeatured;
+    }
+    topic.status = "pending";
+    topic.rejectionReason = "";
 
     await topic.save();
-    await topic.populate('author', 'username avatar');
+    await topic.populate("author", "username avatar");
 
     res.json(topic);
   } catch (error) {
-    console.error('Update Topic Error:', error);
-    res.status(500).json({ message: 'Gagal mengupdate topik', error: error.message });
+    console.error("Update Topic Error:", error);
+    res
+      .status(500)
+      .json({ message: "Gagal mengupdate topik", error: error.message });
   }
 };
 
@@ -150,20 +264,25 @@ const deleteTopic = async (req, res) => {
     const topic = await ForumTopic.findById(req.params.id);
 
     if (!topic) {
-      return res.status(404).json({ message: 'Topik tidak ditemukan' });
+      return res.status(404).json({ message: "Topik tidak ditemukan" });
     }
 
-    if (topic.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    if (
+      topic.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Tidak memiliki izin" });
     }
 
     // Hapus semua komentar di topik ini
     await ForumComment.deleteMany({ topic: topic._id });
     await ForumTopic.findByIdAndDelete(req.params.id);
 
-    res.json({ message: 'Topik berhasil dihapus' });
+    res.json({ message: "Topik berhasil dihapus" });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menghapus topik', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal menghapus topik", error: error.message });
   }
 };
 
@@ -175,18 +294,20 @@ const addComment = async (req, res) => {
     const topic = await ForumTopic.findById(req.params.id);
 
     if (!topic) {
-      return res.status(404).json({ message: 'Topik tidak ditemukan' });
+      return res.status(404).json({ message: "Topik tidak ditemukan" });
     }
 
     if (topic.isClosed) {
-      return res.status(403).json({ message: 'Topik sudah ditutup' });
+      return res.status(403).json({ message: "Topik sudah ditutup" });
     }
 
     const comment = await ForumComment.create({
-      content: req.body.content,
+      content: filterBadWords(req.body.content),
       topic: topic._id,
       author: req.user._id,
       parentComment: req.body.parentComment || null,
+      quote: req.body.quote || null,
+      mentions: req.body.mentions || [],
       image: req.file ? `/uploads/${req.file.filename}` : null,
     });
 
@@ -195,25 +316,30 @@ const addComment = async (req, res) => {
     topic.lastReplyAt = Date.now();
     await topic.save();
 
-    await comment.populate('author', 'username avatar');
+    await comment.populate("author", "username avatar");
 
     // Notify topic author (if not the commenter)
     if (topic.author.toString() !== req.user._id.toString()) {
       const notification = await Notification.create({
         recipient: topic.author,
         sender: req.user._id,
-        type: 'comment_forum',
+        type: "comment_forum",
         message: `${req.user.username} mengomentari topik Anda: "${topic.title}"`,
-        link: `/forum/${topic._id}`
+        link: `/forum/${topic._id}`,
       });
 
-      const socket = require('../socket');
-      socket.getIO().to(topic.author.toString()).emit('new_notification', notification);
+      const socket = require("../socket");
+      socket
+        .getIO()
+        .to(topic.author.toString())
+        .emit("new_notification", notification);
     }
 
     res.status(201).json(comment);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menambah komentar', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal menambah komentar", error: error.message });
   }
 };
 
@@ -225,11 +351,14 @@ const deleteComment = async (req, res) => {
     const comment = await ForumComment.findById(req.params.commentId);
 
     if (!comment) {
-      return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+      return res.status(404).json({ message: "Komentar tidak ditemukan" });
     }
 
-    if (comment.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Tidak memiliki izin' });
+    if (
+      comment.author.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Tidak memiliki izin" });
     }
 
     const topic = await ForumTopic.findById(comment.topic);
@@ -240,9 +369,11 @@ const deleteComment = async (req, res) => {
 
     await ForumComment.findByIdAndDelete(req.params.commentId);
 
-    res.json({ message: 'Komentar berhasil dihapus' });
+    res.json({ message: "Komentar berhasil dihapus" });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menghapus komentar', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal menghapus komentar", error: error.message });
   }
 };
 
@@ -252,12 +383,14 @@ const deleteComment = async (req, res) => {
 const getMyTopics = async (req, res) => {
   try {
     const topics = await ForumTopic.find({ author: req.user._id })
-      .select('-content')
+      .select("-content")
       .sort({ createdAt: -1 });
 
     res.json(topics);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil topik', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil topik", error: error.message });
   }
 };
 
@@ -267,22 +400,44 @@ const getMyTopics = async (req, res) => {
 const likeComment = async (req, res) => {
   try {
     const comment = await ForumComment.findById(req.params.id);
-    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+    if (!comment)
+      return res.status(404).json({ message: "Komentar tidak ditemukan" });
 
     const userId = req.user._id;
-    comment.dislikes = (comment.dislikes || []).filter(id => id.toString() !== userId.toString());
+    const author = await User.findById(comment.author);
 
-    if ((comment.likes || []).map(id => id.toString()).includes(userId.toString())) {
+    let repChange = 0;
+    let reactChange = 0;
+
+    // Remove Dislike if exists
+    if (comment.dislikes.includes(userId)) {
+      comment.dislikes = comment.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    }
+
+    // Toggle Like
+    if (comment.likes.includes(userId)) {
       comment.likes = comment.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
     } else {
-      comment.likes = comment.likes || [];
       comment.likes.push(userId);
+      repChange += 1;
+      reactChange += 1;
     }
 
     await comment.save();
+    
+    // Update Author Reputation
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
     res.json({ likes: comment.likes, dislikes: comment.dislikes });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menyukai komentar', error: error.message });
+    res.status(500).json({ message: "Gagal menyukai komentar", error: error.message });
   }
 };
 
@@ -292,22 +447,43 @@ const likeComment = async (req, res) => {
 const dislikeComment = async (req, res) => {
   try {
     const comment = await ForumComment.findById(req.params.id);
-    if (!comment) return res.status(404).json({ message: 'Komentar tidak ditemukan' });
+    if (!comment)
+      return res.status(404).json({ message: "Komentar tidak ditemukan" });
 
     const userId = req.user._id;
-    comment.likes = (comment.likes || []).filter(id => id.toString() !== userId.toString());
+    const author = await User.findById(comment.author);
 
-    if ((comment.dislikes || []).map(id => id.toString()).includes(userId.toString())) {
+    let repChange = 0;
+    let reactChange = 0;
+
+    // Remove Like if exists
+    if (comment.likes.includes(userId)) {
+      comment.likes = comment.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    }
+
+    // Toggle Dislike
+    if (comment.dislikes.includes(userId)) {
       comment.dislikes = comment.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
     } else {
-      comment.dislikes = comment.dislikes || [];
       comment.dislikes.push(userId);
+      repChange -= 1;
     }
 
     await comment.save();
+
+    // Update Author Reputation
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
     res.json({ likes: comment.likes, dislikes: comment.dislikes });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal tidak menyukai komentar', error: error.message });
+    res.status(500).json({ message: "Gagal tidak menyukai komentar", error: error.message });
   }
 };
 
@@ -317,14 +493,16 @@ const dislikeComment = async (req, res) => {
 const getTopCategories = async (req, res) => {
   try {
     const categories = await ForumTopic.aggregate([
-      { $match: { status: 'approved' } },
-      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $match: { status: "approved" } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $limit: 10 }
+      { $limit: 10 },
     ]);
-    res.json(categories.map(c => ({ name: c._id, count: c.count })));
+    res.json(categories.map((c) => ({ name: c._id, count: c.count })));
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil kategori', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil kategori", error: error.message });
   }
 };
 
@@ -334,24 +512,124 @@ const getTopCategories = async (req, res) => {
 const getRelatedTopics = async (req, res) => {
   try {
     const topic = await ForumTopic.findById(req.params.id);
-    if (!topic) return res.status(404).json({ message: 'Topik tidak ditemukan' });
+    if (!topic)
+      return res.status(404).json({ message: "Topik tidak ditemukan" });
 
     const related = await ForumTopic.find({
       _id: { $ne: topic._id },
       category: topic.category,
-      status: 'approved'
+      status: "approved",
     })
-    .limit(5)
-    .select('title createdAt');
+      .limit(5)
+      .select("title createdAt");
 
     res.json(related);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil topik terkait', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil topik terkait", error: error.message });
   }
 };
 
-module.exports = { 
-  getTopics, getTopicById, getTopicForEdit, createTopic, updateTopic, deleteTopic, 
-  addComment, deleteComment, getMyTopics,
-  likeComment, dislikeComment, getTopCategories, getRelatedTopics
+// @desc    Like topik
+// @route   POST /api/forum/:id/like
+// @access  Private
+const likeTopic = async (req, res) => {
+  try {
+    const topic = await ForumTopic.findById(req.params.id);
+    if (!topic) return res.status(404).json({ message: "Topik tidak ditemukan" });
+
+    const userId = req.user._id;
+    const author = await User.findById(topic.author);
+
+    let repChange = 0;
+    let reactChange = 0;
+
+    if (topic.dislikes.includes(userId)) {
+      topic.dislikes = topic.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    }
+
+    if (topic.likes.includes(userId)) {
+      topic.likes = topic.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    } else {
+      topic.likes.push(userId);
+      repChange += 1;
+      reactChange += 1;
+    }
+
+    await topic.save();
+
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
+    res.json({ likes: topic.likes, dislikes: topic.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal menyukai topik", error: error.message });
+  }
+};
+
+// @desc    Dislike topik
+// @route   POST /api/forum/:id/dislike
+// @access  Private
+const dislikeTopic = async (req, res) => {
+  try {
+    const topic = await ForumTopic.findById(req.params.id);
+    if (!topic) return res.status(404).json({ message: "Topik tidak ditemukan" });
+
+    const userId = req.user._id;
+    const author = await User.findById(topic.author);
+
+    let repChange = 0;
+    let reactChange = 0;
+
+    if (topic.likes.includes(userId)) {
+      topic.likes = topic.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    }
+
+    if (topic.dislikes.includes(userId)) {
+      topic.dislikes = topic.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    } else {
+      topic.dislikes.push(userId);
+      repChange -= 1;
+    }
+
+    await topic.save();
+
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
+    res.json({ likes: topic.likes, dislikes: topic.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal tidak menyukai topik", error: error.message });
+  }
+};
+
+module.exports = {
+  getTopics,
+  getTopicById,
+  getTopicForEdit,
+  createTopic,
+  updateTopic,
+  deleteTopic,
+  addComment,
+  deleteComment,
+  getMyTopics,
+  likeTopic,
+  dislikeTopic,
+  likeComment,
+  dislikeComment,
+  getTopCategories,
+  getRelatedTopics,
 };

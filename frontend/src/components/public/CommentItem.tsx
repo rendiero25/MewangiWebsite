@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import ReportModal from './ReportModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -13,11 +14,17 @@ interface CommentItemProps {
     likes?: string[];
     dislikes?: string[];
     image?: string;
+    quote?: {
+      _id: string;
+      content: string;
+      author: { username: string };
+    };
     topic?: string;
     article?: string;
     review?: string;
   };
   onDelete?: (commentId: string) => void;
+  onQuote?: (comment: any) => void;
 }
 
 function timeAgo(dateStr: string) {
@@ -33,7 +40,7 @@ function timeAgo(dateStr: string) {
   return `${months} bulan lalu`;
 }
 
-export default function CommentItem({ comment, onDelete }: CommentItemProps) {
+export default function CommentItem({ comment, onDelete, onQuote }: CommentItemProps) {
   const { user } = useAuth();
   const isMe = user && user._id === comment.author?._id;
   const isAdmin = user && user.role === 'admin';
@@ -41,6 +48,7 @@ export default function CommentItem({ comment, onDelete }: CommentItemProps) {
   const [likes, setLikes] = useState<string[]>(comment.likes || []);
   const [dislikes, setDislikes] = useState<string[]>(comment.dislikes || []);
   const [isLiking, setIsLiking] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const hasLiked = user && likes.includes(user._id);
   const hasDisliked = user && dislikes.includes(user._id);
@@ -90,7 +98,7 @@ export default function CommentItem({ comment, onDelete }: CommentItemProps) {
     <div className={`flex flex-col gap-1 py-4 ${isMe ? 'items-end' : 'items-start'}`}>
       <div className={`flex gap-3 max-w-[85%] sm:max-w-[75%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center shrink-0 mt-1">
+        <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary/80 to-secondary/80 flex items-center justify-center shrink-0 mt-1">
           {comment.author?.avatar ? (
             <img 
               src={comment.author.avatar.startsWith('http') ? comment.author.avatar : `${API_URL.replace('/api', '')}${comment.author.avatar}`} 
@@ -114,13 +122,20 @@ export default function CommentItem({ comment, onDelete }: CommentItemProps) {
             </span>
           </div>
 
+          {comment.quote && (
+            <div className={`mb-2 p-2 rounded-lg text-xs border-l-4 ${isMe ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-200/50 border-gray-400 text-gray-500'}`}>
+              <p className="font-bold mb-0.5">@{comment.quote.author.username}</p>
+              <div className="line-clamp-2 italic" dangerouslySetInnerHTML={{ __html: comment.quote.content }} />
+            </div>
+          )}
+
           <div className={`p-3 rounded-xl text-sm shadow-sm ${
             isMe 
-              ? 'bg-primary text-white rounded-xl-tr-none' 
-              : 'bg-gray-100 text-gray-800 rounded-xl-tl-none'
+              ? 'bg-primary text-white rounded-tr-none' 
+              : 'bg-gray-100 text-gray-800 rounded-tl-none'
           }`}>
             <div 
-              className={`prose prose-xs max-w-none break-words ql-editor ${isMe ? 'text-white' : 'text-gray-700'}`}
+              className={`prose prose-xs max-w-none wrap-break-word ql-editor ${isMe ? 'text-white' : 'text-gray-700'}`}
               dangerouslySetInnerHTML={{ __html: comment.content }}
             />
             
@@ -164,16 +179,41 @@ export default function CommentItem({ comment, onDelete }: CommentItemProps) {
             </button>
             
             {(isMe || isAdmin) && onDelete && (
-              <button className="cursor-pointer"
+              <button
                 onClick={() => onDelete(comment._id)}
                 className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-red-500'}`}
               >
                 Hapus
               </button>
             )}
+
+            {!isMe && user && onQuote && (
+              <button
+                onClick={() => onQuote && onQuote(comment)}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-primary'}`}
+              >
+                Balas
+              </button>
+            )}
+
+            {!isMe && user && (
+              <button
+                onClick={() => setReportModalOpen(true)}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-red-500'}`}
+              >
+                Laporkan
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      <ReportModal 
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="Comment"
+        targetId={comment._id}
+      />
     </div>
   );
 }

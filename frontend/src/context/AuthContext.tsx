@@ -16,6 +16,21 @@ interface User {
   birthday?: string;
   location?: string;
   website?: string;
+  socialLinks?: {
+    facebook?: string;
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+    tiktok?: string;
+  };
+  statistik?: {
+    posts: number;
+    threads: number;
+    reactions: number;
+    reputation: number;
+  };
+  lastActive?: string;
+  createdAt?: string;
 }
 
 interface AuthContextType {

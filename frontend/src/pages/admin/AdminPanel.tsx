@@ -1,17 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
+import AdminReports from './AdminReports';
+import { MdBlock, MdCheckCircle, MdFlag } from 'react-icons/md';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users';
+type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users' | 'reports';
 
 interface Stats { totalUsers: number; totalPerfumes: number; pendingReviews: number; pendingArticles: number; pendingTopics: number; totalTopics: number; }
 interface PendingReview { _id: string; title: string; content: string; image?: string; occasion?: string[]; season?: string[]; author: { username: string; email: string };
   rating: { overall: number; longevity: number; sillage: number; valueForMoney: number }; createdAt: string; status: string; rejectionReason?: string; }
 interface PendingArticle { _id: string; slug: string; title: string; content: string; excerpt?: string; coverImage?: string; category: string; tags?: string[]; author: { username: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
 interface PendingTopic { _id: string; title: string; content: string; category: string; author: { username: string; avatar?: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
-interface UserData { _id: string; username: string; email: string; role: string; isVerified: boolean; createdAt: string }
+interface UserData { _id: string; username: string; email: string; role: string; isVerified: boolean; isBanned?: boolean; banExpires?: string; createdAt: string }
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -133,12 +132,33 @@ export default function AdminPanel() {
     } catch { alert('Gagal menghapus user.'); }
   };
 
+  const handleBanUser = async (id: string) => {
+    const reason = prompt('Alasan pemblokiran:', 'Melanggar aturan komunitas');
+    if (reason === null) return;
+    const duration = prompt('Durasi (hari, 0 untuk permanen):', '0');
+    if (duration === null) return;
+
+    try {
+      await axios.post(`${API_URL}/admin/users/${id}/ban`, { reason, duration: Number(duration) }, { headers });
+      setUsers(prev => prev.map(u => u._id === id ? { ...u, isBanned: true } : u));
+    } catch { alert('Gagal memblokir user.'); }
+  };
+
+  const handleUnbanUser = async (id: string) => {
+    if (!confirm('Buka blokir user ini?')) return;
+    try {
+      await axios.post(`${API_URL}/admin/users/${id}/unban`, {}, { headers });
+      setUsers(prev => prev.map(u => u._id === id ? { ...u, isBanned: false } : u));
+    } catch { alert('Gagal membuka blokir user.'); }
+  };
+
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'reviews', label: 'Review', count: pendingReviews.length },
     { key: 'articles', label: 'Artikel', count: pendingArticles.length },
     { key: 'topics', label: 'Topik Forum', count: pendingTopics.length },
     { key: 'users', label: 'Users' },
+    { key: 'reports', label: 'Laporan', count: 0 }, // We can fetch count if needed
   ];
 
   return (
@@ -151,7 +171,7 @@ export default function AdminPanel() {
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-white rounded-xl border border-gray-100 p-1 overflow-x-auto">
           {tabs.map((tab) => (
-            <button className="cursor-pointer"
+            <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
@@ -188,7 +208,7 @@ export default function AdminPanel() {
                   <span className="text-xl">{stat.icon}</span>
                   <p className="text-xs text-gray-400 font-medium">{stat.label}</p>
                 </div>
-                <p className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                <p className={`text-3xl font-bold bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
                   {loading ? '—' : stat.value ?? 0}
                 </p>
               </div>
@@ -220,13 +240,13 @@ export default function AdminPanel() {
                           <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · {formatDate(r.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button className="cursor-pointer" onClick={() => setViewingItem({ type: 'review', data: r })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
+                          <button onClick={() => setViewingItem({ type: 'review', data: r })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
                             👁 Lihat
                           </button>
-                          <button className="cursor-pointer" onClick={() => handleReviewAction(r._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
+                          <button onClick={() => handleReviewAction(r._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
                             ✓ Approve
                           </button>
-                          <button className="cursor-pointer" onClick={() => { setRejectingId(r._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          <button onClick={() => { setRejectingId(r._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                             ✕ Reject
                           </button>
                         </div>
@@ -267,7 +287,7 @@ export default function AdminPanel() {
                         <a href={`/review/${r._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
                           🌐 Buka
                         </a>
-                        <button className="cursor-pointer" onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                        <button onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -303,13 +323,13 @@ export default function AdminPanel() {
                           <p className="text-xs text-gray-400">{a.category} · Oleh {a.author?.username || 'User Terhapus'} · {formatDate(a.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button className="cursor-pointer" onClick={() => setViewingItem({ type: 'article', data: a })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
+                          <button onClick={() => setViewingItem({ type: 'article', data: a })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
                             👁 Lihat
                           </button>
-                          <button className="cursor-pointer" onClick={() => handleArticleAction(a._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
+                          <button onClick={() => handleArticleAction(a._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
                             ✓ Approve
                           </button>
-                          <button className="cursor-pointer" onClick={() => { setRejectingId(a._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          <button onClick={() => { setRejectingId(a._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                             ✕ Reject
                           </button>
                         </div>
@@ -350,7 +370,7 @@ export default function AdminPanel() {
                         <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
                           🌐 Buka
                         </a>
-                        <button className="cursor-pointer" onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                        <button onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -386,13 +406,13 @@ export default function AdminPanel() {
                           <p className="text-xs text-gray-400">{t.category} · Oleh {t.author?.username || 'User Terhapus'} · {formatDate(t.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button className="cursor-pointer" onClick={() => setViewingItem({ type: 'topic', data: t })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
+                          <button onClick={() => setViewingItem({ type: 'topic', data: t })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
                             👁 Lihat
                           </button>
-                          <button className="cursor-pointer" onClick={() => handleTopicAction(t._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
+                          <button onClick={() => handleTopicAction(t._id, 'approved')} className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer">
                             ✓ Approve
                           </button>
-                          <button className="cursor-pointer" onClick={() => { setRejectingId(t._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          <button onClick={() => { setRejectingId(t._id); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                             ✕ Reject
                           </button>
                         </div>
@@ -433,7 +453,7 @@ export default function AdminPanel() {
                         <a href={`/forum/${t._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
                           🌐 Buka
                         </a>
-                        <button className="cursor-pointer" onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                        <button onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -470,7 +490,7 @@ export default function AdminPanel() {
                       <tr key={u._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center shrink-0">
                               <span className="text-white text-xs font-bold">{u.username.charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="min-w-0">
@@ -499,14 +519,27 @@ export default function AdminPanel() {
                         </td>
                         <td className="px-6 py-3 text-gray-500 text-xs">{formatDate(u.createdAt)}</td>
                         <td className="px-6 py-3 text-right">
-                          {u._id !== user?._id && u.role !== 'admin' && (
-                            <button className="cursor-pointer"
-                              onClick={() => handleDeleteUser(u._id)}
-                              className="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer"
-                            >
-                              Hapus
-                            </button>
-                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            {u._id !== user?._id && u.role !== 'admin' && (
+                              <>
+                                {u.isBanned ? (
+                                  <button onClick={() => handleUnbanUser(u._id)} className="text-emerald-600 hover:text-emerald-700 font-bold text-xs flex items-center gap-1 cursor-pointer">
+                                    <MdCheckCircle /> Unban
+                                  </button>
+                                ) : (
+                                  <button onClick={() => handleBanUser(u._id)} className="text-amber-600 hover:text-amber-700 font-bold text-xs flex items-center gap-1 cursor-pointer">
+                                    <MdBlock /> Ban
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteUser(u._id)}
+                                  className="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                                >
+                                  Hapus
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -515,6 +548,9 @@ export default function AdminPanel() {
               </div>
             )}
           </div>
+        )}
+        {activeTab === 'reports' && (
+          <AdminReports />
         )}
       </div>
 
@@ -526,7 +562,7 @@ export default function AdminPanel() {
               <h3 className="font-bold text-lg text-gray-900">
                 Detail {viewingItem.type === 'review' ? 'Review' : viewingItem.type === 'article' ? 'Artikel' : 'Topik'}
               </h3>
-              <button className="cursor-pointer" onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              <button onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                 ✕
               </button>
             </div>
@@ -631,8 +667,8 @@ export default function AdminPanel() {
                    className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20"
                  />
                  <div className="flex justify-end gap-2 mt-1">
-                    <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">Batal</button>
-                    <button className="cursor-pointer" onClick={() => { 
+                    <button onClick={() => setRejectingId(null)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">Batal</button>
+                    <button onClick={() => { 
                       if (viewingItem.type === 'review') handleReviewAction(viewingItem.data._id, 'rejected', rejectReason);
                       else if (viewingItem.type === 'article') handleArticleAction(viewingItem.data._id, 'rejected', rejectReason);
                       else handleTopicAction(viewingItem.data._id, 'rejected', rejectReason);
@@ -643,13 +679,13 @@ export default function AdminPanel() {
               </div>
             ) : (
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3 shrink-0">
-                <button className="cursor-pointer" onClick={() => { setViewingItem(null); setRejectingId(null); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors cursor-pointer">
+                <button onClick={() => { setViewingItem(null); setRejectingId(null); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-white transition-colors cursor-pointer">
                   Tutup
                 </button>
-                <button className="cursor-pointer" onClick={() => { setRejectingId(viewingItem.data._id); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
+                <button onClick={() => { setRejectingId(viewingItem.data._id); setRejectReason(''); }} className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
                   ✕ Reject
                 </button>
-                <button className="cursor-pointer" onClick={() => { 
+                <button onClick={() => { 
                     if (viewingItem.type === 'review') handleReviewAction(viewingItem.data._id, 'approved');
                     else if (viewingItem.type === 'article') handleArticleAction(viewingItem.data._id, 'approved');
                     else handleTopicAction(viewingItem.data._id, 'approved');

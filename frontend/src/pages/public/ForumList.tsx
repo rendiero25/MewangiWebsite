@@ -3,21 +3,32 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import TopicCard from '../../components/public/TopicCard';
+import Breadcrumbs from '../../components/public/Breadcrumbs';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const categories = ['Semua', 'Diskusi Umum', 'Rekomendasi', 'Jual Beli', 'Clone & Inspired', 'Tips & Trik', 'Lainnya'];
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  icon?: string;
+}
 
 interface Topic {
   _id: string;
   title: string;
   content: string;
-  category: string;
+  category: { name: string; slug: string; icon?: string };
   author: { username: string; avatar?: string };
+  tags: string[];
+  prefix?: string;
+  type: string;
   views: number;
   replyCount: number;
   isPinned: boolean;
   isClosed: boolean;
+  isFeatured: boolean;
+  isAnnouncement: boolean;
   createdAt: string;
   lastReplyAt: string;
 }
@@ -25,18 +36,35 @@ interface Topic {
 export default function ForumList() {
   const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCats, setLoadingCats] = useState(true);
   const [activeCategory, setActiveCategory] = useState('Semua');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [sort, setSort] = useState('latest');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/categories`);
+        setCategories(data);
+      } catch (err) {
+        console.error('Gagal memuat kategori:', err);
+      } finally {
+        setLoadingCats(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const fetchTopics = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string | number> = { page, limit: 25 };
+      const params: Record<string, string | number> = { page, limit: 25, sort };
       if (activeCategory !== 'Semua') params.category = activeCategory;
       if (search) params.search = search;
 
@@ -49,7 +77,7 @@ export default function ForumList() {
     } finally {
       setLoading(false);
     }
-  }, [activeCategory, search, page]);
+  }, [activeCategory, search, sort, page]);
 
   useEffect(() => {
     fetchTopics();
@@ -64,7 +92,7 @@ export default function ForumList() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       {/* Hero header */}
-      <div className="bg-gradient-to-br from-primary/5 via-white to-secondary/5 border-b border-gray-100">
+      <div className="bg-linear-to-br from-primary/5 via-white to-secondary/5 border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
@@ -78,7 +106,7 @@ export default function ForumList() {
             {user && (
               <Link
                 to="/forum/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 shrink-0"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all duration-300 shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -91,6 +119,8 @@ export default function ForumList() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <Breadcrumbs items={[{ label: 'Forum', to: '/forum' }]} />
+
         {/* Search & filters */}
         <div className="mb-6 space-y-4">
           {/* Search bar */}
@@ -107,21 +137,59 @@ export default function ForumList() {
             </svg>
           </form>
 
-          {/* Category pills */}
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
-              <button className="cursor-pointer"
-                key={cat}
-                onClick={() => { setActiveCategory(cat); setPage(1); }}
+            <button
+              onClick={() => { setActiveCategory('Semua'); setPage(1); }}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
+                activeCategory === 'Semua'
+                  ? 'bg-primary text-white shadow-md shadow-primary/25'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/30 hover:text-primary'
+              }`}
+            >
+              Semua
+            </button>
+            {!loadingCats && categories.map((cat) => (
+              <button
+                key={cat._id}
+                onClick={() => { setActiveCategory(cat.slug); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-                  activeCategory === cat
+                  activeCategory === cat.slug
                     ? 'bg-primary text-white shadow-md shadow-primary/25'
                     : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/30 hover:text-primary'
                 }`}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
+          </div>
+
+          {/* Sort bar */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Urutkan:</span>
+              <div className="flex gap-1">
+                {[
+                  { id: 'latest', label: 'Terbaru' },
+                  { id: 'popular', label: 'Terpopuler' },
+                  { id: 'replies', label: 'Paling Banyak Balasan' },
+                  { id: 'relevance', label: 'Relevansi', searchOnly: true }
+                ].map((s) => (
+                  (!s.searchOnly || search) && (
+                    <button
+                      key={s.id}
+                      onClick={() => { setSort(s.id); setPage(1); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                        sort === s.id 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  )
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -167,7 +235,7 @@ export default function ForumList() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <button className="cursor-pointer"
+            <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
@@ -179,7 +247,7 @@ export default function ForumList() {
               .map((p, idx, arr) => (
                 <span key={p}>
                   {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-gray-400">…</span>}
-                  <button className="cursor-pointer"
+                  <button
                     onClick={() => setPage(p)}
                     className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
                       page === p
@@ -191,7 +259,7 @@ export default function ForumList() {
                   </button>
                 </span>
               ))}
-            <button className="cursor-pointer"
+            <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"

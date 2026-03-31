@@ -3,6 +3,7 @@ const ReviewComment = require('../models/ReviewComment');
 const Perfume = require('../models/Perfume');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const { filterBadWords } = require('../utils/moderation');
 
 // @desc    Get semua review (approved only untuk public)
 // @route   GET /api/reviews
@@ -77,8 +78,8 @@ const createReview = async (req, res) => {
     }
 
     const review = await Review.create({
-      title,
-      content,
+      title: filterBadWords(title),
+      content: filterBadWords(content),
       author: req.user._id,
       perfume: perfume || null,
       rating,
@@ -136,8 +137,8 @@ const updateReview = async (req, res) => {
         overall: Number(req.body['rating[overall]'])
       };
     }
-    review.title = title || review.title;
-    review.content = content || review.content;
+    review.title = title ? filterBadWords(title) : review.title;
+    review.content = content ? filterBadWords(content) : review.content;
     review.rating = rating || review.rating;
     review.occasion = occasion || review.occasion;
     review.season = season || review.season;
@@ -191,7 +192,7 @@ const addReviewComment = async (req, res) => {
     }
 
     const comment = await ReviewComment.create({
-      content: req.body.content,
+      content: filterBadWords(req.body.content),
       review: review._id,
       author: req.user._id,
     });

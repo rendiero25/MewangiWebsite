@@ -33,6 +33,21 @@ const updateProfile = async (req, res) => {
     user.location = location !== undefined ? location : user.location;
     user.website = website !== undefined ? website : user.website;
 
+    if (req.body.socialLinks) {
+      try {
+        const socialLinksData = typeof req.body.socialLinks === 'string' 
+          ? JSON.parse(req.body.socialLinks) 
+          : req.body.socialLinks;
+        
+        user.socialLinks = {
+          ...user.socialLinks,
+          ...socialLinksData
+        };
+      } catch (e) {
+        console.error('Gagal parse socialLinks:', e);
+      }
+    }
+
     if (req.file) {
       // Hapus avatar lama jika ada dan bukan default
       if (user.avatar && user.avatar.startsWith('/uploads/')) {
@@ -57,6 +72,10 @@ const updateProfile = async (req, res) => {
       birthday: user.birthday,
       location: user.location,
       website: user.website,
+      socialLinks: user.socialLinks,
+      statistik: user.statistik,
+      lastActive: user.lastActive,
+      createdAt: user.createdAt,
       isVerified: user.isVerified,
     });
   } catch (error) {
@@ -107,4 +126,130 @@ const getTopMembers = async (req, res) => {
   }
 };
 
-module.exports = { updateProfile, getTopMembers };
+// @desc    Get user profile by username or ID
+// @route   GET /api/users/profile/:id
+// @access  Public
+const getUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Cari berdasar ID atau Username
+    let query = { _id: id };
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      query = { username: id };
+    }
+
+    const user = await User.findOne(query)
+      .select('-verificationToken -verificationTokenExpire -passwordResetToken -passwordResetExpires -loginAttempts -lockUntil')
+      .populate('followers', 'username avatar')
+      .populate('following', 'username avatar');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    // Convert to object to add dynamic fields
+    const userObj = user.toObject();
+    
+    // Check if current user is following this profile
+    userObj.isFollowing = false;
+    if (req.user && user.followers) {
+      userObj.isFollowing = user.followers.some(f => f._id.toString() === req.user._id.toString());
+    }
+
+    // Counts
+    userObj.followerCount = user.followers ? user.followers.length : 0;
+    userObj.followingCount = user.following ? user.following.length : 0;
+
+    res.json(userObj);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil profil', error: error.message });
+  }
+};
+
+// @desc    Follow user
+// @route   POST /api/users/:id/follow
+// @access  Private
+const followUser = async (req, res) => {
+  try {
+    const targetUserId = req.params.id;
+    const currentUserId = req.user._id;
+
+    if (targetUserId === currentUserId.toString()) {
+      return res.status(400).json({ message: 'Tidak bisa mengikuti diri sendiri' });
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    // Check if already following
+    if (targetUser.followers.includes(currentUserId)) {
+      return res.status(400).json({ message: 'Sudah mengikuti user ini' });
+    }
+
+    // Add to followers
+    targetUser.followers.push(currentUserId);
+    await targetUser.save();
+
+    // Add to following
+    currentUser.following.push(targetUserId);
+    await currentUser.save();
+
+    // Create Notification
+    const Notification = require('../models/Notification');
+    const notification = await Notification.create({
+      recipient: targetUserId,
+      sender: currentUserId,
+      type: 'system', // or add 'follow' type
+      message: `${currentUser.username} mulai mengikuti Anda`,
+      link: `/profile/${currentUser.username}`
+    });
+
+    // Socket notification
+    try {
+      const socket = require('../socket');
+      socket.getIO().to(targetUserId.toString()).emit('new_notification', notification);
+    } catch (err) {
+       console.error('[Socket] Failed to emit follow notification:', err.message);
+    }
+
+    res.json({ message: 'Berhasil mengikuti user', followerCount: targetUser.followers.length });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengikuti user', error: error.message });
+  }
+};
+
+// @desc    Unfollow user
+// @route   POST /api/users/:id/unfollow
+// @access  Private
+const unfollowUser = async (req, res) => {
+  try {
+    const targetUserId = req.params.id;
+    const currentUserId = req.user._id;
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    // Remove from followers
+    targetUser.followers = targetUser.followers.filter(id => id.toString() !== currentUserId.toString());
+    await targetUser.save();
+
+    // Remove from following
+    currentUser.following = currentUser.following.filter(id => id.toString() !== targetUserId.toString());
+    await currentUser.save();
+
+    res.json({ message: 'Berhasil berhenti mengikuti user', followerCount: targetUser.followers.length });
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal berhenti mengikuti user', error: error.message });
+  }
+};
+
+module.exports = { updateProfile, getTopMembers, getUserProfile, followUser, unfollowUser };

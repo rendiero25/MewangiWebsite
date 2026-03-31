@@ -12,14 +12,35 @@ const forumTopicSchema = new mongoose.Schema({
     required: [true, 'Konten topik wajib diisi'],
   },
   category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: [true, 'Kategori wajib diisi'],
+  },
+  tags: [{
     type: String,
-    enum: ['Diskusi Umum', 'Rekomendasi', 'Jual Beli', 'Clone & Inspired', 'Tips & Trik', 'Lainnya'],
-    default: 'Diskusi Umum',
+    trim: true,
+  }],
+  prefix: {
+    type: String,
+    trim: true,
+    default: '', // e.g., [SOLVED], [WTS]
+  },
+  type: {
+    type: String,
+    enum: ['normal', 'poll', 'question'],
+    default: 'normal',
+  },
+  poll: {
+    options: [{
+      text: String,
+      votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    }],
+    expiresAt: Date,
   },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
-    default: 'pending',
+    default: 'approved', // Default auto-approve for now, can be changed to pending
   },
   rejectionReason: {
     type: String,
@@ -42,6 +63,14 @@ const forumTopicSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isFeatured: {
+    type: Boolean,
+    default: false,
+  },
+  isAnnouncement: {
+    type: Boolean,
+    default: false,
+  },
   lastReplyAt: {
     type: Date,
     default: Date.now,
@@ -50,10 +79,18 @@ const forumTopicSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  dislikes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
 }, {
   timestamps: true,
 });
 
-forumTopicSchema.index({ title: 'text', content: 'text' });
+forumTopicSchema.index({ title: 'text', content: 'text', tags: 'text' });
 
 module.exports = mongoose.model('ForumTopic', forumTopicSchema);
