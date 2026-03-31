@@ -6,6 +6,7 @@ import { FaFacebook, FaTwitter, FaInstagram, FaTiktok, FaLinkedin } from 'react-
 import { useAuth } from '../../context/AuthContext';
 import FollowButton from '../../components/public/FollowButton';
 import { useNavigate } from 'react-router-dom';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -109,9 +110,6 @@ const PublicProfile = () => {
     );
   }
 
-  const avatarUrl = profile.avatar 
-    ? (profile.avatar.startsWith('http') ? profile.avatar : `${API_URL.replace('/api', '')}${profile.avatar}`)
-    : '';
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -124,15 +122,7 @@ const PublicProfile = () => {
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 text-center sm:text-left">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-5xl font-bold">
-                      {profile.username.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
+                <Avatar src={profile.avatar} size="full" alt={profile.username} className="w-32 h-32 sm:w-40 sm:h-40 border-4 border-white shadow-lg" />
               </div>
               
               {/* Name & Basic Info */}

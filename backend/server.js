@@ -18,7 +18,11 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const sitemapRoutes = require('./routes/sitemapRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const checkIPBan = require('./middleware/ipBan');
 
 // Connect to MongoDB
 connectDB();
@@ -34,16 +38,38 @@ const apiLimiter = rateLimit({
 
 const app = express();
 app.use('/api/', apiLimiter);
+app.use('/api/', checkIPBan); // Apply IP check globally to API
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5175',
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Security Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+})); // Set secure HTTP headers
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -60,6 +86,10 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+
+// SEO Routes (Sitemap & Robots)
+app.use('/', sitemapRoutes);
 
 // Static Folder for Frontend Production
 if (process.env.NODE_ENV === 'production') {

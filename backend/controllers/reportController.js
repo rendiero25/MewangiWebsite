@@ -2,6 +2,7 @@ const Report = require('../models/Report');
 const ForumTopic = require('../models/ForumTopic');
 const ForumComment = require('../models/ForumComment');
 const Notification = require('../models/Notification');
+const AuditLog = require('../models/AuditLog');
 
 // @desc    Buat laporan baru
 // @route   POST /api/reports
@@ -92,6 +93,16 @@ const resolveReport = async (req, res) => {
     };
 
     await report.save();
+
+    // Log moderation action
+    await AuditLog.create({
+      admin: adminId,
+      action: 'RESOLVE_REPORT',
+      targetType: 'Report',
+      targetId: report._id,
+      details: `Action: ${action}, Reason: ${reason || 'N/A'}`,
+      ipAddress: req.ip
+    });
 
     // Opsional: Kirim notifikasi ke pelapor
     const notification = await Notification.create({

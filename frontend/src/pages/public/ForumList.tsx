@@ -93,7 +93,7 @@ export default function ForumList() {
     <div className="min-h-screen bg-gray-50/50">
       {/* Hero header */}
       <div className="bg-linear-to-br from-primary/5 via-white to-secondary/5 border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-black mb-2">
@@ -118,7 +118,7 @@ export default function ForumList() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Breadcrumbs items={[{ label: 'Forum', to: '/forum' }]} />
 
         {/* Search & filters */}

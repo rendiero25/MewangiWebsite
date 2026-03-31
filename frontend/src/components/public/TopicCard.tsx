@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Avatar from '../common/Avatar';
 
 interface TopicCardProps {
   topic: {
@@ -57,11 +58,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
       <div className="p-5 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-start gap-4">
           {/* Author avatar */}
-          <div className="hidden sm:flex w-10 h-10 rounded-full bg-linear-to-br from-primary to-secondary items-center justify-center shrink-0">
-            <span className="text-white text-sm font-bold">
-              {(topic.author?.username || 'U').charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <Avatar src={topic.author?.avatar} size="md" alt={topic.author?.username} />
 
           <div className="flex-1 min-w-0">
             {/* Top row: badges */}
@@ -92,8 +89,8 @@ export default function TopicCard({ topic }: TopicCardProps) {
                   Ditutup
                 </span>
               )}
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors[topic.category?.slug] || categoryColors['lainnya']}`}>
-                {topic.category?.name || 'Kategori'}
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${colorClass}`}>
+                {topic.category?.name || 'Lainnya'}
               </span>
             </div>
 

@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import ImageWithLazyLoad from '../common/ImageWithLazyLoad';
+import Avatar from '../common/Avatar';
 
 interface ArticleCardProps {
   article: {
@@ -42,18 +44,19 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <Link to={`/blog/${article.slug}`} className="block group">
-      <div className="rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
+      <div className="rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
         {/* Cover image */}
-        <div className="h-44 bg-gradient-to-br from-indigo-100 to-blue-50 overflow-hidden">
+        <div className="h-44 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
           {article.coverImage ? (
-            <img
+            <ImageWithLazyLoad
               src={article.coverImage.startsWith('http') ? article.coverImage : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${article.coverImage}`}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              placeholderClassName="h-44 w-full"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <svg className="w-12 h-12 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-indigo-200 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
               </svg>
             </div>
@@ -63,19 +66,19 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         <div className="p-5 flex-1 flex flex-col">
           {/* Category + read time */}
           <div className="flex items-center gap-2 mb-2">
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium dark:brightness-110 ${colorClass}`}>
               {article.category}
             </span>
           </div>
 
           {/* Title */}
-          <h3 className="text-base font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 mb-2">
             {article.title}
           </h3>
 
           {/* Excerpt */}
           {article.excerpt && (
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3 flex-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3 flex-1">
               {article.excerpt}
             </p>
           )}
@@ -84,7 +87,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           {article.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {article.tags.slice(0, 3).map((tag) => (
-                <span key={tag} className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-xs">
+                <span key={tag} className="px-2 py-0.5 rounded-full bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs">
                   #{tag}
                 </span>
               ))}
@@ -92,14 +95,10 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           )}
 
           {/* Meta */}
-          <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-50 mt-auto">
+          <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 pt-3 border-t border-gray-50 dark:border-gray-700 mt-auto">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center shrink-0">
-                <span className="text-white text-[10px] font-bold">
-                  {(article.author?.username || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="font-medium text-gray-600">{article.author?.username || 'User Terhapus'}</span>
+              <Avatar src={article.author?.avatar} size="xs" alt={article.author?.username} />
+              <span className="font-medium text-gray-600 dark:text-gray-300">{article.author?.username || 'User Terhapus'}</span>
             </div>
             <div className="flex items-center gap-3">
               <span>{timeAgo(article.createdAt)}</span>

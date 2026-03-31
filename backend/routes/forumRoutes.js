@@ -4,7 +4,8 @@ const { protect, verified } = require('../middleware/auth');
 const { 
   getTopics, getTopicById, createTopic, updateTopic, deleteTopic, 
   addComment, deleteComment, getMyTopics, getTopicForEdit,
-  likeComment, dislikeComment, getTopCategories, getRelatedTopics
+  likeComment, dislikeComment, getTopCategories, getRelatedTopics,
+  likeTopic, dislikeTopic
 } = require('../controllers/forumController');
 
 // Public

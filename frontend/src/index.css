@@ -20,6 +20,60 @@ body {
   font-family: "Outfit", sans-serif;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  @apply bg-gray-900 text-white;
+}
+
+/* Dark mode styles */
+html.dark {
+  --color-white: #1f2937;
+  --color-black: #f3f4f6;
+}
+
+html.dark .bg-white {
+  @apply bg-gray-800;
+}
+
+html.dark .text-gray-900 {
+  @apply text-gray-100;
+}
+
+html.dark .text-gray-700 {
+  @apply text-gray-300;
+}
+
+html.dark .text-gray-600 {
+  @apply text-gray-400;
+}
+
+html.dark .border-gray-100 {
+  @apply border-gray-700;
+}
+
+html.dark .border-gray-200 {
+  @apply border-gray-700;
+}
+
+html.dark .bg-gray-50 {
+  @apply bg-gray-800;
+}
+
+html.dark .bg-gray-100 {
+  @apply bg-gray-800;
+}
+
+html.dark .hover\:bg-gray-50:hover {
+  @apply bg-gray-800;
+}
+
+html.dark .hover\:bg-gray-100:hover {
+  @apply bg-gray-800;
+}
+
 /* Fix React Quill Editor styles flattened by Tailwind CSS */
 .ql-editor p {
   margin-bottom: 1.25em !important;

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -196,13 +197,7 @@ export default function ReviewDetail() {
                       </h1>
 
                       <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-md flex items-center justify-center font-black text-white text-xs">
-                          {review.author.avatar ? (
-                            <img src={review.author.avatar.startsWith('http') ? review.author.avatar : `${API_URL.replace('/api', '')}${review.author.avatar}`} alt={review.author.username} className="w-full h-full rounded-full object-cover" />
-                          ) : (
-                            review.author.username.charAt(0).toUpperCase()
-                          )}
-                        </div>
+                        <Avatar src={review.author.avatar} size="sm" alt={review.author.username} />
                         <div className="flex flex-col">
                            <span className="text-xs font-black text-gray-800">{review.author.username}</span>
                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Contributor • {new Date(review.createdAt).toLocaleDateString()}</span>

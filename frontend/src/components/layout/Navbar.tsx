@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { MdChat } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
 import NotificationBell from '../notifications/NotificationBell';
+import ThemeToggle from './ThemeToggle';
+import Avatar from '../common/Avatar';
 import Logo from '../../assets/logo.png';
 
 const navLinks = [
@@ -22,31 +24,27 @@ export default function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 shadow-sm" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 2xl:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <img src={Logo} alt="Logo" className="w-40" />
-            {/* <div className="w-9 h-9 rounded-xl bg-linear-to-br from-primary to-secondary flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <span className="text-white font-bold text-lg">M</span>
-            </div>
-            <span className="text-xl font-bold text-black tracking-tight">
-              Mewangi
-            </span> */}
+          <Link to="/" className="flex items-center gap-2 group" aria-label="Mewangi Home">
+            <img src={Logo} alt="Mewangi Logo" className="w-40" />
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1" role="menubar" aria-label="Main menu">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                role="menuitem"
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
                   isActive(link.path)
                     ? 'bg-primary/10 text-primary'
-                    : 'text-gray-600 hover:text-primary hover:bg-primary/5'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-primary/5'
                 }`}
+                aria-current={isActive(link.path) ? 'page' : undefined}
               >
                 {link.name}
               </Link>
@@ -55,12 +53,14 @@ export default function Navbar() {
 
           {/* Desktop Right Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {user ? (
               <div className="flex items-center gap-3">
                 <Link 
                   to="/messages" 
-                  className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block"
+                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary transition-colors hover:bg-primary/5 dark:hover:bg-primary/10 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary"
                   title="Pesan"
+                  aria-label="Direct messages"
                 >
                   <MdChat size={22} />
                 </Link>
@@ -68,28 +68,27 @@ export default function Navbar() {
                 <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
+                  className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                  aria-expanded={profileOpen}
+                  aria-haspopup="menu"
+                  aria-label={`Toggle profile menu for ${user.username}`}
                 >
-                  <div className="w-7 h-7 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
-                      {user.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate">
+                  <Avatar src={user.avatar} size="sm" alt={user.username} />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-[100px] truncate">
                     {user.username}
                   </span>
-                  <svg className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {profileOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900">{user.username}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} aria-hidden="true" />
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 z-50 animate-in fade-in slide-in-from-top-2" role="menu">
+                      <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.username}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                         {user.role === 'admin' && (
                           <span className="inline-block mt-1 px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">Admin</span>
                         )}
@@ -97,7 +96,8 @@ export default function Navbar() {
                       <Link
                         to="/dashboard"
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700"
+                        role="menuitem"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -180,7 +180,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg">
           <div className="px-4 py-3 space-y-1">
             {navLinks.map((link) => (
               <Link
@@ -201,32 +201,30 @@ export default function Navbar() {
             {user ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-3 px-4 py-2">
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">{user.username.charAt(0).toUpperCase()}</span>
-                  </div>
+                  <Avatar src={user.avatar} size="sm" alt={user.username} />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{user.username}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.username}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                   </div>
                 </div>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
-                <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Dashboard</Link>
+                <Link to="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <span>Notifikasi</span>
                   <span className="bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">Baru</span>
                 </Link>
                 {user.role === 'admin' && (
-                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50">Admin Panel</Link>
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">Admin Panel</Link>
                 )}
                 <button
                   onClick={() => { logout(); setMobileOpen(false); }}
-                  className="cursor-pointer w-full text-left px-4 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50"
+                  className="cursor-pointer w-full text-left px-4 py-2.5 rounded-xl text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
                 >
                   Keluar
                 </button>
               </div>
             ) : (
               <div className="flex gap-2">
-                <Link to="/login" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50">Masuk</Link>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800">Masuk</Link>
                 <Link to="/register" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl">Daftar</Link>
               </div>
             )}

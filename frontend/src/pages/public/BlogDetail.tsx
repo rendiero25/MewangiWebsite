@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -187,13 +188,7 @@ export default function BlogDetail() {
                     </h1>
 
                     <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100/50">
-                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
-                        {article.author.avatar ? (
-                          <img src={article.author.avatar.startsWith('http') ? article.author.avatar : `${API_URL.replace('/api', '')}${article.author.avatar}`} alt={article.author.username} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-indigo-600 font-bold">{article.author.username.charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
+                      <Avatar src={article.author.avatar} size="lg" alt={article.author.username} />
                       <div>
                         <p className="text-sm font-bold text-gray-900">{article.author.username}</p>
                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Penulis • {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>

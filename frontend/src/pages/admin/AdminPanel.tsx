@@ -1,3 +1,6 @@
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 import AdminReports from './AdminReports';
 import { MdBlock, MdCheckCircle, MdFlag } from 'react-icons/md';
 

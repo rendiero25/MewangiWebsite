@@ -29,6 +29,10 @@ const categorySchema = new mongoose.Schema({
     ref: 'Category',
     default: null,
   },
+  needsApproval: {
+    type: Boolean,
+    default: false,
+  },
   visibility: {
     type: String,
     enum: ['public', 'private', 'member-only', 'role-based'],
@@ -38,6 +42,14 @@ const categorySchema = new mongoose.Schema({
     type: String,
     default: ['member', 'admin'],
   }],
+  metaTitle: {
+    type: String,
+    default: '',
+  },
+  metaDescription: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ReportModal from './ReportModal';
+import Avatar from '../common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -98,19 +99,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
     <div className={`flex flex-col gap-1 py-4 ${isMe ? 'items-end' : 'items-start'}`}>
       <div className={`flex gap-3 max-w-[85%] sm:max-w-[75%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary/80 to-secondary/80 flex items-center justify-center shrink-0 mt-1">
-          {comment.author?.avatar ? (
-            <img 
-              src={comment.author.avatar.startsWith('http') ? comment.author.avatar : `${API_URL.replace('/api', '')}${comment.author.avatar}`} 
-              className="w-full h-full rounded-full object-cover" 
-              alt={comment.author.username} 
-            />
-          ) : (
-            <span className="text-white text-[10px] font-bold">
-              {(comment.author?.username || 'U').charAt(0).toUpperCase()}
-            </span>
-          )}
-        </div>
+        <Avatar src={comment.author?.avatar} size="sm" alt={comment.author?.username} className="mt-1" />
 
         <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
           <div className="flex items-center gap-2 mb-1 px-1">

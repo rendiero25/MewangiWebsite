@@ -162,6 +162,16 @@ const createTopic = async (req, res) => {
       isFeatured,
     } = req.body;
 
+    // Spam Protection: 1 topic per minute
+    const lastTopic = await ForumTopic.findOne({ author: req.user._id }).sort({ createdAt: -1 });
+    if (lastTopic && (Date.now() - new Date(lastTopic.createdAt).getTime()) < 60000) {
+      return res.status(429).json({ message: 'Anda mengirim topik terlalu cepat. Tunggu sebentar.' });
+    }
+
+    // Check if category requires approval
+    const cat = await Category.findById(category);
+    const status = (cat && cat.needsApproval) ? 'pending' : 'approved';
+
     const topic = await ForumTopic.create({
       title: filterBadWords(title),
       content: filterBadWords(content),
@@ -172,6 +182,7 @@ const createTopic = async (req, res) => {
       isAnnouncement: isAnnouncement || false,
       isFeatured: isFeatured || false,
       author: req.user._id,
+      status,
     });
 
     await topic.populate("author", "username avatar");
@@ -299,6 +310,12 @@ const addComment = async (req, res) => {
 
     if (topic.isClosed) {
       return res.status(403).json({ message: "Topik sudah ditutup" });
+    }
+
+    // Spam Protection: 1 comment per 30 seconds
+    const lastComment = await ForumComment.findOne({ author: req.user._id, topic: topic._id }).sort({ createdAt: -1 });
+    if (lastComment && (Date.now() - new Date(lastComment.createdAt).getTime()) < 30000) {
+      return res.status(429).json({ message: 'Anda mengirim komentar terlalu cepat. Tunggu sebentar.' });
     }
 
     const comment = await ForumComment.create({

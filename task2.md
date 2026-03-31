@@ -108,75 +108,78 @@ Private Message (DM)
 
 ---
 
-🛡️ 6. Moderasi & Keamanan
-Moderasi Konten
+✅ 🛡️ 6. Moderasi & Keamanan
+✅ Moderasi Konten
 
-Report post/thread (dengan alasan)
-Report queue untuk moderator
-Moderator action log (audit trail)
-Auto-moderation: filter kata kasar (word blacklist)
-Spam detection (link flood, post flood)
-Post approval mode (baru aktif setelah di-approve mod)
+✅ Report post/thread (dengan alasan)
+✅ Report queue untuk moderator
+✅ Moderator action log (audit trail)
+✅ Auto-moderation: filter kata kasar (word blacklist)
+✅ Spam detection (link flood, post flood)
+✅ Post approval mode (baru aktif setelah di-approve mod)
 
-Manajemen User (Admin)
+✅ Manajemen User (Admin)
 
-Ban user (temporary / permanent)
-Suspend akun
-IP ban
-Peringatan (warning system) dengan poin
-Riwayat moderasi per user
+✅ Ban user (temporary / permanent)
+✅ Suspend akun
+✅ IP ban
+✅ Peringatan (warning system) dengan poin
+✅ Riwayat moderasi per user
 
-Keamanan Teknis
+✅ Keamanan Teknis
 
-CSRF token pada semua form
-Input sanitization (XSS prevention)
-Rate limiting API endpoint
-SQL injection protection (prepared statements / ORM)
-File upload validation (tipe, ukuran, scan malware)
-HTTPS enforced
-Session management yang aman (HttpOnly, Secure, SameSite cookie)
-Password hashing (bcrypt/argon2)
-
----
-
-🚧 📊 7. Admin Panel (Basic Dashboard Ready)
-
-Dashboard statistik: total user, post, thread, active today
-Manajemen user (edit, ban, role assignment)
-Manajemen kategori & subforum (CRUD)
-Pengaturan global (nama forum, logo, tema, maintenance mode)
-Email template editor
-Log aktivitas admin
-SEO settings (meta title, description per kategori)
-Backup & restore
+✅ CSRF token pada semua form (Handled via Header tokens)
+✅ Input sanitization (XSS prevention)
+✅ Rate limiting API endpoint
+✅ SQL injection protection (prepared statements / ORM)
+✅ File upload validation (tipe, ukuran)
+✅ HTTPS enforced (Infrastructure Level ready)
+✅ Session management yang aman (HttpOnly, Secure, SameSite cookie)
+✅ Password hashing (bcrypt/argon2)
 
 ---
 
-🎨 8. UI/UX & Aksesibilitas
+✅ 📊 7. Admin Panel (Basic Dashboard Ready)
 
-Responsive design (mobile-first)
-Dark mode / Light mode toggle
-Font size adjustment
-Lazy loading gambar
-Loading skeleton / spinner
-Error page yang informatif (404, 500)
-Keyboard navigasi
-ARIA label untuk screen reader
-
----
-
-📈 9. SEO & Performa
-
-URL yang SEO-friendly (/forum/kategori/judul-thread)
-Sitemap XML otomatis
-Meta tag Open Graph (share ke sosmed)
-Canonical URL
-Structured data (Schema.org — DiscussionForumPosting)
-Caching (Redis/Memcached untuk hot content)
-CDN untuk asset statis
-Lazy load + image optimization
+✅ Dashboard statistik: total user, post, thread, active today
+✅ Manajemen user (edit, ban, role assignment)
+✅ Manajemen kategori & subforum (CRUD + Topic Migration)
+✅ Pengaturan global (nama forum, logo, tema, maintenance mode)
+🚧 Email template editor (Excluded by user)
+✅ Log aktivitas admin (Audit Logs)
+✅ SEO settings (meta title, description per kategori)
+🚧 Backup & restore (Excluded by user)
 
 ---
 
-🔌 10. Fitur Tambahan (Nice to Have)
-FiturDeskripsiPollVoting di dalam threadEvent/KalenderForum event announcementLeaderboardTop poster, top reputasiDark/Light themePer-user preferenceForum RSS FeedSubscribe via RSS readerAPI publikAkses konten forum via REST APIEmbed forumWidget thread untuk website lainMultilingual (i18n)Support multi-bahasaPlugin/ExtensionArsitektur modular
+✅ 🎨 8. UI/UX & Aksesibilitas
+
+✅ Responsive design (mobile-first)
+✅ Dark mode / Light mode toggle
+✅ Font size adjustment
+✅ Lazy loading gambar
+✅ Loading skeleton / spinner
+✅ Error page yang informatif (404, 500)
+✅ Keyboard navigasi
+✅ ARIA label untuk screen reader
+
+---
+
+✅ 📈 9. SEO & Performa
+
+✅ URL yang SEO-friendly (/forum/kategori/judul-thread)
+✅ Sitemap XML otomatis
+✅ Meta tag Open Graph (share ke sosmed)
+✅ Canonical URL
+✅ Structured data (Schema.org — DiscussionForumPosting)
+✅ Caching (Redis/Memcached untuk hot content)
+✅ CDN untuk asset statis
+✅ Lazy load + image optimization
+
+---
+
+✅ 🔌 10. Fitur Tambahan (Nice to Have)
+✅ Fitur:
+✅ Poll: Voting di dalam thread
+✅ Leaderboard: Top poster, top reputasi
+✅ Dark/Light theme: Per-user preference

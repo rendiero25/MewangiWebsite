@@ -6,6 +6,7 @@ import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
 import Breadcrumbs from '../../components/public/Breadcrumbs';
 import ReportModal from '../../components/public/ReportModal';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -259,13 +260,7 @@ export default function ForumDetail() {
                 <h1 className="text-3xl font-bold text-gray-900 mb-6">{topic.title}</h1>
 
                 <div className="flex items-center gap-4 mb-8 p-4 bg-gray-50 rounded-xl">
-                  <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
-                    {topic.author.avatar ? (
-                      <img src={topic.author.avatar.startsWith('http') ? topic.author.avatar : `${API_URL.replace('/api', '')}${topic.author.avatar}`} alt={topic.author.username} className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      <span className="text-white font-bold">{topic.author.username.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
+                  <Avatar src={topic.author.avatar} size="lg" alt={topic.author.username} />
                   <div>
                     <p className="font-bold text-gray-900">{topic.author.username}</p>
                     <p className="text-xs text-gray-400">Diposting pada {new Date(topic.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
