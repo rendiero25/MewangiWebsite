@@ -8,7 +8,19 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users' | 'reports';
 
-interface Stats { totalUsers: number; totalPerfumes: number; pendingReviews: number; pendingArticles: number; pendingTopics: number; totalTopics: number; }
+interface Stats { 
+  totalUsers: number; 
+  totalPerfumes: number; 
+  pendingReviews: number; 
+  pendingArticles: number; 
+  pendingTopics: number; 
+  totalTopics: number; 
+  approvedReviews?: number;
+  approvedArticles?: number;
+  totalComments?: number;
+  activeToday?: number;
+  totalReports?: number;
+}
 interface PendingReview { _id: string; title: string; content: string; image?: string; occasion?: string[]; season?: string[]; author: { username: string; email: string };
   rating: { overall: number; longevity: number; sillage: number; valueForMoney: number }; createdAt: string; status: string; rejectionReason?: string; }
 interface PendingArticle { _id: string; slug: string; title: string; content: string; excerpt?: string; coverImage?: string; category: string; tags?: string[]; author: { username: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
@@ -205,6 +217,11 @@ export default function AdminPanel() {
               { label: 'Artikel Pending', value: stats?.pendingArticles, icon: '📝', color: 'from-purple-500 to-pink-500' },
               { label: 'Total Topik', value: stats?.totalTopics, icon: '💬', color: 'from-indigo-400 to-blue-500' },
               { label: 'Topik Pending', value: stats?.pendingTopics, icon: '💭', color: 'from-pink-500 to-rose-500' },
+              { label: 'Review Approved', value: stats?.approvedReviews, icon: '✓', color: 'from-green-500 to-emerald-500' },
+              { label: 'Artikel Approved', value: stats?.approvedArticles, icon: '📄', color: 'from-cyan-500 to-blue-500' },
+              { label: 'Total Comments', value: stats?.totalComments, icon: '💬', color: 'from-violet-500 to-purple-500' },
+              { label: 'Active Today', value: stats?.activeToday, icon: '🔥', color: 'from-red-500 to-orange-500' },
+              { label: 'Total Reports', value: stats?.totalReports, icon: '🚩', color: 'from-red-600 to-pink-600' },
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">

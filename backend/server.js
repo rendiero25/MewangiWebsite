@@ -36,12 +36,10 @@ const apiLimiter = rateLimit({
   message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' }
 });
 
-const app = express();
-app.use('/api/', apiLimiter);
-app.use('/api/', checkIPBan); // Apply IP check globally to API
 const PORT = process.env.PORT || 5000;
+const app = express();
 
-// Middleware
+// Middleware - CORS MUST come FIRST to handle preflight OPTIONS requests
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
   'http://localhost:5174',
@@ -60,7 +58,10 @@ app.use(cors({
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -69,7 +70,11 @@ app.use(morgan('dev'));
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false,
-})); // Set secure HTTP headers
+}));
+
+// Rate Limiting - Applied AFTER CORS
+app.use('/api/', apiLimiter);
+app.use('/api/', checkIPBan);
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

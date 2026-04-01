@@ -35,7 +35,7 @@ function StarRating({ value }: { value: number }) {
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
-          className={`w-3.5 h-3.5 ${star <= value ? 'text-amber-400' : 'text-gray-200 dark:text-gray-700'}`}
+          className={`w-3.5 h-3.5 ${star <= value ? 'text-amber-400' : 'text-gray-200'}`}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -49,10 +49,10 @@ function StarRating({ value }: { value: number }) {
 export default function ReviewCard({ review }: ReviewCardProps) {
   return (
     <Link to={`/review/${review._id}`} className="block group">
-      <div className="rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden">
+      <div className="rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden">
         {/* Image banner */}
         {review.image && (
-          <div className="h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+          <div className="h-40 bg-gray-100 overflow-hidden">
             <ImageWithLazyLoad
               src={review.image.startsWith('http') ? review.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${review.image}`}
               alt={review.title}
@@ -64,7 +64,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
 
         <div className="p-5">
           {/* Title */}
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary dark:group-hover:text-primary transition-colors line-clamp-2 mb-2">
+          <h3 className="text-base font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-2">
             {review.title}
           </h3>
 
@@ -75,7 +75,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           </div>
 
           {/* Preview */}
-          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
+          <p className="text-sm text-gray-500 line-clamp-2 mb-3">
             {review.content.replace(/<[^>]*>/g, '').slice(0, 120)}
           </p>
 
@@ -83,18 +83,18 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           {(review.occasion.length > 0 || review.season.length > 0) && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {review.occasion.slice(0, 2).map((o) => (
-                <span key={o} className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs">{o}</span>
+                <span key={o} className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs">{o}</span>
               ))}
               {review.season.slice(0, 2).map((s) => (
-                <span key={s} className="px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300 text-xs">{s}</span>
+                <span key={s} className="px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs">{s}</span>
               ))}
             </div>
           )}
 
           {/* Meta */}
-          <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 pt-3 border-t border-gray-50 dark:border-gray-700">
+          <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-50">
             <Avatar src={review.author?.avatar} size="xs" alt={review.author?.username} />
-            <span className="font-medium text-gray-600 dark:text-gray-300">{review.author?.username || 'User Terhapus'}</span>
+            <span className="font-medium text-gray-600">{review.author?.username || 'User Terhapus'}</span>
             <span>·</span>
             <span>{timeAgo(review.createdAt)}</span>
           </div>

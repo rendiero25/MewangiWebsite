@@ -3,6 +3,10 @@ const Review = require('../models/Review');
 const Article = require('../models/Article');
 const Perfume = require('../models/Perfume');
 const ForumTopic = require('../models/ForumTopic');
+const ForumComment = require('../models/ForumComment');
+const ArticleComment = require('../models/ArticleComment');
+const ReviewComment = require('../models/ReviewComment');
+const Report = require('../models/Report');
 const Notification = require('../models/Notification');
 const AuditLog = require('../models/AuditLog');
 const Warning = require('../models/Warning');
@@ -491,14 +495,32 @@ const deletePerfume = async (req, res) => {
 // @access  Private (admin only)
 const getDashboardStats = async (req, res) => {
   try {
-    const [totalUsers, totalPerfumes, pendingReviews, pendingArticles, pendingTopics, totalTopics, totalComments] = await Promise.all([
+    const [
+      totalUsers,
+      totalPerfumes,
+      pendingReviews,
+      pendingArticles,
+      pendingTopics,
+      approvedTopics,
+      approvedReviews,
+      approvedArticles,
+      forumComments,
+      articleComments,
+      reviewComments,
+      totalReports,
+    ] = await Promise.all([
       User.countDocuments(),
       Perfume.countDocuments(),
       Review.countDocuments({ status: 'pending' }),
       Article.countDocuments({ status: 'pending' }),
       ForumTopic.countDocuments({ status: 'pending' }),
       ForumTopic.countDocuments({ status: 'approved' }),
+      Review.countDocuments({ status: 'approved' }),
+      Article.countDocuments({ status: 'approved' }),
       ForumComment.countDocuments(),
+      ArticleComment.countDocuments(),
+      ReviewComment.countDocuments(),
+      Report.countDocuments(),
     ]);
 
     // Active Today (users active in the last 24h)
@@ -506,15 +528,24 @@ const getDashboardStats = async (req, res) => {
       lastActive: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } 
     });
 
+    const totalComments = forumComments + articleComments + reviewComments;
+
     res.json({
       totalUsers,
       totalPerfumes,
       pendingReviews,
       pendingArticles,
       pendingTopics,
-      totalTopics,
-      totalPosts: totalTopics + totalComments,
+      approvedReviews,
+      approvedArticles,
+      totalTopics: approvedTopics,
+      totalComments,
+      forumComments,
+      articleComments,
+      reviewComments,
+      totalPosts: approvedTopics + totalComments,
       activeToday,
+      totalReports,
     });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil statistik', error: error.message });

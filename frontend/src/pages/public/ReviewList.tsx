@@ -63,9 +63,9 @@ export default function ReviewList() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-white">
       {/* Hero header */}
-      <div className="bg-gradient-to-br from-amber-50/80 via-white to-primary/5 border-b border-gray-100">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
@@ -114,7 +114,7 @@ export default function ReviewList() {
                 <button className="cursor-pointer"
                   key={occ}
                   onClick={() => { setActiveOccasion(occ); setPage(1); }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                     activeOccasion === occ
                       ? 'bg-amber-500 text-white shadow-sm'
                       : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-300'
