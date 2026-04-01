@@ -49,6 +49,10 @@ const getArticleBySlug = async (req, res) => {
 
     const comments = await ArticleComment.find({ article: article._id })
       .populate('author', 'username avatar')
+      .populate({
+        path: 'quote',
+        populate: { path: 'author', select: 'username' }
+      })
       .sort({ createdAt: 1 });
 
     res.json({ ...article.toObject(), comments });
@@ -208,6 +212,8 @@ const addArticleComment = async (req, res) => {
       content: req.body.content,
       article: article._id,
       author: req.user._id,
+      quote: req.body.quoteId || null,
+      image: req.file ? `/uploads/${req.file.filename}` : '',
     });
 
     await comment.populate('author', 'username avatar');

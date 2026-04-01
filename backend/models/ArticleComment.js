@@ -20,6 +20,15 @@ const articleCommentSchema = new mongoose.Schema({
     ref: 'ArticleComment',
     default: null,
   },
+  quote: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ArticleComment',
+    default: null,
+  },
+  image: {
+    type: String,
+    default: '',
+  },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

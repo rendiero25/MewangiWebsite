@@ -1,10 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface AvatarProps {
   src?: string;
   alt?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   className?: string;
+  username?: string;
+  href?: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -20,14 +23,16 @@ const sizeClasses = {
   'full': 'w-full h-full',
 };
 
-const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', className = '' }) => {
+const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', className = '', username, href }) => {
   const fullSrc = src 
     ? (src.startsWith('http') ? src : `${BASE_URL}${src}`)
     : null;
 
   const sizeClass = sizeClasses[size];
+  
+  const profileLink = href || (username ? `/profile/${username}` : null);
 
-  return (
+  const avatarContent = (
     <div className={`${sizeClass} rounded-full overflow-hidden bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 dark:border-gray-800 shadow-xs ${className}`}>
       {fullSrc ? (
         <img 
@@ -53,6 +58,12 @@ const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', clas
       </svg>
     </div>
   );
+
+  if (profileLink) {
+    return <Link to={profileLink} className="no-underline hover:opacity-80 transition-opacity">{avatarContent}</Link>;
+  }
+
+  return avatarContent;
 };
 
 export default Avatar;

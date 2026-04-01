@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MdChat } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
+import { useChat } from '../../context/ChatContext';
 import NotificationBell from '../notifications/NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import Avatar from '../common/Avatar';
@@ -17,6 +18,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { toggleChat } = useChat();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -33,13 +35,13 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1" role="menubar" aria-label="Main menu">
+          <div className="hidden md:flex items-center gap-2" role="menubar" aria-label="Main menu">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 role="menuitem"
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none ${
                   isActive(link.path)
                     ? 'bg-primary/10 text-primary'
                     : 'text-gray-600 hover:text-primary hover:bg-primary/5'
@@ -56,14 +58,14 @@ export default function Navbar() {
             <ThemeToggle />
             {user ? (
               <div className="flex items-center gap-3">
-                <Link 
-                  to="/messages" 
-                  className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary"
+                <button 
+                  onClick={toggleChat}
+                  className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                   title="Pesan"
                   aria-label="Direct messages"
                 >
                   <MdChat size={22} />
-                </Link>
+                </button>
                 <NotificationBell />
                 <div className="relative">
                 <button

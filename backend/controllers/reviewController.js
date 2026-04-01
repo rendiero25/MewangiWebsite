@@ -51,6 +51,10 @@ const getReviewById = async (req, res) => {
 
     const comments = await ReviewComment.find({ review: review._id })
       .populate('author', 'username avatar')
+      .populate({
+        path: 'quote',
+        populate: { path: 'author', select: 'username' }
+      })
       .sort({ createdAt: 1 });
 
     res.json({ review, comments });
@@ -195,6 +199,8 @@ const addReviewComment = async (req, res) => {
       content: filterBadWords(req.body.content),
       review: review._id,
       author: req.user._id,
+      quote: req.body.quoteId || null,
+      image: req.file ? `/uploads/${req.file.filename}` : '',
     });
 
     await comment.populate('author', 'username avatar');

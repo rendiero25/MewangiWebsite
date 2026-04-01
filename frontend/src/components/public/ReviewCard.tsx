@@ -93,8 +93,12 @@ export default function ReviewCard({ review }: ReviewCardProps) {
 
           {/* Meta */}
           <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-50">
-            <Avatar src={review.author?.avatar} size="xs" alt={review.author?.username} />
-            <span className="font-medium text-gray-600">{review.author?.username || 'User Terhapus'}</span>
+            <Avatar src={review.author?.avatar} size="xs" alt={review.author?.username} username={review.author?.username} />
+            {review.author?.username ? (
+              <Link to={`/profile/${review.author.username}`} className="font-medium text-gray-600 hover:text-primary transition-colors">{review.author.username}</Link>
+            ) : (
+              <span className="font-medium text-gray-600">User Terhapus</span>
+            )}
             <span>·</span>
             <span>{timeAgo(review.createdAt)}</span>
           </div>

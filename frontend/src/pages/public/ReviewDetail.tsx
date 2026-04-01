@@ -1,10 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import gsap from 'gsap';
+import ScrollSmoother from 'gsap/ScrollSmoother';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
 import Avatar from '../../components/common/Avatar';
+
+gsap.registerPlugin(ScrollSmoother);
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -72,6 +76,11 @@ export default function ReviewDetail() {
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [commentImage, setCommentImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
+  const [quotedComment, setQuotedComment] = useState<CommentData | null>(null);
 
   const fetchReview = useCallback(async () => {
     setLoading(true);
@@ -93,22 +102,57 @@ export default function ReviewDetail() {
     fetchReview();
   }, [fetchReview]);
 
+  // ScrollSmoother disabled to fix scroll issues
+  // useEffect(() => {
+  //   const smoother = ScrollSmoother.create({
+  //     smooth: 1,
+  //     effects: true,
+  //   });
+  //   
+  //   return () => {
+  //     smoother.kill();
+  //   };
+  // }, []);
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
     setSubmitting(true);
     try {
+      const formData = new FormData();
+      formData.append('content', commentText);
+      if (commentImage) formData.append('image', commentImage);
+      if (quotedComment) formData.append('quoteId', quotedComment._id);
+
       const { data } = await axios.post(
         `${API_URL}/reviews/${id}/comments`,
-        { content: commentText },
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${user?.token}`,
+            'Content-Type': 'multipart/form-data'
+          } 
+        }
       );
       setComments((prev) => [...prev, data]);
       setCommentText('');
+      setCommentImage(null);
+      setImagePreview('');
+      setQuotedComment(null);
     } catch {
       setError('Gagal mengirim komentar.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCommentImage(file);
+      const reader = new FileReader();
+      reader.onload = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -197,9 +241,9 @@ export default function ReviewDetail() {
                       </h1>
 
                       <div className="flex items-center gap-3">
-                        <Avatar src={review.author.avatar} size="sm" alt={review.author.username} />
+                        <Avatar src={review.author.avatar} size="sm" alt={review.author.username} username={review.author.username} />
                         <div className="flex flex-col">
-                           <span className="text-xs font-black text-gray-800">{review.author.username}</span>
+                           <Link to={`/profile/${review.author.username}`} className="text-xs font-black text-gray-800 hover:text-primary transition-colors">{review.author.username}</Link>
                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Contributor • {new Date(review.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
@@ -253,7 +297,16 @@ export default function ReviewDetail() {
                   <>
                     <div className="space-y-2">
                       {(user ? comments : comments.slice(0, 5)).map(c => (
-                        <CommentItem key={c._id} comment={{...c, review: review._id}} onDelete={handleDeleteComment} />
+                        <CommentItem 
+                          key={c._id} 
+                          comment={{...c, review: review._id}} 
+                          onDelete={handleDeleteComment}
+                          onQuote={(qc) => {
+                            setQuotedComment(qc);
+                            commentInputRef.current?.focus();
+                            commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}
+                        />
                       ))}
                     </div>
                     {!user && comments.length > 5 && (
@@ -270,28 +323,53 @@ export default function ReviewDetail() {
 
               {/* Add Comment */}
               {user ? (
-                <form onSubmit={handleAddComment} className="bg-white rounded-xl-[2.5rem] border border-gray-100 p-8 shadow-xl shadow-gray-200/50">
-                  <div className="relative">
-                    <textarea 
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      placeholder="Add to the conversation..."
-                      rows={3}
-                      className="w-full p-6 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm font-medium"
-                    />
-                    <div className="absolute bottom-4 right-4">
-                      <button 
-                        type="submit" 
-                        disabled={submitting || !commentText.trim()}
-                        className="bg-primary text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-                      >
-                        {submitting ? 'Sending...' : 'Post Reply'}
+                <form onSubmit={handleAddComment} className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+                  {error && <p className="text-red-500 text-xs mb-3 italic">⚠️ {error}</p>}
+                  {quotedComment && (
+                    <div className="mb-3 p-3 bg-gray-50 border-l-4 border-primary rounded-r-xl flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] font-bold text-primary mb-1">Membalas @{quotedComment.author.username}</p>
+                        <div className="text-xs text-gray-500 line-clamp-1 italic" dangerouslySetInnerHTML={{ __html: quotedComment.content }} />
+                      </div>
+                      <button onClick={() => setQuotedComment(null)} className="text-gray-400 hover:text-red-500 transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                     </div>
+                  )}
+                  <textarea 
+                    ref={commentInputRef}
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder={quotedComment ? `Balas @${quotedComment.author.username}...` : "Add to the conversation..."}
+                    rows={3}
+                    className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
+                  />
+                  <div className="mt-4 flex items-center justify-between">
+                    <label className="cursor-pointer p-2 text-gray-400 hover:text-primary transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <input type="file" className="hidden" accept="image/*" ref={fileInputRef} onChange={handleFileChange} />
+                    </label>
+                    <button 
+                      type="submit" 
+                      disabled={submitting}
+                      className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                    >
+                      {submitting ? '...' : 'Post Reply'}
+                    </button>
                   </div>
+                  {imagePreview && (
+                    <div className="mt-3 relative w-32 h-32">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl border border-gray-100" />
+                      <button onClick={() => {setCommentImage(null); setImagePreview('');}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg cursor-pointer">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  )}
                 </form>
               ) : (
-                <div className="p-10 bg-amber-600 rounded-xl-[2.5rem] text-center text-white shadow-2xl shadow-amber-200">
+                <div className="p-10 bg-amber-600 rounded-2xl text-center text-white shadow-2xl shadow-amber-200">
                   <p className="font-black text-xl mb-6 uppercase tracking-widest">Join the Discussion</p>
                   <Link to="/login" className="inline-block bg-white text-amber-600 px-12 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-colors shadow-xl">
                     Authorized Access Only

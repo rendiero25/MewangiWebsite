@@ -250,7 +250,7 @@ export default function Home() {
           text,
           { color: "currentColor" },
           {
-            color: "#ED1B79",
+            color: "#009545",
             duration: 0.5,
             repeat: 1,
             yoyo: true,
@@ -438,7 +438,7 @@ export default function Home() {
       {/* Features Section dengan ScrollTrigger */}
       <section
         ref={featuresRef}
-        className="py-20 lg:py-28 bg-white"
+        className="py-20 lg:py-28 bg-third/25"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Title dengan animation */}
@@ -446,7 +446,7 @@ export default function Home() {
             <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
               Kenapa <span className="highlight-text text-primary">Mewangi</span>?
             </h2>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg leading-relaxed">
+            <p className="text-primary max-w-2xl mx-auto text-lg leading-relaxed">
               Platform lengkap untuk para pecinta parfum di Indonesia. Dengan
               fitur-fitur canggih, moderasi terbaik, dan komunitas yang ramah.
             </p>
@@ -658,9 +658,8 @@ export default function Home() {
             ].map((item) => (
               <div
                 key={item.step}
-                className="step-card relative group p-8 rounded-2xl bg-linear-to-br from-gray-50 to-gray-100 border border-gray-200 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300"
+                className="step-card relative group p-8 rounded-2xl bg-white border border-gray-200 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 dark:border-gray-700"
               >
-                {/* Step number dengan background */}
                 <div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                   <span className="text-sm font-black text-primary">
                     {item.step}
@@ -680,8 +679,8 @@ export default function Home() {
                 </p>
 
                 {/* Details reveal on hover */}
-                <div className="pt-4 border-t border-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="text-xs text-gray-500 italic">
+                <div className="pt-4 border-t border-gray-300 dark:border-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 italic">
                     {item.details}
                   </p>
                 </div>
@@ -695,7 +694,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section dengan scroll animation */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-linear-to-b from-white to-third/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
@@ -936,7 +935,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section untuk membantu konversi */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-linear-to-b from-third/25 to-third/25">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">

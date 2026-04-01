@@ -99,9 +99,9 @@ export default function SidebarDetail({ type }: SidebarDetailProps) {
         <div className="space-y-4">
           {topMembers.map((member, idx) => (
             <div key={member._id} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <Link to={`/profile/${member._id}`} className="flex items-center gap-3 hover:text-primary transition-colors group">
                 <div className="relative">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden ring-2 ring-white">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden ring-2 ring-white group-hover:ring-primary/30 transition-all">
                     {member.avatar ? (
                       <img src={member.avatar.startsWith('http') ? member.avatar : `${API_URL.replace('/api', '')}${member.avatar}`} alt={member.username} className="w-full h-full object-cover" />
                     ) : (
@@ -116,8 +116,8 @@ export default function SidebarDetail({ type }: SidebarDetailProps) {
                     </div>
                   )}
                 </div>
-                <span className="text-xs font-semibold text-gray-700 truncate max-w-[100px]">{member.username}</span>
-              </div>
+                <span className="text-xs font-semibold text-gray-700 group-hover:text-primary transition-colors truncate max-w-[100px]">{member.username}</span>
+              </Link>
               <span className="text-[10px] font-medium text-primary bg-primary/5 px-2 py-0.5 rounded-full">
                 {member.commentCount} posts
               </span>

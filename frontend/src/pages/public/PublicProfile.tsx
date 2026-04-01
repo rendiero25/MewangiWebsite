@@ -4,8 +4,8 @@ import axios from 'axios';
 import { MdLocationOn, MdLanguage, MdCalendarToday, MdAccessTime, MdChat } from 'react-icons/md';
 import { FaFacebook, FaTwitter, FaInstagram, FaTiktok, FaLinkedin } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { useChat } from '../../context/ChatContext';
 import FollowButton from '../../components/public/FollowButton';
-import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -42,7 +42,7 @@ interface UserProfile {
 const PublicProfile = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { openChat } = useChat();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -64,7 +64,7 @@ const PublicProfile = () => {
     };
 
     fetchProfile();
-  }, [id]);
+  }, [id, user]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -150,7 +150,7 @@ const PublicProfile = () => {
                 <FollowButton 
                   targetUserId={profile._id} 
                   isInitialFollowing={!!profile.isFollowing} 
-                  onToggle={(following) => {
+                  onToggle={(following: boolean) => {
                     setProfile(prev => prev ? {
                       ...prev,
                       isFollowing: following,
@@ -162,7 +162,7 @@ const PublicProfile = () => {
                 
                 {user && user._id !== profile._id && (
                   <button 
-                    onClick={() => navigate(`/messages?user=${profile._id}`)}
+                    onClick={() => openChat({ _id: profile._id, username: profile.username, avatar: profile.avatar })}
                     className="p-3 bg-gray-50 text-primary rounded-2xl hover:bg-primary/5 transition-colors border border-gray-100 shadow-sm cursor-pointer"
                     title="Kirim Pesan"
                   >

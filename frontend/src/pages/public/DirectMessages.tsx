@@ -42,7 +42,6 @@ export default function DirectMessages() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [socket, setSocket] = useState<any>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
@@ -50,28 +49,6 @@ export default function DirectMessages() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-
-  // Initialize Socket
-  useEffect(() => {
-    if (user) {
-      const newSocket = io(SOCKET_URL);
-      newSocket.emit('setup', user._id);
-      setSocket(newSocket);
-
-      newSocket.on('new_message', (msg: Message) => {
-        // If message is from the currently selected user
-        if (selectedUser && (msg.sender._id === selectedUser._id || msg.recipient._id === selectedUser._id)) {
-          setMessages(prev => [...prev, msg]);
-        }
-        // Refresh conversations list to update last message/unread
-        fetchConversations();
-      });
-
-      return () => {
-        newSocket.disconnect();
-      };
-    }
-  }, [user, selectedUser]);
 
   const fetchConversations = useCallback(async () => {
     if (!user) return;
@@ -103,6 +80,27 @@ export default function DirectMessages() {
     }
   }, [user]);
 
+  // Initialize Socket
+  useEffect(() => {
+    if (user) {
+      const newSocket = io(SOCKET_URL);
+      newSocket.emit('setup', user._id);
+
+      newSocket.on('new_message', (msg: Message) => {
+        // If message is from the currently selected user
+        if (selectedUser && (msg.sender._id === selectedUser._id || msg.recipient._id === selectedUser._id)) {
+          setMessages(prev => [...prev, msg]);
+        }
+        // Refresh conversations list to update last message/unread
+        fetchConversations();
+      });
+
+      return () => {
+        newSocket.disconnect();
+      };
+    }
+  }, [user, selectedUser, fetchConversations]);
+
   // Initial Data Fetch
   useEffect(() => {
     fetchConversations();
@@ -131,17 +129,19 @@ export default function DirectMessages() {
     if (!newMessage.trim() || !selectedUser || !user) return;
 
     try {
-      const { data } = await axios.post(`${API_URL}/messages`, {
-        recipientId: selectedUser._id,
-        content: newMessage
-      }, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      if (selectedUser && user) {
+        const { data } = await axios.post(`${API_URL}/messages`, {
+          recipientId: selectedUser?._id,
+          content: newMessage
+        }, {
+          headers: { Authorization: `Bearer ${user?.token}` }
+        });
 
-      setMessages(prev => [...prev, data]);
-      setNewMessage('');
-      fetchConversations();
-      setTimeout(scrollToBottom, 50);
+        setMessages(prev => [...prev, data]);
+        setNewMessage('');
+        fetchConversations();
+        setTimeout(scrollToBottom, 50);
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
     }
@@ -149,8 +149,8 @@ export default function DirectMessages() {
 
   const selectConversation = (otherUser: User) => {
     setSelectedUser(otherUser);
-    fetchMessages(otherUser._id);
-    navigate(`/messages?user=${otherUser._id}`, { replace: true });
+    fetchMessages(otherUser?._id);
+    navigate(`/messages?user=${otherUser?._id}`, { replace: true });
   };
 
   if (!user) {
@@ -169,8 +169,27 @@ export default function DirectMessages() {
   }
 
   return (
-    <div className="min-h-[calc(100-80px)] bg-gray-50 flex items-center justify-center p-0 lg:p-6">
-      <div className="w-full max-w-7xl h-[calc(100vh-80px)] lg:h-[800px] bg-white lg:rounded-3xl shadow-2xl flex overflow-hidden border border-gray-100">
+    <div className="min-h-[calc(100vh-80px)] p-4 lg:p-10 flex justify-end items-start relative overflow-hidden">
+      {/* Background Backdrop Overlay - Satisfies the request to cover the previous page */}
+      <div className="fixed inset-0 z-0 bg-gray-900/40 backdrop-blur-md transition-all duration-700"></div>
+      
+      {/* Animated Decorative Orbs */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[10%] w-[50%] h-[50%] bg-secondary/10 rounded-full blur-[150px] animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="w-full max-w-2xl h-[calc(100vh-120px)] lg:h-[700px] bg-white rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.3)] flex flex-col md:flex-row overflow-hidden border border-white/50 relative z-10 animate-in fade-in zoom-in duration-500">
+        {/* Global Close Button */}
+        <button 
+          onClick={() => navigate('/')} 
+          className="absolute top-4 right-4 z-50 p-2 bg-white/80 backdrop-blur-md rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm border border-gray-100 md:hidden lg:flex"
+          title="Tutup Pesan"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         
         {/* Sidebar: Conversations List */}
         <div className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 flex-col border-r border-gray-100 bg-white`}>
@@ -267,6 +286,11 @@ export default function DirectMessages() {
                 </div>
                 <div className="flex gap-2">
                   <button className="p-2.5 text-gray-400 hover:bg-gray-50 rounded-xl transition-all"><MdMoreVert size={20} /></button>
+                  <button onClick={() => setSelectedUser(null)} className="hidden md:block p-2.5 text-gray-400 hover:bg-gray-50 rounded-xl transition-all hover:text-red-500" title="Tutup">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
@@ -285,7 +309,7 @@ export default function DirectMessages() {
                   </div>
                 ) : (
                   messages.map((msg, idx) => {
-                    const isMe = msg.sender._id === user._id;
+                    const isMe = user && msg.sender._id === user._id;
                     const showDate = idx === 0 || new Date(msg.createdAt).toDateString() !== new Date(messages[idx-1].createdAt).toDateString();
                     
                     return (
@@ -324,7 +348,7 @@ export default function DirectMessages() {
                   />
                   <button 
                     type="submit"
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() || !user}
                     className="absolute right-2 p-3 bg-primary text-white rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:bg-gray-200 disabled:shadow-none"
                   >
                     <MdSend size={20} />

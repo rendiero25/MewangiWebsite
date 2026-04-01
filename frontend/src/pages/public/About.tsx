@@ -1,6 +1,21 @@
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import gsap from 'gsap';
+import ScrollSmoother from 'gsap/ScrollSmoother';
+
+gsap.registerPlugin(ScrollSmoother);
 
 export default function About() {
+  useEffect(() => {
+    const smoother = ScrollSmoother.create({
+      smooth: 1,
+      effects: true,
+    });
+    
+    return () => {
+      smoother.kill();
+    };
+  }, []);
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}

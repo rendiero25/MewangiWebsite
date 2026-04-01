@@ -16,7 +16,7 @@ router.get('/detail/:id/related', getRelatedArticles);
 router.get('/edit/:id', protect, getArticleById);
 router.get('/my/list', protect, getMyArticles);
 router.post('/', protect, verified, upload.single('coverImage'), createArticle);
-router.post('/:id/comments', protect, verified, addArticleComment);
+router.post('/:id/comments', protect, verified, upload.single('image'), addArticleComment);
 router.post('/comments/:id/like', protect, likeComment);
 router.post('/comments/:id/dislike', protect, dislikeComment);
 router.delete('/comments/:commentId', protect, deleteArticleComment);

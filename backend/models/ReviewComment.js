@@ -15,6 +15,20 @@ const reviewCommentSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  parentComment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ReviewComment',
+    default: null,
+  },
+  quote: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ReviewComment',
+    default: null,
+  },
+  image: {
+    type: String,
+    default: '',
+  },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

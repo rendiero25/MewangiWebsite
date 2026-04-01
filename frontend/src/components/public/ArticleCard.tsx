@@ -97,8 +97,12 @@ export default function ArticleCard({ article }: ArticleCardProps) {
           {/* Meta */}
           <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-50 mt-auto">
             <div className="flex items-center gap-2">
-              <Avatar src={article.author?.avatar} size="xs" alt={article.author?.username} />
-              <span className="font-medium text-gray-600">{article.author?.username || 'User Terhapus'}</span>
+              <Avatar src={article.author?.avatar} size="xs" alt={article.author?.username} username={article.author?.username} />
+              {article.author?.username ? (
+                <Link to={`/profile/${article.author.username}`} className="font-medium text-gray-600 hover:text-primary transition-colors">{article.author.username}</Link>
+              ) : (
+                <span className="font-medium text-gray-600">User Terhapus</span>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <span>{timeAgo(article.createdAt)}</span>

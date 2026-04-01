@@ -21,7 +21,7 @@ router.put('/:id', protect, verified, upload.single('image'), updateReview);
 router.delete('/:id', protect, deleteReview);
 
 // Comments
-router.post('/:id/comments', protect, verified, addReviewComment);
+router.post('/:id/comments', protect, verified, upload.single('image'), addReviewComment);
 router.post('/comments/:id/like', protect, likeComment);
 router.post('/comments/:id/dislike', protect, dislikeComment);
 router.delete('/comments/:commentId', protect, deleteReviewComment);

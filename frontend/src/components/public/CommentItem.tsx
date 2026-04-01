@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ReportModal from './ReportModal';
@@ -25,7 +26,7 @@ interface CommentItemProps {
     review?: string;
   };
   onDelete?: (commentId: string) => void;
-  onQuote?: (comment: any) => void;
+  onQuote?: (comment: CommentItemProps['comment']) => void;
 }
 
 function timeAgo(dateStr: string) {
@@ -62,7 +63,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
   }, [comment]);
 
   const handleLike = async () => {
-    if (!user) return;
+    if (!user || isLiking) return;
     setIsLiking(true);
     try {
       const { data } = await axios.post(`${API_URL}/${commentType}/comments/${comment._id}/like`, {}, {
@@ -78,7 +79,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
   };
 
   const handleDislike = async () => {
-    if (!user) return;
+    if (!user || isLiking) return;
     setIsLiking(true);
     try {
       const { data } = await axios.post(`${API_URL}/${commentType}/comments/${comment._id}/dislike`, {}, {
@@ -99,13 +100,17 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
     <div className={`flex flex-col gap-1 py-4 ${isMe ? 'items-end' : 'items-start'}`}>
       <div className={`flex gap-3 max-w-[85%] sm:max-w-[75%] ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Avatar */}
-        <Avatar src={comment.author?.avatar} size="sm" alt={comment.author?.username} className="mt-1" />
+        <Avatar src={comment.author?.avatar} size="sm" alt={comment.author?.username} username={comment.author?.username} className="mt-1" />
 
         <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
           <div className="flex items-center gap-2 mb-1 px-1">
-            <span className="text-xs font-semibold text-gray-900">
-              {comment.author?.username || 'User Terhapus'}
-            </span>
+            {comment.author?.username ? (
+              <Link to={`/profile/${comment.author.username}`} className="text-xs font-semibold text-gray-900 hover:text-primary transition-colors">
+                {comment.author.username}
+              </Link>
+            ) : (
+              <span className="text-xs font-semibold text-gray-900">User Terhapus</span>
+            )}
             <span className="text-[10px] text-gray-400">
               {timeAgo(comment.createdAt)}
             </span>
@@ -113,31 +118,33 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
 
           {comment.quote && (
             <div className={`mb-2 p-2 rounded-lg text-xs border-l-4 ${isMe ? 'bg-white/10 border-white/30 text-white' : 'bg-gray-200/50 border-gray-400 text-gray-500'}`}>
-              <p className="font-bold mb-0.5">@{comment.quote.author.username}</p>
+              <Link to={`/profile/${comment.quote.author.username}`} className={`font-bold mb-0.5 inline-block ${isMe ? 'text-white hover:text-white/70' : 'text-gray-500 hover:text-primary'} transition-colors`}>
+                @{comment.quote.author.username}
+              </Link>
               <div className="line-clamp-2 italic" dangerouslySetInnerHTML={{ __html: comment.quote.content }} />
             </div>
           )}
 
-          <div className={`p-3 rounded-xl text-sm shadow-sm ${
+          <div className={`p-4 rounded-2xl text-sm shadow-md transition-all duration-300 ${
             isMe 
               ? 'bg-primary text-white rounded-tr-none' 
-              : 'bg-gray-100 text-gray-800 rounded-tl-none'
+              : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
           }`}>
-            <div 
-              className={`prose prose-xs max-w-none wrap-break-word ql-editor ${isMe ? 'text-white' : 'text-gray-700'}`}
-              dangerouslySetInnerHTML={{ __html: comment.content }}
-            />
-            
             {imageUrl && (
-              <div className="mt-2 rounded-xl overflow-hidden border border-white/20">
+              <div className="mb-3 rounded-2xl overflow-hidden border border-white/30 max-w-md shadow-lg">
                 <img 
                   src={imageUrl} 
                   alt="Attachment" 
-                  className="max-h-60 w-auto object-contain cursor-pointer transition-opacity hover:opacity-90"
+                  className="max-h-[500px] w-full object-cover cursor-pointer transition-transform duration-500 hover:scale-105"
                   onClick={() => window.open(imageUrl, '_blank')}
                 />
               </div>
             )}
+            
+            <div 
+              className={`prose prose-xs sm:prose-sm max-w-none wrap-break-word ql-editor leading-relaxed ${isMe ? 'text-white' : 'text-gray-700'}`}
+              dangerouslySetInnerHTML={{ __html: comment.content }}
+            />
           </div>
 
           {/* Actions: Like, Dislike, Delete */}

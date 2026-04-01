@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -46,6 +46,8 @@ export default function ForumList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState('');
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -63,6 +65,7 @@ export default function ForumList() {
 
   const fetchTopics = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const params: Record<string, string | number> = { page, limit: 25, sort };
       if (activeCategory !== 'Semua') params.category = activeCategory;
@@ -73,7 +76,9 @@ export default function ForumList() {
       setTotalPages(data.totalPages);
       setTotal(data.total);
     } catch (err) {
+      const errorMsg = (err as any)?.response?.data?.message || 'Gagal memuat topik';
       console.error('Gagal memuat topik:', err);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -87,6 +92,18 @@ export default function ForumList() {
     e.preventDefault();
     setPage(1);
     setSearch(searchInput);
+  };
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value);
+    // Debounce search input
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setPage(1);
+      setSearch(value);
+    }, 500);
   };
 
   return (
@@ -123,12 +140,23 @@ export default function ForumList() {
 
         {/* Search & filters */}
         <div className="mb-6 space-y-4">
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-fade-in">
+              <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-medium text-red-800">{error}</p>
+                <p className="text-xs text-red-600 mt-1">Silakan tunggu beberapa saat dan coba lagi.</p>
+              </div>
+            </div>
+          )}
           {/* Search bar */}
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => handleSearchInputChange(e.target.value)}
               placeholder="Cari topik diskusi..."
               className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
