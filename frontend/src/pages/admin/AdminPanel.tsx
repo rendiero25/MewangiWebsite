@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminReports from './AdminReports';
 import { MdBlock, MdCheckCircle, MdFlag } from 'react-icons/md';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -25,7 +27,7 @@ interface PendingReview { _id: string; title: string; content: string; image?: s
   rating: { overall: number; longevity: number; sillage: number; valueForMoney: number }; createdAt: string; status: string; rejectionReason?: string; }
 interface PendingArticle { _id: string; slug: string; title: string; content: string; excerpt?: string; coverImage?: string; category: string; tags?: string[]; author: { username: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
 interface PendingTopic { _id: string; title: string; content: string; category: string; author: { username: string; avatar?: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
-interface UserData { _id: string; username: string; email: string; role: string; isVerified: boolean; isBanned?: boolean; banExpires?: string; createdAt: string }
+interface UserData { _id: string; username: string; email: string; avatar?: string; role: string; isVerified: boolean; isBanned?: boolean; banExpires?: string; createdAt: string }
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -510,12 +512,12 @@ export default function AdminPanel() {
                       <tr key={u._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center shrink-0">
-                              <span className="text-white text-xs font-bold">{u.username.charAt(0).toUpperCase()}</span>
-                            </div>
+                            <Avatar src={u.avatar} size="sm" alt={u.username} className="shrink-0" />
                             <div className="min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{u.username}</p>
-                              <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                              <Link to={`/profile/${u._id}`} className="font-bold text-gray-900 truncate hover:text-primary transition-colors">
+                                {u.username}
+                              </Link>
+                              <p className="text-[10px] text-gray-400 truncate">{u.email}</p>
                             </div>
                           </div>
                         </td>

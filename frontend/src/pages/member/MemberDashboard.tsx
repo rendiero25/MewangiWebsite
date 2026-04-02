@@ -129,7 +129,7 @@ export default function MemberDashboard() {
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4">
               <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
-              <p className={`text-2xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+              <p className={`text-2xl font-bold bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
                 {loading ? '—' : stat.value}
               </p>
             </div>
@@ -177,14 +177,29 @@ export default function MemberDashboard() {
                       <StatusBadge status={r.status} />
                     </div>
                     {r.status === 'rejected' && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
                         <div>
                           <strong className="block mb-0.5">Alasan Penolakan:</strong>
                           {r.rejectionReason || 'Tidak ada alasan spesifik.'}
                         </div>
-                        <Link to={`/review/edit/${r._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link to={`/review/edit/${r._id}`} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
+                            ✏️ Edit
+                          </Link>
+                          <button onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
+                            🗑️ Hapus
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {r.status === 'pending' && (
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <Link to={`/review/edit/${r._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
+                        <button onClick={() => handleDeleteReview(r._id)} className="text-xs font-semibold px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
                       </div>
                     )}
                     {r.status === 'approved' && (
@@ -195,7 +210,7 @@ export default function MemberDashboard() {
                         <Link to={`/review/edit/${r._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
-                        <button className="cursor-pointer" onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                        <button onClick={() => handleDeleteReview(r._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -230,14 +245,29 @@ export default function MemberDashboard() {
                       <StatusBadge status={a.status} />
                     </div>
                     {a.status === 'rejected' && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
                         <div>
                           <strong className="block mb-0.5">Alasan Penolakan:</strong>
                           {a.rejectionReason || 'Tidak ada alasan spesifik.'}
                         </div>
-                        <Link to={`/blog/edit/${a._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
+                            ✏️ Edit
+                          </Link>
+                          <button onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
+                            🗑️ Hapus
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {a.status === 'pending' && (
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
+                        <button onClick={() => handleDeleteArticle(a._id)} className="text-xs font-semibold px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
                       </div>
                     )}
                     {a.status === 'approved' && (
@@ -248,7 +278,7 @@ export default function MemberDashboard() {
                         <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
-                        <button className="cursor-pointer" onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                        <button onClick={() => handleDeleteArticle(a._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>
@@ -283,14 +313,29 @@ export default function MemberDashboard() {
                       <StatusBadge status={t.status} />
                     </div>
                     {t.status === 'rejected' && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
                         <div>
                           <strong className="block mb-0.5">Alasan Penolakan:</strong>
                           {t.rejectionReason || 'Tidak ada alasan spesifik.'}
                         </div>
-                        <Link to={`/forum/edit/${t._id}`} className="shrink-0 px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link to={`/forum/edit/${t._id}`} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors text-center">
+                            ✏️ Edit
+                          </Link>
+                          <button onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 font-medium rounded-xl hover:bg-red-50 transition-colors cursor-pointer">
+                            🗑️ Hapus
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {t.status === 'pending' && (
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <Link to={`/forum/edit/${t._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
+                        <button onClick={() => handleDeleteTopic(t._id)} className="text-xs font-semibold px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
                       </div>
                     )}
                     {t.status === 'approved' && (
@@ -301,7 +346,7 @@ export default function MemberDashboard() {
                         <Link to={`/forum/edit/${t._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
                           ✏️ Edit
                         </Link>
-                        <button className="cursor-pointer" onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                        <button onClick={() => handleDeleteTopic(t._id)} className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
                           🗑️ Hapus
                         </button>
                       </div>

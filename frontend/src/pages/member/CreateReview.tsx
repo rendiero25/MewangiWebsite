@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
@@ -17,7 +17,7 @@ function StarInput({ value, onChange, label }: { value: number; onChange: (v: nu
       <span className="text-sm text-gray-600 w-28 shrink-0">{label}</span>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button className="cursor-pointer"
+          <button
             key={star}
             type="button"
             onMouseEnter={() => setHover(star)}
@@ -117,12 +117,15 @@ export default function CreateReview() {
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Breadcrumb */}
-        <Link to="/review" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6">
+        <button 
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6 cursor-pointer bg-transparent border-0 p-0"
+        >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Kembali ke Review
-        </Link>
+          Kembali
+        </button>
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
@@ -130,96 +133,111 @@ export default function CreateReview() {
             <p className="text-sm text-gray-500 mt-1">Review kamu akan ditinjau admin sebelum dipublikasikan.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
-            {/* Image upload (moved to top) */}
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-1.5">Foto Parfum Terkait</p>
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-amber-300 hover:bg-amber-50/30 transition-all">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="h-full object-contain rounded-xl p-1" />
-                ) : (
-                  <div className="text-center">
-                    <svg className="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-xs text-gray-400">Klik untuk upload foto</p>
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column: Image */}
+              <div className="lg:col-span-1">
+                <p className="text-sm font-semibold text-gray-700 mb-2">Foto Parfum Terkait</p>
+                <label className="flex flex-col items-center justify-center w-full h-80 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-amber-300 hover:bg-amber-50/30 transition-all overflow-hidden group">
+                  {imagePreview ? (
+                    <div className="relative w-full h-full">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white text-xs font-medium">Klik untuk ganti foto</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center p-6">
+                      <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-400 group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-600">Upload Foto</p>
+                      <p className="text-xs text-gray-400 mt-1">Sertakan foto terbaikmu</p>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                </label>
+              </div>
+
+              {/* Right Column: Fields */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Title */}
+                <div>
+                  <label htmlFor="review-title" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Judul Review
+                  </label>
+                  <input
+                    id="review-title"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder='Contoh: "Versace Eros — King of Club Night"'
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all"
+                  />
+                </div>
+
+                {/* Ratings */}
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-3">Rating</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-amber-50/30 border border-amber-100">
+                    <StarInput label="Longevity" value={rating.longevity} onChange={(v) => setRating({ ...rating, longevity: v })} />
+                    <StarInput label="Sillage" value={rating.sillage} onChange={(v) => setRating({ ...rating, sillage: v })} />
+                    <StarInput label="Value" value={rating.valueForMoney} onChange={(v) => setRating({ ...rating, valueForMoney: v })} />
+                    <StarInput label="Overall" value={rating.overall} onChange={(v) => setRating({ ...rating, overall: v })} />
                   </div>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-              </label>
-            </div>
+                </div>
 
-            {/* Title */}
-            <div>
-              <label htmlFor="review-title" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Judul Review
-              </label>
-              <input
-                id="review-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder='Contoh: "Versace Eros — King of Club Night"'
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all"
-              />
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Occasion */}
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Occasion</p>
+                    <div className="flex flex-wrap gap-2">
+                      {occasions.map((o) => (
+                        <button 
+                          key={o}
+                          type="button"
+                          onClick={() => toggleTag(o, selectedOccasions, setSelectedOccasions)}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            selectedOccasions.includes(o)
+                              ? 'bg-blue-500 text-white shadow-sm'
+                              : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300'
+                          }`}
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-            {/* Ratings */}
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-3">Rating</p>
-              <div className="space-y-3 p-4 rounded-xl bg-amber-50/50 border border-amber-100">
-                <StarInput label="Longevity" value={rating.longevity} onChange={(v) => setRating({ ...rating, longevity: v })} />
-                <StarInput label="Sillage" value={rating.sillage} onChange={(v) => setRating({ ...rating, sillage: v })} />
-                <StarInput label="Value" value={rating.valueForMoney} onChange={(v) => setRating({ ...rating, valueForMoney: v })} />
-                <StarInput label="Overall" value={rating.overall} onChange={(v) => setRating({ ...rating, overall: v })} />
+                  {/* Season */}
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Season</p>
+                    <div className="flex flex-wrap gap-2">
+                      {seasons.map((s) => (
+                        <button 
+                          key={s}
+                          type="button"
+                          onClick={() => toggleTag(s, selectedSeasons, setSelectedSeasons)}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            selectedSeasons.includes(s)
+                              ? 'bg-orange-500 text-white shadow-sm'
+                              : 'bg-white text-gray-500 border border-gray-200 hover:border-orange-300'
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Occasion */}
+            {/* Content (Full Width Below) */}
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">Occasion</p>
-              <div className="flex flex-wrap gap-2">
-                {occasions.map((o) => (
-                  <button className="cursor-pointer"
-                    key={o}
-                    type="button"
-                    onClick={() => toggleTag(o, selectedOccasions, setSelectedOccasions)}
-                    className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
-                      selectedOccasions.includes(o)
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
-                    }`}
-                  >
-                    {o}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Season */}
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">Season</p>
-              <div className="flex flex-wrap gap-2">
-                {seasons.map((s) => (
-                  <button className="cursor-pointer"
-                    key={s}
-                    type="button"
-                    onClick={() => toggleTag(s, selectedSeasons, setSelectedSeasons)}
-                    className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
-                      selectedSeasons.includes(s)
-                        ? 'bg-orange-500 text-white shadow-md'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div>
-              <label htmlFor="review-content" className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label htmlFor="review-content" className="block text-sm font-semibold text-gray-700 mb-2">
                 Konten Review
               </label>
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-amber-200 focus-within:border-amber-400 transition-all">
@@ -233,7 +251,6 @@ export default function CreateReview() {
               </div>
             </div>
 
-
             {error && (
               <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
                 {error}
@@ -241,13 +258,17 @@ export default function CreateReview() {
             )}
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <Link to="/review" className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+              <button 
+                type="button"
+                onClick={() => navigate(-1)} 
+                className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer bg-white"
+              >
                 Batal
-              </Link>
+              </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-amber-500 to-orange-500 rounded-xl hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {submitting ? 'Mengirim...' : 'Kirim Review'}
               </button>

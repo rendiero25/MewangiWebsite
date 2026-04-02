@@ -64,7 +64,7 @@ export default function BlogList() {
     <div className="min-h-screen bg-white">
       {/* Hero header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-black mb-2">

@@ -29,6 +29,9 @@ interface Topic {
   isClosed: boolean;
   isFeatured: boolean;
   isAnnouncement: boolean;
+  slug: string;
+  likes: string[];
+  dislikes: string[];
   createdAt: string;
   lastReplyAt: string;
 }
@@ -47,7 +50,7 @@ export default function ForumList() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState('');
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -110,7 +113,7 @@ export default function ForumList() {
     <div className="min-h-screen bg-white">
       {/* Hero header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-black mb-2">

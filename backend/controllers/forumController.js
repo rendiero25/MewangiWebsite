@@ -97,8 +97,11 @@ const getTopics = async (req, res) => {
 // @access  Public
 const getTopicById = async (req, res) => {
   try {
+    const { id } = req.params;
+    const query = mongoose.isValidObjectId(id) ? { _id: id } : { slug: id };
+
     const topic = await ForumTopic.findOneAndUpdate(
-      { _id: req.params.id, status: "approved" },
+      { ...query, status: "approved" },
       { $inc: { views: 1 } },
       { new: true },
     )
@@ -287,7 +290,7 @@ const deleteTopic = async (req, res) => {
 
     // Hapus semua komentar di topik ini
     await ForumComment.deleteMany({ topic: topic._id });
-    await ForumTopic.findByIdAndDelete(req.params.id);
+    await ForumTopic.findByIdAndDelete(topic._id);
 
     res.json({ message: "Topik berhasil dihapus" });
   } catch (error) {
@@ -297,12 +300,11 @@ const deleteTopic = async (req, res) => {
   }
 };
 
-// @desc    Tambah komentar ke topik
-// @route   POST /api/forum/:id/comments
-// @access  Private (verified member)
 const addComment = async (req, res) => {
   try {
-    const topic = await ForumTopic.findById(req.params.id);
+    const { id } = req.params;
+    const query = mongoose.isValidObjectId(id) ? { _id: id } : { slug: id };
+    const topic = await ForumTopic.findOne(query);
 
     if (!topic) {
       return res.status(404).json({ message: "Topik tidak ditemukan" });
@@ -342,7 +344,7 @@ const addComment = async (req, res) => {
         sender: req.user._id,
         type: "comment_forum",
         message: `${req.user.username} mengomentari topik Anda: "${topic.title}"`,
-        link: `/forum/${topic._id}`,
+        link: `/forum/${topic.slug || topic._id}`,
       });
 
       const socket = require("../socket");
@@ -512,10 +514,20 @@ const getTopCategories = async (req, res) => {
     const categories = await ForumTopic.aggregate([
       { $match: { status: "approved" } },
       { $group: { _id: "$category", count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "_id",
+          foreignField: "_id",
+          as: "categoryDetails"
+        }
+      },
+      { $unwind: "$categoryDetails" },
+      { $project: { name: "$categoryDetails.name", count: 1 } },
       { $sort: { count: -1 } },
       { $limit: 10 },
     ]);
-    res.json(categories.map((c) => ({ name: c._id, count: c.count })));
+    res.json(categories);
   } catch (error) {
     res
       .status(500)
@@ -523,12 +535,12 @@ const getTopCategories = async (req, res) => {
   }
 };
 
-// @desc    Get related topics
-// @route   GET /api/forum/:id/related
-// @access  Public
 const getRelatedTopics = async (req, res) => {
   try {
-    const topic = await ForumTopic.findById(req.params.id);
+    const { id } = req.params;
+    const query = mongoose.isValidObjectId(id) ? { _id: id } : { slug: id };
+    const topic = await ForumTopic.findOne(query);
+
     if (!topic)
       return res.status(404).json({ message: "Topik tidak ditemukan" });
 
@@ -548,12 +560,12 @@ const getRelatedTopics = async (req, res) => {
   }
 };
 
-// @desc    Like topik
-// @route   POST /api/forum/:id/like
-// @access  Private
 const likeTopic = async (req, res) => {
   try {
-    const topic = await ForumTopic.findById(req.params.id);
+    const { id } = req.params;
+    const query = mongoose.isValidObjectId(id) ? { _id: id } : { slug: id };
+    const topic = await ForumTopic.findOne(query);
+
     if (!topic) return res.status(404).json({ message: "Topik tidak ditemukan" });
 
     const userId = req.user._id;
@@ -591,12 +603,12 @@ const likeTopic = async (req, res) => {
   }
 };
 
-// @desc    Dislike topik
-// @route   POST /api/forum/:id/dislike
-// @access  Private
 const dislikeTopic = async (req, res) => {
   try {
-    const topic = await ForumTopic.findById(req.params.id);
+    const { id } = req.params;
+    const query = mongoose.isValidObjectId(id) ? { _id: id } : { slug: id };
+    const topic = await ForumTopic.findOne(query);
+
     if (!topic) return res.status(404).json({ message: "Topik tidak ditemukan" });
 
     const userId = req.user._id;

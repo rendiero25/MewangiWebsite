@@ -18,7 +18,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { toggleChat } = useChat();
+  const { toggleChat, unreadCount } = useChat();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -60,11 +60,16 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <button 
                   onClick={toggleChat}
-                  className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                  className="relative p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                   title="Pesan"
                   aria-label="Direct messages"
                 >
                   <MdChat size={22} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white animate-in zoom-in">
+                      {unreadCount}
+                    </span>
+                  )}
                 </button>
                 <NotificationBell />
                 <div className="relative">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
@@ -78,12 +78,15 @@ export default function CreateTopic() {
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Breadcrumb */}
-        <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6">
+        <button 
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors mb-6 cursor-pointer bg-transparent border-0 p-0"
+        >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Kembali ke Forum
-        </Link>
+          Kembali
+        </button>
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
@@ -91,101 +94,121 @@ export default function CreateTopic() {
             <p className="text-sm text-gray-500 mt-1">Mulai diskusi baru di forum komunitas Mewangi.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
-            {/* Title */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column: Icon/Illustration */}
+              <div className="lg:col-span-1">
+                <div className="aspect-square bg-indigo-50/50 rounded-xl border-2 border-dashed border-indigo-100 flex flex-col items-center justify-center p-8 text-center group transition-colors hover:bg-indigo-50">
+                  <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-indigo-500 mb-4 group-hover:scale-110 transition-transform">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-700">Diskusi Forum</p>
+                  <p className="text-xs text-gray-500 mt-1">Gunakan judul yang menarik untuk memicu diskusi berkualitas.</p>
+                </div>
+              </div>
+
+              {/* Right Column: Fields */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Title */}
+                <div>
+                  <label htmlFor="topic-title" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Judul Topik
+                  </label>
+                  <input
+                    id="topic-title"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Tulis judul yang jelas dan menarik..."
+                    maxLength={200}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                  />
+                  <div className="flex justify-end mt-1">
+                    <p className={`text-[10px] font-medium ${title.length >= 200 ? 'text-red-500' : 'text-gray-400'}`}>
+                      {title.length}/200
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Prefix
+                    </label>
+                    <select
+                      value={prefix}
+                      onChange={(e) => setPrefix(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Tanpa Prefix</option>
+                      <option value="[QUESTION]">❓ [QUESTION]</option>
+                      <option value="[SOLVED]">✅ [SOLVED]</option>
+                      <option value="[TUTORIAL]">📖 [TUTORIAL]</option>
+                      <option value="[WTS]">💰 [WTS]</option>
+                      <option value="[WTB]">🔎 [WTB]</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="topic-category" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Kategori
+                    </label>
+                    <select
+                      id="topic-category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      disabled={loadingCats}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none cursor-pointer disabled:opacity-50"
+                    >
+                      {loadingCats ? (
+                        <option>Memuat kategori...</option>
+                      ) : (
+                        categories.map((cat) => (
+                          <option key={cat._id} value={cat._id}>{cat.name}</option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Tags (pisahkan dengan koma)
+                    </label>
+                    <input
+                      type="text"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="parfum, lokal, review..."
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Tipe Thread
+                    </label>
+                    <select
+                      value={type}
+                      onChange={(e) => setType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="question">Question (Q&A)</option>
+                      <option value="poll">Poll (Voting)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content (Full Width Below) */}
             <div>
-              <label htmlFor="topic-title" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Judul Topik
+              <label htmlFor="topic-content" className="block text-sm font-semibold text-gray-700 mb-2">
+                Konten Diskusi
               </label>
-              <input
-                id="topic-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Tulis judul yang jelas dan menarik..."
-                maxLength={200}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
-              <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
-            </div>
-
-            {/* Prefix & Category */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Prefix
-                </label>
-                <select
-                  value={prefix}
-                  onChange={(e) => setPrefix(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
-                >
-                  <option value="">Tanpa Prefix</option>
-                  <option value="[QUESTION]">❓ [QUESTION]</option>
-                  <option value="[SOLVED]">✅ [SOLVED]</option>
-                  <option value="[TUTORIAL]">📖 [TUTORIAL]</option>
-                  <option value="[WTS]">💰 [WTS] - Jual</option>
-                  <option value="[WTB]">🔎 [WTB] - Beli</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="topic-category" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Kategori
-                </label>
-                <select
-                  id="topic-category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  disabled={loadingCats}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer disabled:opacity-50"
-                >
-                  {loadingCats ? (
-                    <option>Memuat kategori...</option>
-                  ) : (
-                    categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Tags & Type */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Tags (pisahkan dengan koma)
-                </label>
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="parfum, lokal, review..."
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Tipe Thread
-                </label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
-                >
-                  <option value="normal">Normal</option>
-                  <option value="question">Question (Q&A)</option>
-                  <option value="poll">Poll (Voting)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div>
-              <label htmlFor="topic-content" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Konten
-              </label>
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-200 focus-within:border-indigo-400 transition-all">
                 <ReactQuill
                   theme="snow"
                   value={content}
@@ -203,16 +226,17 @@ export default function CreateTopic() {
             )}
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <Link
-                to="/forum"
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              <button 
+                type="button"
+                onClick={() => navigate(-1)} 
+                className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer bg-white"
               >
                 Batal
-              </Link>
+              </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {submitting ? 'Memposting...' : 'Posting Topik'}
               </button>

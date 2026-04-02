@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import gsap from 'gsap';
 import ScrollSmoother from 'gsap/ScrollSmoother';
 import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
-import Breadcrumbs from '../../components/public/Breadcrumbs';
 import ReportModal from '../../components/public/ReportModal';
 import Avatar from '../../components/common/Avatar';
+import { useBreadcrumbs } from '../../context/BreadcrumbContext';
 
 gsap.registerPlugin(ScrollSmoother);
 
@@ -26,6 +26,7 @@ const categoryColors: Record<string, string> = {
 interface TopicData {
   _id: string;
   title: string;
+  slug: string;
   content: string;
   category: { name: string; slug: string; icon?: string };
   author: { _id: string; username: string; avatar?: string };
@@ -67,6 +68,8 @@ export default function ForumDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setBreadcrumbTitle } = useBreadcrumbs();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [topic, setTopic] = useState<TopicData | null>(null);
@@ -96,6 +99,7 @@ export default function ForumDetail() {
       setTopic(data.topic);
       setTopicLikes(data.topic.likes || []);
       setTopicDislikes(data.topic.dislikes || []);
+      setBreadcrumbTitle(location.pathname, data.topic.title);
       setComments(data.comments);
       setRelatedTopics(relatedData);
     } catch {
@@ -103,23 +107,11 @@ export default function ForumDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, location.pathname, setBreadcrumbTitle]);
 
   useEffect(() => {
     fetchTopic();
   }, [fetchTopic]);
-
-  // ScrollSmoother disabled to fix scroll issues
-  // useEffect(() => {
-  //   const smoother = ScrollSmoother.create({
-  //     smooth: 1,
-  //     effects: true,
-  //   });
-  //   
-  //   return () => {
-  //     smoother.kill();
-  //   };
-  // }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -241,18 +233,11 @@ export default function ForumDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-8">
-            <Breadcrumbs 
-              items={[
-                { label: 'Forum', to: '/forum' },
-                { label: topic.category?.name || 'Kategori', to: `/forum?category=${topic.category?.slug}` },
-                { label: topic.title }
-              ]} 
-            />
 
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-8">
@@ -501,7 +486,7 @@ export default function ForumDetail() {
               <h3 className="text-lg font-bold text-gray-900 px-1">Pembahasan Lainnya</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {relatedTopics.map(t => (
-                  <Link key={t._id} to={`/forum/${t._id}`} className="p-4 bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-md transition-all group">
+                  <Link key={t._id} to={`/forum/${t.slug || t._id}`} className="p-4 bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-md transition-all group">
                     <p className="text-xs text-primary font-bold mb-1 opacity-60 group-hover:opacity-100 transition-opacity">Related Thread</p>
                     <h4 className="text-sm font-bold text-gray-800 line-clamp-2">{t.title}</h4>
                     <p className="text-[10px] text-gray-400 mt-2">{new Date(t.createdAt).toLocaleDateString()}</p>

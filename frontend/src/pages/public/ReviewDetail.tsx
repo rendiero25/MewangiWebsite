@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import gsap from 'gsap';
 import ScrollSmoother from 'gsap/ScrollSmoother';
@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
 import Avatar from '../../components/common/Avatar';
+import { useBreadcrumbs } from '../../context/BreadcrumbContext';
 
 gsap.registerPlugin(ScrollSmoother);
 
@@ -68,6 +69,8 @@ export default function ReviewDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setBreadcrumbTitle } = useBreadcrumbs();
+  const location = useLocation();
 
   const [review, setReview] = useState<ReviewData | null>(null);
   const [comments, setComments] = useState<CommentData[]>([]);
@@ -88,6 +91,7 @@ export default function ReviewDetail() {
       const { data } = await axios.get(`${API_URL}/reviews/${id}`);
       setReview(data.review);
       setComments(data.comments);
+      setBreadcrumbTitle(location.pathname, data.review.title);
       
       const relatedRes = await axios.get(`${API_URL}/reviews/${data.review._id}/related`);
       setRelatedReviews(relatedRes.data);
@@ -96,23 +100,11 @@ export default function ReviewDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, location.pathname, setBreadcrumbTitle]);
 
   useEffect(() => {
     fetchReview();
   }, [fetchReview]);
-
-  // ScrollSmoother disabled to fix scroll issues
-  // useEffect(() => {
-  //   const smoother = ScrollSmoother.create({
-  //     smooth: 1,
-  //     effects: true,
-  //   });
-  //   
-  //   return () => {
-  //     smoother.kill();
-  //   };
-  // }, []);
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,22 +192,22 @@ export default function ReviewDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-10">
-            <Link to="/review" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors font-medium">
+            {/* <Link to="/review" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors font-medium">
               ← Kembali ke Katalog Review
-            </Link>
+            </Link> */}
 
-            <article className="bg-white rounded-xl-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+            <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               {/* Header section: Image & Data (1 Row) */}
               <div className="p-8 sm:p-12 border-b border-gray-100">
-                <div className="flex flex-col md:flex-row gap-10">
+                <div className="flex flex-col md:flex-row gap-10 items-center">
                   {/* Left: Image */}
                   <div className="w-full md:w-[320px] shrink-0">
-                    <div className="aspect-square rounded-xl-[2rem] overflow-hidden shadow-2xl shadow-gray-200 ring-1 ring-gray-100">
+                    <div className="relative aspect-4/3 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
                       <img 
                         src={review.image?.startsWith('http') ? review.image : `${API_URL.replace('/api', '')}${review.image}`} 
                         alt={review.title} 
@@ -290,34 +282,24 @@ export default function ReviewDetail() {
             <section className="space-y-6">
               <h2 className="text-2xl font-black text-gray-900 px-4">User Discussions</h2>
               
-              <div className="bg-white rounded-[2.5rem] border border-gray-100 p-8 shadow-sm">
+              <div className="bg-white rounded-4xl border border-gray-100 p-8 shadow-sm">
                 {comments.length === 0 ? (
                   <p className="text-center text-gray-400 py-10 font-medium">No discussions yet. Share your thoughts!</p>
                 ) : (
-                  <>
-                    <div className="space-y-2">
-                      {(user ? comments : comments.slice(0, 5)).map(c => (
-                        <CommentItem 
-                          key={c._id} 
-                          comment={{...c, review: review._id}} 
-                          onDelete={handleDeleteComment}
-                          onQuote={(qc) => {
-                            setQuotedComment(qc);
-                            commentInputRef.current?.focus();
-                            commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }}
-                        />
-                      ))}
-                    </div>
-                    {!user && comments.length > 5 && (
-                      <div className="text-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 mt-6">
-                        <p className="text-xs text-gray-400 mb-4 font-black uppercase tracking-widest">Only the 5 newest reviews are visible</p>
-                        <Link to="/login" className="inline-block bg-primary text-white px-10 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all cursor-pointer">
-                          Login to Read All Reviews
-                        </Link>
-                      </div>
-                    )}
-                  </>
+                  <div className="space-y-2">
+                    {(user ? comments : comments.slice(0, 5)).map(c => (
+                      <CommentItem 
+                        key={c._id} 
+                        comment={{...c, review: review._id}} 
+                        onDelete={handleDeleteComment}
+                        onQuote={(qc) => {
+                          setQuotedComment(qc);
+                          commentInputRef.current?.focus();
+                          commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -385,7 +367,7 @@ export default function ReviewDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {relatedReviews.map(t => (
                     <Link key={t._id} to={`/review/${t._id}`} className="group bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-2xl transition-all overflow-hidden flex flex-col h-full">
-                      <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                      <div className="aspect-16/10 overflow-hidden bg-gray-100">
                         {t.image ? (
                           <img src={`${API_URL.replace('/api', '')}${t.image}`} alt={t.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (

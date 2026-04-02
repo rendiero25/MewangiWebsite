@@ -583,7 +583,7 @@ export default function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="feature-card group p-8 rounded-2xl bg-white border border-gray-200 hover:border-gray-300 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-300"
+                className="feature-card group p-8 rounded-2xl bg-white border border-primary hover:border-secondary hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-300"
               >
                 <div
                   className={`w-16 h-16 rounded-xl bg-linear-to-br ${feature.icon_bg} flex items-center justify-center text-white mb-5 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}
@@ -658,7 +658,7 @@ export default function Home() {
             ].map((item) => (
               <div
                 key={item.step}
-                className="step-card relative group p-8 rounded-2xl bg-white border border-gray-200 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 dark:border-gray-700"
+                className="step-card relative group p-8 rounded-2xl bg-white border border-primary hover:border-secondary hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 dark:border-primary"
               >
                 <div className="absolute top-4 right-4 w-12 h-12 rounded-full bg-linear-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                   <span className="text-sm font-black text-primary">
@@ -738,7 +738,7 @@ export default function Home() {
             ].map((testimonial) => (
               <div
                 key={testimonial.author}
-                className="feature-card p-8 rounded-2xl bg-white border border-gray-200 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+                className="feature-card p-8 rounded-2xl bg-white border border-primary hover:border-secondary hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
               >
                 {/* Rating Stars */}
                 <div className="flex items-center gap-1 mb-4">
@@ -773,7 +773,7 @@ export default function Home() {
       </section>
 
       {/* Stats Showcase Section dengan ScrollTrigger */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="pt-20 lg:pt-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -804,7 +804,7 @@ export default function Home() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="stat-item text-center p-6 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 transition-all duration-300"
+                className="stat-item text-center p-6 rounded-xl bg-linear-to-br from-primary to-secondary hover:bg-blue-50 border border-gray-200 transition-all duration-300"
               >
                 <div className="text-4xl mb-2">{stat.icon}</div>
                   <p className="text-2xl sm:text-3xl font-bold text-black mb-2">

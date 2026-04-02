@@ -22,10 +22,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (storedTheme === 'light' || storedTheme === 'dark') {
       return storedTheme;
     }
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
     return 'light';
   });
 

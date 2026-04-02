@@ -19,6 +19,7 @@ interface TopicCardProps {
     isClosed: boolean;
     isFeatured: boolean;
     isAnnouncement: boolean;
+    slug: string;
     createdAt: string;
     lastReplyAt: string;
   };
@@ -52,7 +53,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
 
   return (
     <Link
-      to={`/forum/${topic._id}`}
+      to={`/forum/${topic.slug || topic._id}`}
       className="block group"
     >
       <div className="p-5 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">

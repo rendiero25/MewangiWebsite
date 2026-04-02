@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const forumTopicSchema = new mongoose.Schema({
   title: {
@@ -6,6 +7,10 @@ const forumTopicSchema = new mongoose.Schema({
     required: [true, 'Judul topik wajib diisi'],
     trim: true,
     maxlength: [200, 'Judul maksimal 200 karakter'],
+  },
+  slug: {
+    type: String,
+    unique: true,
   },
   content: {
     type: String,
@@ -89,6 +94,13 @@ const forumTopicSchema = new mongoose.Schema({
   }],
 }, {
   timestamps: true,
+});
+
+forumTopicSchema.pre('save', async function() {
+  if (!this.isModified('title')) {
+    return;
+  }
+  this.slug = slugify(this.title, { lower: true, strict: true });
 });
 
 forumTopicSchema.index({ title: 'text', content: 'text', tags: 'text' });
