@@ -1,12 +1,19 @@
 "use client";
 
 import { Link } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TextPlugin } from "gsap/TextPlugin";
 
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+interface Article { _id: string; title: string; slug: string; category: string; coverImage?: string; author: { username: string; avatar?: string }; createdAt: string; excerpt?: string; }
+interface Review { _id: string; title: string; author: { username: string; avatar?: string }; rating: { overall: number }; createdAt: string; }
+interface Topic { _id: string; title: string; slug: string; category: { name: string }; author: { username: string; avatar?: string }; replyCount: number; createdAt: string; }
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -17,7 +24,28 @@ export default function Home() {
   const featuresRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
-  const svgContainerRef = useRef<HTMLDivElement>(null);
+
+  const [latestArticles, setLatestArticles] = useState<Article[]>([]);
+  const [latestReviews, setLatestReviews] = useState<Review[]>([]);
+  const [latestTopics, setLatestTopics] = useState<Topic[]>([]);
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const [artRes, revRes, topicRes] = await Promise.allSettled([
+          axios.get(`${API_URL}/articles?limit=3&status=approved`),
+          axios.get(`${API_URL}/reviews?limit=3&status=approved`),
+          axios.get(`${API_URL}/forum?limit=3&status=approved`),
+        ]);
+        if (artRes.status === 'fulfilled') setLatestArticles(artRes.value.data.articles || artRes.value.data || []);
+        if (revRes.status === 'fulfilled') setLatestReviews(revRes.value.data.reviews || revRes.value.data || []);
+        if (topicRes.status === 'fulfilled') setLatestTopics(topicRes.value.data.topics || topicRes.value.data || []);
+      } catch (err) {
+        console.error('Failed to fetch latest content:', err);
+      }
+    };
+    fetchLatest();
+  }, []);
 
   useEffect(() => {
     // ScrollTrigger - Hero Section Animations
@@ -276,66 +304,36 @@ export default function Home() {
         ref={heroRef}
         className="relative overflow-hidden bg-white"
       >
-        {/* Animated SVG Decorations dengan MotionPath-like effect */}
-        <div
-          ref={svgContainerRef}
-          className="absolute inset-0 overflow-hidden pointer-events-none"
-        >
-          <svg
-            viewBox="0 0 1200 800"
-            className="w-full h-full opacity-15"
-            preserveAspectRatio="xMidYMid slice"
-          >
-            {/* Floating circle paths */}
-            <g className="svg-float">
-              <circle cx="150" cy="100" r="40" fill="url(#grad1)" />
-              <circle cx="150" cy="100" r="35" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-            </g>
-
-            <g className="svg-float" style={{ animationDelay: "0.5s" }}>
-              <circle cx="1050" cy="200" r="50" fill="url(#grad2)" />
-              <circle cx="1050" cy="200" r="45" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-            </g>
-
-            {/* Floating dots */}
-            {[1, 2, 3, 4, 5].map((i) => (
-              <circle
-                key={`dot-${i}`}
-                className="svg-dot"
-                cx={100 + i * 200}
-                cy={150 + i * 80}
-                r="3"
-                fill="currentColor"
-              />
-            ))}
-
-            {/* Pulse circles */}
-            <circle className="svg-pulse" cx="300" cy="600" r="2" fill="currentColor" opacity="0.8" />
-            <circle className="svg-pulse" cx="900" cy="650" r="2" fill="currentColor" opacity="0.8" style={{ animationDelay: "0.5s" }} />
-
-            {/* Gradient definitions */}
-            <defs>
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#ED1B79" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#007AFF" stopOpacity="0.3" />
-              </linearGradient>
-              <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#007AFF" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#34C759" stopOpacity="0.3" />
-              </linearGradient>
-            </defs>
-          </svg>
+        {/* Orbiting Gradient Glow Background */}
+        <style>{`
+          @keyframes orbit-1 {
+            0%   { transform: translate(0px, 0px) scale(0.7); opacity: 0.12; }
+            25%  { transform: translate(300px, 80px) scale(1.15); opacity: 0.18; }
+            50%  { transform: translate(200px, 250px) scale(0.8); opacity: 0.10; }
+            75%  { transform: translate(-80px, 150px) scale(1.2); opacity: 0.22; }
+            100% { transform: translate(0px, 0px) scale(0.7); opacity: 0.12; }
+          }
+          @keyframes orbit-2 {
+            0%   { transform: translate(0px, 0px) scale(1.1); opacity: 0.15; }
+            25%  { transform: translate(-250px, 120px) scale(0.65); opacity: 0.08; }
+            50%  { transform: translate(-150px, -100px) scale(1.25); opacity: 0.20; }
+            75%  { transform: translate(120px, -80px) scale(0.75); opacity: 0.12; }
+            100% { transform: translate(0px, 0px) scale(1.1); opacity: 0.15; }
+          }
+          .hero-orb-1 { animation: orbit-1 12s ease-in-out infinite; }
+          .hero-orb-2 { animation: orbit-2 16s ease-in-out infinite; }
+        `}</style>
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="hero-orb-1 absolute top-0 left-0 w-[580px] h-[580px] rounded-full bg-primary blur-[130px]" />
+          <div className="hero-orb-2 absolute top-10 right-0 w-[520px] h-[520px] rounded-full bg-secondary blur-[120px]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[250px] rounded-full bg-primary/5 blur-[80px]" />
+          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,149,69,0.05) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         </div>
 
-        {/* Animated Decorative elements with parallax - only in dark mode */}
-        <div className="decorative-circle absolute top-20 left-10 w-72 h-72 hidden bg-transparent rounded-full blur-3xl" />
-        <div className="decorative-circle absolute bottom-10 right-10 w-96 h-96 hidden bg-transparent rounded-full blur-3xl" />
 
-        {/* Animated gradient orbs - only in dark mode */}
-        <div className="absolute top-40 right-1/4 w-96 h-96 hidden bg-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-20 left-1/3 w-96 h-96 hidden bg-transparent rounded-full blur-3xl animate-pulse" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pt-32 lg:pb-36">
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pb-36">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge dengan animation */}
             <div
@@ -349,7 +347,7 @@ export default function Home() {
             {/* Title dengan SplitText effect */}
             <h1
               ref={heroTitleRef}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black leading-tight mb-6"
+              className="text-4xl sm:text-5xl lg:text-7xl font-bold text-black leading-tight mb-6"
             >
               Temukan Dunia{" "}
               <span className="highlight-text bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -361,7 +359,7 @@ export default function Home() {
             {/* Description dengan animation */}
             <p
               ref={heroDescRef}
-              className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed"
+              className="text-lg sm:text-2xl text-gray-600 max-w-2xl xl:max-w-4xl mx-auto mb-10 leading-relaxed"
             >
               Gabung bersama ribuan pecinta parfum Indonesia. Diskusikan,
               review, dan bagikan pengalaman parfum terbaikmu di Mewangi dengan
@@ -768,6 +766,191 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== LATEST CONTENT SECTIONS ===== */}
+
+      {/* Latest Reviews */}
+      <section className="py-20 lg:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-100 rounded-full text-xs font-bold text-amber-600 mb-3">
+                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                Terbaru
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-black">Review <span className="text-amber-500">Terpilih</span></h2>
+              <p className="text-gray-500 mt-2 text-sm">Review parfum terbaru dari komunitas Mewangi.</p>
+            </div>
+            <Link to="/review" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary transition-colors group">
+              Lihat Semua
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
+
+          {latestReviews.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {latestReviews.slice(0, 3).map((review, idx) => (
+                <Link key={review._id} to={`/review/${review._id}`}
+                  className="group relative bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-2xl hover:shadow-amber-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-[4rem] -mr-6 -mt-6 group-hover:bg-amber-100 transition-colors" />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1">
+                        {[1,2,3,4,5].map(s => (
+                          <svg key={s} className={`w-4 h-4 ${s <= Math.round(review.rating?.overall || 0) ? 'text-amber-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-medium">#{idx + 1}</span>
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-3 leading-snug group-hover:text-amber-600 transition-colors line-clamp-2">{review.title}</h3>
+                    <div className="flex items-center gap-2 mt-auto">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-black">
+                        {review.author?.username?.[0]?.toUpperCase() || '?'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-700">{review.author?.username || 'Anonymous'}</p>
+                        <p className="text-[10px] text-gray-400">{new Date(review.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1,2,3].map(i => <div key={i} className="h-48 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />)}
+            </div>
+          )}
+          <div className="mt-6 text-center sm:hidden">
+            <Link to="/review" className="inline-flex items-center gap-2 text-sm font-bold text-primary">Lihat Semua Review →</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Latest Forum Topics */}
+      <section className="py-20 lg:py-28 bg-third/25">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-xs font-bold text-emerald-600 mb-3">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                Diskusi Aktif
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-black">Topik <span className="text-primary">Forum</span></h2>
+              <p className="text-gray-500 mt-2 text-sm">Ikut bergabung dalam diskusi parfum terkini.</p>
+            </div>
+            <Link to="/forum" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary transition-colors group">
+              Lihat Semua
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
+
+          {latestTopics.length > 0 ? (
+            <div className="space-y-4">
+              {latestTopics.slice(0, 3).map((topic, idx) => (
+                <Link key={topic._id} to={`/forum/${topic._id}`}
+                  className="group flex items-center gap-5 bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-xl hover:shadow-emerald-100/40 hover:-translate-y-0.5 hover:border-primary/20 transition-all duration-300"
+                >
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-primary/20">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{topic.title}</h3>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs text-gray-400">{topic.author?.username || 'Anonymous'}</span>
+                      {topic.category?.name && (
+                        <span className="text-[10px] px-2 py-0.5 bg-primary/5 text-primary rounded-full font-bold">{topic.category.name}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-center">
+                    <p className="text-lg font-black text-gray-700">{topic.replyCount || 0}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">Balasan</p>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {[1,2,3].map(i => <div key={i} className="h-24 bg-white rounded-2xl animate-pulse border border-gray-100" />)}
+            </div>
+          )}
+          <div className="mt-6 text-center sm:hidden">
+            <Link to="/forum" className="inline-flex items-center gap-2 text-sm font-bold text-primary">Lihat Semua Topik →</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Latest Articles */}
+      <section className="py-20 lg:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full text-xs font-bold text-indigo-600 mb-3">
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                Blog & Edukasi
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-black">Artikel <span className="text-indigo-600">Terbaru</span></h2>
+              <p className="text-gray-500 mt-2 text-sm">Perluas pengetahuanmu seputar dunia parfum.</p>
+            </div>
+            <Link to="/blog" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary transition-colors group">
+              Lihat Semua
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
+          </div>
+
+          {latestArticles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {latestArticles.slice(0, 3).map((article) => (
+                <Link key={article._id} to={`/blog/${article.slug}`}
+                  className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300"
+                >
+                  <div className="h-44 overflow-hidden bg-gradient-to-br from-indigo-500/10 to-blue-500/10 relative">
+                    {article.coverImage ? (
+                      <img
+                        src={article.coverImage.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${article.coverImage}` : article.coverImage}
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center group-hover:from-indigo-500/20 group-hover:to-blue-500/20 transition-all">
+                        <svg className="w-16 h-16 text-indigo-200 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    {article.category && (
+                      <span className="inline-block text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-bold mb-3">{article.category}</span>
+                    )}
+                    <h3 className="font-bold text-gray-900 leading-snug mb-3 group-hover:text-indigo-600 transition-colors line-clamp-2">{article.title}</h3>
+                    {article.excerpt && <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed">{article.excerpt}</p>}
+                    <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white text-[10px] font-black">
+                        {article.author?.username?.[0]?.toUpperCase() || '?'}
+                      </div>
+                      <p className="text-xs text-gray-500 font-medium">{article.author?.username || 'Anonymous'}</p>
+                      <span className="text-gray-300">·</span>
+                      <p className="text-xs text-gray-400">{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1,2,3].map(i => <div key={i} className="h-64 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />)}
+            </div>
+          )}
+          <div className="mt-6 text-center sm:hidden">
+            <Link to="/blog" className="inline-flex items-center gap-2 text-sm font-bold text-primary">Lihat Semua Artikel →</Link>
           </div>
         </div>
       </section>

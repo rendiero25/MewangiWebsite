@@ -105,6 +105,7 @@ const createArticle = async (req, res) => {
       await Promise.all(admins.map(admin => 
         Notification.create({
           recipient: admin._id,
+          sender: req.user._id,
           type: 'new_article_admin',
           message: `Artikel baru pending: "${article.title}" oleh ${req.user.username}`,
           link: `/admin`

@@ -100,6 +100,7 @@ const createReview = async (req, res) => {
     await Promise.all(admins.map(admin => 
       Notification.create({
         recipient: admin._id,
+        sender: req.user._id,
         type: 'new_review_admin',
         message: `Review baru pending: "${review.title}" oleh ${req.user.username}`,
         link: `/admin`

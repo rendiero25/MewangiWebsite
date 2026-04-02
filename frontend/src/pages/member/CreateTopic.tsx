@@ -65,7 +65,7 @@ export default function CreateTopic() {
         },
         { headers: { Authorization: `Bearer ${user?.token}` } }
       );
-      navigate('/forum');
+      navigate('/dashboard?tab=forum');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal membuat topik.';
       setError(msg || 'Gagal membuat topik.');
@@ -91,7 +91,9 @@ export default function CreateTopic() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 border-b border-gray-100">
             <h1 className="text-2xl font-bold text-gray-900">Buat Topik Baru</h1>
-            <p className="text-sm text-gray-500 mt-1">Mulai diskusi baru di forum komunitas Mewangi.</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Topik Anda akan ditinjau oleh admin sebelum tampil di forum Mewangi.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
@@ -238,7 +240,7 @@ export default function CreateTopic() {
                 disabled={submitting}
                 className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                {submitting ? 'Memposting...' : 'Posting Topik'}
+                {submitting ? 'Memposting...' : user?.role === 'admin' ? 'Posting Langsung' : 'Kirim untuk Review'}
               </button>
             </div>
           </form>

@@ -71,6 +71,7 @@ const updateReviewStatus = async (req, res) => {
     // Notify user
     const notification = await Notification.create({
       recipient: review.author,
+      sender: req.user._id,
       type: status === 'approved' ? 'approve_review' : 'reject_review',
       message: status === 'approved' 
         ? `Review Anda "${review.title}" telah disetujui!` 
@@ -142,6 +143,7 @@ const updateArticleStatus = async (req, res) => {
     // Notify user
     const notification = await Notification.create({
       recipient: article.author,
+      sender: req.user._id,
       type: status === 'approved' ? 'approve_article' : 'reject_article',
       message: status === 'approved' 
         ? `Artikel Anda "${article.title}" telah disetujui!` 
@@ -203,6 +205,7 @@ const updateTopicStatus = async (req, res) => {
     // Notify user
     const notification = await Notification.create({
       recipient: topic.author,
+      sender: req.user._id,
       type: status === 'approved' ? 'approve_forum' : 'reject_forum', // Assuming these exist or will be added
       message: status === 'approved' 
         ? `Topik Forum Anda "${topic.title}" telah disetujui!` 

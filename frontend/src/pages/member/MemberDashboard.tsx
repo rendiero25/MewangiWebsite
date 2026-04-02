@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -57,6 +58,28 @@ export default function MemberDashboard() {
   const [articles, setArticles] = useState<MyArticle[]>([]);
   const [topics, setTopics] = useState<MyTopic[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Per-section Filters
+  const [reviewFilters, setReviewFilters] = useState({ status: 'all', sort: 'latest', search: '' });
+  const [articleFilters, setArticleFilters] = useState({ status: 'all', sort: 'latest', search: '' });
+  const [topicFilters, setTopicFilters] = useState({ status: 'all', sort: 'latest', search: '' });
+
+  const [searchQuery, setSearchQuery] = useState(''); // Global search remains for the pop-out
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Modal State
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'primary';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -76,35 +99,108 @@ export default function MemberDashboard() {
     }
   }, [user?.token]);
 
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab) {
+      const element = document.getElementById(tab === 'forum' ? 'forum' : tab);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [location.search]);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const headers = { Authorization: `Bearer ${user?.token}` };
 
-  const handleDeleteReview = async (id: string) => {
-    if (!confirm('Hapus review ini secara permanen?')) return;
-    try {
-      await axios.delete(`${API_URL}/reviews/${id}`, { headers });
-      setReviews(prev => prev.filter(r => r._id !== id));
-    } catch { alert('Gagal menghapus review.'); }
+  const handleDeleteReview = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Hapus Review?',
+      message: 'Apakah Anda yakin ingin menghapus review ini secara permanen? Tindakan ini tidak dapat dibatalkan.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_URL}/reviews/${id}`, { headers });
+          setReviews(prev => prev.filter(r => r._id !== id));
+        } catch { 
+          alert('Gagal menghapus review.'); 
+        }
+      }
+    });
   };
 
-  const handleDeleteArticle = async (id: string) => {
-    if (!confirm('Hapus artikel ini secara permanen?')) return;
-    try {
-      await axios.delete(`${API_URL}/articles/${id}`, { headers });
-      setArticles(prev => prev.filter(a => a._id !== id));
-    } catch { alert('Gagal menghapus artikel.'); }
+  const handleDeleteArticle = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Hapus Artikel?',
+      message: 'Apakah Anda yakin ingin menghapus artikel ini? Semua konten artikel akan hilang selamanya.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_URL}/articles/${id}`, { headers });
+          setArticles(prev => prev.filter(a => a._id !== id));
+        } catch { 
+          alert('Gagal menghapus artikel.'); 
+        }
+      }
+    });
   };
 
-  const handleDeleteTopic = async (id: string) => {
-    if (!confirm('Hapus topik ini secara permanen?')) return;
-    try {
-      await axios.delete(`${API_URL}/forum/${id}`, { headers });
-      setTopics(prev => prev.filter(t => t._id !== id));
-    } catch { alert('Gagal menghapus topik.'); }
+  const handleDeleteTopic = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Hapus Topik Forum?',
+      message: 'Apakah Anda yakin ingin menghapus topik ini? Semua komentar di dalamnya juga akan terhapus.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_URL}/forum/${id}`, { headers });
+          setTopics(prev => prev.filter(t => t._id !== id));
+        } catch { 
+          alert('Gagal menghapus topik.'); 
+        }
+      }
+    });
   };
+
+  const getFilteredAndSorted = <T extends MyReview | MyArticle | MyTopic>(data: T[], filters: { status: string, sort: string, search: string }) => {
+    return data.filter(item => {
+      const matchesStatus = filters.status === 'all' || item.status === filters.status;
+      const title = 'title' in item ? item.title : '';
+      const matchesSearch = !filters.search || title.toLowerCase().includes(filters.search.toLowerCase());
+      return matchesStatus && matchesSearch;
+    }).sort((a, b) => {
+      if (filters.sort === 'latest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (filters.sort === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (filters.sort === 'az') return a.title.localeCompare(b.title);
+      return 0;
+    });
+  };
+
+  const searchInData = <T extends MyReview | MyArticle | MyTopic>(data: T[]) => {
+    if (!searchQuery) return [];
+    return data.filter(item => {
+      const title = 'title' in item ? item.title : '';
+      return title.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  };
+
+  const filteredReviews = getFilteredAndSorted(reviews, reviewFilters);
+  const filteredArticles = getFilteredAndSorted(articles, articleFilters);
+  const filteredTopics = getFilteredAndSorted(topics, topicFilters);
+
+  const searchReviews = searchInData(reviews);
+  const searchArticles = searchInData(articles);
+  const searchTopics = searchInData(topics);
+  const totalSearchCount = searchReviews.length + searchArticles.length + searchTopics.length;
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -136,38 +232,146 @@ export default function MemberDashboard() {
           ))}
         </div>
 
+        {/* Global Search Bar (Pop-out results only) */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-8 shadow-sm">
+          <div className="relative group">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Cari cepat ke semua konten Anda..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSearchResults(!!e.target.value);
+              }}
+              onFocus={() => setShowSearchResults(!!searchQuery)}
+              className="w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all cursor-pointer"
+            />
+            {/* Pop-out Search Results */}
+            {showSearchResults && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-50 max-h-[400px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="p-2">
+                  {searchReviews.length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Reviews</h4>
+                      {searchReviews.slice(0, 5).map(r => (
+                        <div key={r._id} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group">
+                          <p className="text-xs font-bold text-gray-900 truncate">{r.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${r.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : r.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>{r.status}</span>
+                            <span className="text-[9px] text-gray-400 font-medium">Review</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchArticles.length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Artikel</h4>
+                      {searchArticles.slice(0, 5).map(a => (
+                        <div key={a._id} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group">
+                          <p className="text-xs font-bold text-gray-900 truncate">{a.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${a.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : a.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>{a.status}</span>
+                            <span className="text-[9px] text-gray-400 font-medium">Artikel</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchTopics.length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Topik Forum</h4>
+                      {searchTopics.slice(0, 5).map(t => (
+                        <div key={t._id} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group">
+                          <p className="text-xs font-bold text-gray-900 truncate">{t.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${t.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : t.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>{t.status}</span>
+                            <span className="text-[9px] text-gray-400 font-medium">Forum</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {totalSearchCount === 0 && (
+                    <div className="p-8 text-center text-xs text-gray-400">Tidak ada hasil ditemukan.</div>
+                  )}
+                </div>
+                {totalSearchCount > 0 && (
+                  <div className="p-3 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400 font-medium italic">Hasil teratas ditampilkan</span>
+                    <button onClick={() => setShowSearchResults(false)} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">Tutup</button>
+                  </div>
+                )}
+              </div>
+            )}
+            {showSearchResults && <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowSearchResults(false)} />}
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-3 mb-8">
-          <Link to="/review/new" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          <Link to="/review/new" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-all hover:shadow-md hover:shadow-amber-200/20 active:scale-95">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
             Tulis Review
           </Link>
-          <Link to="/blog/new" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+          <Link to="/blog/new" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-100 transition-all hover:shadow-md hover:shadow-indigo-200/20 active:scale-95">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
             Tulis Artikel
           </Link>
-          <Link to="/forum/new" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/5 border border-primary/20 rounded-xl hover:bg-primary/10 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            Buat Topik Forum
+          <Link to="/forum/new" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-primary bg-primary/5 border border-primary/20 rounded-xl hover:bg-primary/10 transition-all hover:shadow-md hover:shadow-primary/20 active:scale-95">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+            Buat Topik
           </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* My Reviews */}
-          <section className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-gray-900">Review Saya</h2>
-              <span className="text-xs text-gray-400">{reviews.length} total</span>
+          <section id="reviews" className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-linear-to-r from-white to-gray-50/50">
+              <h2 className="font-bold text-gray-900 shrink-0">Review Saya ({filteredReviews.length})</h2>
+              
+              <div className="flex flex-wrap items-center gap-2">
+                <select 
+                  value={reviewFilters.status}
+                  onChange={(e) => setReviewFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="approved">Disetujui</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Ditolak</option>
+                </select>
+                <select 
+                  value={reviewFilters.sort}
+                  onChange={(e) => setReviewFilters(prev => ({ ...prev, sort: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                >
+                  <option value="latest">Terbaru</option>
+                  <option value="oldest">Terlama</option>
+                  <option value="az">A-Z</option>
+                </select>
+                {(reviewFilters.status !== 'all' || reviewFilters.sort !== 'latest') && (
+                  <button 
+                    onClick={() => setReviewFilters({ status: 'all', sort: 'latest', search: '' })}
+                    className="px-2 py-1.5 text-[10px] font-black text-red-500 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    CLEAR
+                  </button>
+                )}
+              </div>
             </div>
             {loading ? (
               <div className="p-6 space-y-3">
                 {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
-            ) : reviews.length === 0 ? (
+            ) : filteredReviews.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">Belum ada review.</div>
             ) : (
               <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
-                {reviews.map((r) => (
+                {filteredReviews.map((r) => (
                   <div key={r._id} className="px-6 py-4 flex flex-col hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
                     <div className="flex items-center justify-between gap-3 mb-1">
                       <div className="min-w-0 flex-1">
@@ -222,20 +426,50 @@ export default function MemberDashboard() {
           </section>
 
           {/* My Articles */}
-          <section className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-gray-900">Artikel Saya</h2>
-              <span className="text-xs text-gray-400">{articles.length} total</span>
+          <section id="articles" className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-linear-to-r from-white to-gray-50/50">
+              <h2 className="font-bold text-gray-900 shrink-0">Artikel Saya ({filteredArticles.length})</h2>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <select 
+                  value={articleFilters.status}
+                  onChange={(e) => setArticleFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="approved">Disetujui</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Ditolak</option>
+                  <option value="draft">Draft</option>
+                </select>
+                <select 
+                  value={articleFilters.sort}
+                  onChange={(e) => setArticleFilters(prev => ({ ...prev, sort: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                >
+                  <option value="latest">Terbaru</option>
+                  <option value="oldest">Terlama</option>
+                  <option value="az">A-Z</option>
+                </select>
+                {(articleFilters.status !== 'all' || articleFilters.sort !== 'latest') && (
+                  <button 
+                    onClick={() => setArticleFilters({ status: 'all', sort: 'latest', search: '' })}
+                    className="px-2 py-1.5 text-[10px] font-black text-red-500 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    CLEAR
+                  </button>
+                )}
+              </div>
             </div>
             {loading ? (
               <div className="p-6 space-y-3">
                 {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
-            ) : articles.length === 0 ? (
+            ) : filteredArticles.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">Belum ada artikel.</div>
             ) : (
               <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
-                {articles.map((a) => (
+                {filteredArticles.map((a) => (
                   <div key={a._id} className="px-6 py-4 flex flex-col hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
                     <div className="flex items-center justify-between gap-3 mb-1">
                       <div className="min-w-0 flex-1">
@@ -290,20 +524,49 @@ export default function MemberDashboard() {
           </section>
 
           {/* My Topics */}
-          <section className="bg-white rounded-xl border border-gray-100 overflow-hidden lg:col-span-2">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-gray-900">Topik Forum Saya</h2>
-              <span className="text-xs text-gray-400">{topics.length} total</span>
+          <section id="forum" className="bg-white rounded-xl border border-gray-100 overflow-hidden lg:col-span-2 shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-linear-to-r from-white to-gray-50/50">
+              <h2 className="font-bold text-gray-900 shrink-0">Topik Forum Saya ({filteredTopics.length})</h2>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <select 
+                  value={topicFilters.status}
+                  onChange={(e) => setTopicFilters(prev => ({ ...prev, status: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                >
+                  <option value="all">Semua Status</option>
+                  <option value="approved">Disetujui</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Ditolak</option>
+                </select>
+                <select 
+                  value={topicFilters.sort}
+                  onChange={(e) => setTopicFilters(prev => ({ ...prev, sort: e.target.value }))}
+                  className="px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 cursor-pointer shadow-xs"
+                >
+                  <option value="latest">Terbaru</option>
+                  <option value="oldest">Terlama</option>
+                  <option value="az">A-Z</option>
+                </select>
+                {(topicFilters.status !== 'all' || topicFilters.sort !== 'latest') && (
+                  <button 
+                    onClick={() => setTopicFilters({ status: 'all', sort: 'latest', search: '' })}
+                    className="px-2 py-1.5 text-[10px] font-black text-red-500 hover:text-red-600 transition-colors cursor-pointer"
+                  >
+                    CLEAR
+                  </button>
+                )}
+              </div>
             </div>
             {loading ? (
               <div className="p-6 space-y-3">
                 {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
-            ) : topics.length === 0 ? (
+            ) : filteredTopics.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400">Belum ada topik.</div>
             ) : (
               <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
-                {topics.map((t) => (
+                {filteredTopics.map((t) => (
                   <div key={t._id} className="px-6 py-4 flex flex-col hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
                     <div className="flex items-center justify-between gap-3 mb-1">
                       <div className="min-w-0 flex-1">
@@ -358,6 +621,15 @@ export default function MemberDashboard() {
           </section>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        onCancel={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        variant={modalConfig.variant as 'danger' | 'primary' | 'success'}
+      />
     </div>
   );
 }

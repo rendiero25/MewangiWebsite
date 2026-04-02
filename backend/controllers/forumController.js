@@ -171,9 +171,8 @@ const createTopic = async (req, res) => {
       return res.status(429).json({ message: 'Anda mengirim topik terlalu cepat. Tunggu sebentar.' });
     }
 
-    // Check if category requires approval
-    const cat = await Category.findById(category);
-    const status = (cat && cat.needsApproval) ? 'pending' : 'approved';
+    // Admin auto-approval, others pending
+    const status = req.user.role === 'admin' ? 'approved' : 'pending';
 
     const topic = await ForumTopic.create({
       title: filterBadWords(title),
@@ -182,26 +181,38 @@ const createTopic = async (req, res) => {
       tags: tags || [],
       prefix: prefix || "",
       type: type || "normal",
-      isAnnouncement: isAnnouncement || false,
-      isFeatured: isFeatured || false,
+      isAnnouncement: (req.user.role === 'admin' && isAnnouncement) || false,
+      isFeatured: (req.user.role === 'admin' && isFeatured) || false,
       author: req.user._id,
       status,
     });
 
     await topic.populate("author", "username avatar");
 
-    // Notify admins
-    const admins = await User.find({ role: "admin" });
-    await Promise.all(
-      admins.map((admin) =>
-        Notification.create({
-          recipient: admin._id,
-          type: "system",
-          message: `Topik baru pending: "${topic.title}" oleh ${req.user.username}`,
-          link: `/admin`,
-        }),
-      ),
-    );
+    // Notify admins if pending (wrapped in try-catch to avoid 500 on main flow)
+    if (status === 'pending') {
+      try {
+        const admins = await User.find({ role: "admin" });
+        const socket = require('../socket');
+        
+        await Promise.all(
+          admins.map(async (admin) => {
+            const notification = await Notification.create({
+              recipient: admin._id,
+              sender: req.user._id,
+              type: "system",
+              message: `Topik baru pending: "${topic.title}" oleh ${req.user.username || 'Member'}`,
+              link: `/admin`,
+            });
+            // Real-time socket notification
+            socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
+          }),
+        );
+      } catch (notifyErr) {
+        console.error("Notification Error (Topic):", notifyErr);
+        // Don't crash the main process if notification fails
+      }
+    }
 
     res.status(201).json(topic);
   } catch (error) {

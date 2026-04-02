@@ -1,5 +1,6 @@
 import { useNotifications } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+import Avatar from '../../components/common/Avatar';
 
 export default function Notifications() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
@@ -55,13 +56,12 @@ export default function Notifications() {
                 >
                   <div className="flex-shrink-0">
                     {notification.sender ? (
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                        {notification.sender.avatar ? (
-                          <img src={notification.sender.avatar} alt="Avatar" className="w-full h-full rounded-xl object-cover" />
-                        ) : (
-                          notification.sender.username.charAt(0).toUpperCase()
-                        )}
-                      </div>
+                      <Avatar 
+                        src={notification.sender.avatar} 
+                        size="md" 
+                        alt={notification.sender.username} 
+                        className="rounded-xl shadow-sm ring-2 ring-white" 
+                      />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@ export default function Notifications() {
                     {!notification.isRead && (
                       <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-sm shadow-primary/40" />
                     )}
-                    <button className="cursor-pointer"
+                    <button
                       onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id); }}
                       className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
                       title="Hapus"

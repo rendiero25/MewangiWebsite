@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminReports from './AdminReports';
-import { MdBlock, MdCheckCircle, MdFlag } from 'react-icons/md';
+import { MdBlock, MdCheckCircle } from 'react-icons/md';
 import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -48,6 +48,10 @@ export default function AdminPanel() {
   const [viewingItem, setViewingItem] = useState<{ type: 'review', data: PendingReview } | { type: 'article', data: PendingArticle } | { type: 'topic', data: PendingTopic } | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<string>('');
+  
+  // Search
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   const headers = { Authorization: `Bearer ${user?.token}` };
 
@@ -181,9 +185,122 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-          Admin <span className="text-primary">Panel</span>
-        </h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Admin <span className="text-primary">Panel</span>
+          </h1>
+
+          {/* Global Search */}
+          <div className="relative w-full md:w-96">
+            <div className="relative group">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Cari user, review, artikel, atau topik..."
+                value={adminSearchQuery}
+                onChange={(e) => {
+                  setAdminSearchQuery(e.target.value);
+                  setShowSearchResults(!!e.target.value);
+                }}
+                onFocus={() => setShowSearchResults(!!adminSearchQuery)}
+                className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all shadow-sm"
+              />
+            </div>
+
+            {/* Pop-out Search Results */}
+            {showSearchResults && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-50 max-h-[400px] overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="p-2">
+                  {/* User Results */}
+                  {users.filter(u => u.username.toLowerCase().includes(adminSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Users</h4>
+                      {users.filter(u => u.username.toLowerCase().includes(adminSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(u => (
+                        <button key={u._id} onClick={() => { setActiveTab('users'); setShowSearchResults(false); }} className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl transition-colors text-left cursor-pointer">
+                          <Avatar src={u.avatar} size="xs" alt={u.username} />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-900 truncate">{u.username}</p>
+                            <p className="text-[10px] text-gray-400 truncate">{u.email}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Review Results */}
+                  {onlineReviews.concat(pendingReviews).filter(r => r.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Reviews</h4>
+                      {onlineReviews.concat(pendingReviews).filter(r => r.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(r => (
+                        <button key={r._id} onClick={() => { 
+                          setActiveTab('reviews'); 
+                          setViewingItem({ type: 'review', data: r }); 
+                          setShowSearchResults(false);
+                        }} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group cursor-pointer">
+                          <p className="text-xs font-bold text-gray-900 group-hover:text-primary transition-colors truncate">{r.title}</p>
+                          <p className="text-[10px] text-gray-400">Oleh {r.author?.username}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Article Results */}
+                  {onlineArticles.concat(pendingArticles).filter(a => a.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Artikel</h4>
+                      {onlineArticles.concat(pendingArticles).filter(a => a.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(a => (
+                        <button key={a._id} onClick={() => { 
+                          setActiveTab('articles'); 
+                          setViewingItem({ type: 'article', data: a }); 
+                          setShowSearchResults(false);
+                        }} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group cursor-pointer">
+                          <p className="text-xs font-bold text-gray-900 group-hover:text-primary transition-colors truncate">{a.title}</p>
+                          <p className="text-[10px] text-gray-400">Oleh {a.author?.username}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Topic Results */}
+                  {onlineTopics.concat(pendingTopics).filter(t => t.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
+                    <div>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Topik Forum</h4>
+                      {onlineTopics.concat(pendingTopics).filter(t => t.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(t => (
+                        <button key={t._id} onClick={() => { 
+                          setActiveTab('topics'); 
+                          setViewingItem({ type: 'topic', data: t }); 
+                          setShowSearchResults(false);
+                        }} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group cursor-pointer">
+                          <p className="text-xs font-bold text-gray-900 group-hover:text-primary transition-colors truncate">{t.title}</p>
+                          <p className="text-[10px] text-gray-400">Oleh {t.author?.username}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* No Results */}
+                  {users.filter(u => u.username.toLowerCase().includes(adminSearchQuery.toLowerCase())).length === 0 &&
+                   onlineReviews.concat(pendingReviews).filter(r => r.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length === 0 &&
+                   onlineArticles.concat(pendingArticles).filter(a => a.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length === 0 &&
+                   onlineTopics.concat(pendingTopics).filter(t => t.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length === 0 && (
+                    <div className="p-8 text-center">
+                      <p className="text-xs text-gray-400">Tidak ada hasil ditemukan.</p>
+                    </div>
+                   )}
+                </div>
+                <div className="p-3 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between">
+                  <span className="text-[10px] text-gray-400 font-medium italic">Hasil teratas ditampilkan</span>
+                  <button onClick={() => setShowSearchResults(false)} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">Tutup</button>
+                </div>
+              </div>
+            )}
+            
+            {/* Click-away backdrop */}
+            {showSearchResults && <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setShowSearchResults(false)} />}
+          </div>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-white rounded-xl border border-gray-100 p-1 overflow-x-auto">
@@ -278,8 +395,8 @@ export default function AdminPanel() {
                           <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
                           <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
                           <div className="flex justify-end gap-2">
-                             <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
-                             <button className="cursor-pointer" onClick={() => { handleReviewAction(r._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button onClick={() => { handleReviewAction(r._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
                           </div>
                         </div>
                       )}
@@ -361,8 +478,8 @@ export default function AdminPanel() {
                           <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
                           <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
                           <div className="flex justify-end gap-2">
-                             <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
-                             <button className="cursor-pointer" onClick={() => { handleArticleAction(a._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button onClick={() => { handleArticleAction(a._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
                           </div>
                         </div>
                       )}
@@ -444,8 +561,8 @@ export default function AdminPanel() {
                           <label className="text-sm font-semibold text-red-800">Alasan Penolakan</label>
                           <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Tulis alasan..." className="w-full px-3 py-2 bg-white border border-red-200 rounded-xl text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none h-20" />
                           <div className="flex justify-end gap-2">
-                             <button className="cursor-pointer" onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
-                             <button className="cursor-pointer" onClick={() => { handleTopicAction(t._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
+                             <button onClick={() => setRejectingId(null)} className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 cursor-pointer">Batal</button>
+                             <button onClick={() => { handleTopicAction(t._id, 'rejected', rejectReason); setRejectingId(null); setRejectReason(''); }} className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 cursor-pointer">Kirim Penolakan</button>
                           </div>
                         </div>
                       )}
