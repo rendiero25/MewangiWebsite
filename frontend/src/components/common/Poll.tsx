@@ -27,7 +27,7 @@ interface PollProps {
 function Poll({ topicId, poll, userId, onVoteSuccess }: PollProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [, setHasVoted] = useState(false);
   const [totalVotes, setTotalVotes] = useState(
     poll.options.reduce((sum, opt) => sum + opt.votes.length, 0)
   );
@@ -44,7 +44,7 @@ function Poll({ topicId, poll, userId, onVoteSuccess }: PollProps) {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/forum/${topicId}/poll/vote`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/forum/${topicId}/poll/vote`,
         { optionIndex },
         {
           headers: {

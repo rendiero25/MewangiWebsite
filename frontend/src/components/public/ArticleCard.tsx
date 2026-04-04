@@ -49,7 +49,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
         <div className="h-44 bg-gradient-to-br from-indigo-100 to-blue-50 overflow-hidden">
           {article.coverImage ? (
             <ImageWithLazyLoad
-              src={article.coverImage.startsWith('http') ? article.coverImage : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${article.coverImage}`}
+              src={article.coverImage.startsWith('http') ? article.coverImage : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${article.coverImage}`}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               placeholderClassName="h-44 w-full"

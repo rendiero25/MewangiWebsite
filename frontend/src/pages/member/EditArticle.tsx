@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const categories = ['Tips & Trik', 'Edukasi', 'Berita', 'Interview', 'Event', 'Lainnya'];
 
@@ -250,7 +250,7 @@ export default function EditArticle() {
               <Link to="/dashboard" className="mr-auto px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                 Batal
               </Link>
-              <button className="cursor-pointer"
+              <button
                 type="button"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={submitting}

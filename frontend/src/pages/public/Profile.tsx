@@ -5,7 +5,7 @@ import Cropper, { type Area } from 'react-easy-crop';
 import { MdFacebook } from 'react-icons/md';
 import { FaInstagram, FaTiktok, FaTwitter, FaLinkedin } from 'react-icons/fa';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();

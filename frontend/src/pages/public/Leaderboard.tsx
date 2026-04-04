@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FiTrendingUp, FiMessageSquare, FiUsers, FiThumbsUp } from 'react-icons/fi';
 import SEO from '../../components/common/SEO';
 import { generateOrganizationSchema } from '../../utils/seoUtils';
-import LoadingSkeleton, { ListSkeleton } from '../../components/common/LoadingSkeleton';
+import { ListSkeleton } from '../../components/common/LoadingSkeleton';
 
 interface LeaderboardUser {
   _id: string;
@@ -30,7 +30,7 @@ function Leaderboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -198,7 +198,7 @@ function Leaderboard() {
                         user.avatar
                           ? user.avatar.startsWith('http')
                             ? user.avatar
-                            : `http://localhost:5000${user.avatar}`
+                            : `http://localhost:3000${user.avatar}`
                           : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
                       }
                       alt={user.username}

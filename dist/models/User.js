@@ -38,6 +38,39 @@ const userSchema = new mongoose.Schema({
     default: '',
     maxlength: [500, 'Bio maksimal 500 karakter'],
   },
+  gender: {
+    type: String,
+    enum: ['Pria', 'Wanita', 'Lainnya', ''],
+    default: '',
+  },
+  birthday: {
+    type: Date,
+  },
+  location: {
+    type: String,
+    default: '',
+  },
+  website: {
+    type: String,
+    default: '',
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now,
+  },
+  statistik: {
+    posts: { type: Number, default: 0 },
+    threads: { type: Number, default: 0 },
+    reactions: { type: Number, default: 0 },
+    reputation: { type: Number, default: 0 },
+  },
+  socialLinks: {
+    facebook: { type: String, default: '' },
+    twitter: { type: String, default: '' },
+    instagram: { type: String, default: '' },
+    linkedin: { type: String, default: '' },
+    tiktok: { type: String, default: '' },
+  },
   isVerified: {
     type: Boolean,
     default: false,
@@ -48,16 +81,44 @@ const userSchema = new mongoose.Schema({
   verificationTokenExpire: {
     type: Date,
   },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  loginAttempts: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  lockUntil: {
+    type: Number,
+  },
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
+  banReason: {
+    type: String,
+    default: '',
+  },
+  banExpires: {
+    type: Date,
+  },
 }, {
   timestamps: true,
 });
 
 // Hash password sebelum save
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Method untuk compare password

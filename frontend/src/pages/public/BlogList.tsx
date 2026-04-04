@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ArticleCard from '../../components/public/ArticleCard';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const categories = ['Semua', 'Tips & Trik', 'Edukasi', 'Berita', 'Interview', 'Event', 'Lainnya'];
 
@@ -107,7 +107,7 @@ export default function BlogList() {
 
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
-              <button className="cursor-pointer"
+              <button
                 key={cat}
                 onClick={() => { setActiveCategory(cat); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
@@ -166,7 +166,7 @@ export default function BlogList() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-8">
-            <button className="cursor-pointer"
+            <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
@@ -178,7 +178,7 @@ export default function BlogList() {
               .map((p, idx, arr) => (
                 <span key={p}>
                   {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-gray-400">…</span>}
-                  <button className="cursor-pointer"
+                  <button
                     onClick={() => setPage(p)}
                     className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
                       page === p
@@ -190,7 +190,7 @@ export default function BlogList() {
                   </button>
                 </span>
               ))}
-            <button className="cursor-pointer"
+            <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"

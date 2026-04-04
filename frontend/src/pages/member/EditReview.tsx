@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const occasions = ['Sehari-hari', 'Kantor', 'Kencan', 'Pesta', 'Olahraga', 'Formal'];
 const seasons = ['Panas', 'Hujan', 'Sejuk', 'Sepanjang Tahun'];
@@ -17,7 +17,7 @@ function StarInput({ value, onChange, label }: { value: number; onChange: (v: nu
       <span className="text-sm text-gray-600 w-28 shrink-0">{label}</span>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button className="cursor-pointer"
+          <button
             key={star}
             type="button"
             onMouseEnter={() => setHover(star)}
@@ -236,7 +236,7 @@ export default function EditReview() {
               <p className="text-sm font-semibold text-gray-700 mb-2">Occasion</p>
               <div className="flex flex-wrap gap-2">
                 {occasions.map((o) => (
-                  <button className="cursor-pointer"
+                  <button
                     key={o}
                     type="button"
                     onClick={() => toggleTag(o, selectedOccasions, setSelectedOccasions)}
@@ -257,7 +257,7 @@ export default function EditReview() {
               <p className="text-sm font-semibold text-gray-700 mb-2">Season</p>
               <div className="flex flex-wrap gap-2">
                 {seasons.map((s) => (
-                  <button className="cursor-pointer"
+                  <button
                     key={s}
                     type="button"
                     onClick={() => toggleTag(s, selectedSeasons, setSelectedSeasons)}

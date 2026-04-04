@@ -6,7 +6,7 @@ import AdminReports from './AdminReports';
 import { MdBlock, MdCheckCircle } from 'react-icons/md';
 import Avatar from '../../components/common/Avatar';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users' | 'reports';
 

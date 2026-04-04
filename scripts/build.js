@@ -29,6 +29,7 @@ async function build() {
     'routes',
     'utils',
     'server.js',
+    'socket.js',
     'package.json',
     '.htaccess'
   ];
@@ -40,6 +41,10 @@ async function build() {
       fs.copySync(src, dest);
     }
   });
+
+  const uploadsDest = path.join(distDir, 'uploads');
+  fs.ensureDirSync(uploadsDest);
+  fs.writeFileSync(path.join(uploadsDest, '.gitkeep'), '');
 
   // 4. Salin hasil build frontend ke dist/public
   console.log('🚚 Menyalin hasil build frontend ke dist/public...');

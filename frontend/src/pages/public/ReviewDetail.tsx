@@ -11,7 +11,7 @@ import { useBreadcrumbs } from '../../context/BreadcrumbContext';
 
 gsap.registerPlugin(ScrollSmoother);
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 function StarRow({ label, value }: { label: string; value: number }) {
   return (

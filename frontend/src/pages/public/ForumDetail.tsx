@@ -12,7 +12,7 @@ import { useBreadcrumbs } from '../../context/BreadcrumbContext';
 
 gsap.registerPlugin(ScrollSmoother);
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const categoryColors: Record<string, string> = {
   'Diskusi Umum': 'bg-blue-100 text-blue-700',

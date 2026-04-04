@@ -22,11 +22,6 @@ const fontSizeClasses: Record<FontSize, string> = {
   large: 'text-lg',
 };
 
-const fontSizeRootClasses: Record<FontSize, string> = {
-  small: 'text-sm',
-  medium: 'text-base',
-  large: 'text-lg',
-};
 
 export const FontSizeProvider = ({ children }: { children: ReactNode }) => {
   const [fontSize, setFontSizeState] = useState<FontSize>(() => {

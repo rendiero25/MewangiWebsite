@@ -26,7 +26,7 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button className="cursor-pointer"
+      <button
         onClick={() => setOpen(!open)}
         className="relative p-2 text-gray-400 hover:text-primary transition-colors cursor-pointer rounded-full hover:bg-gray-100"
       >
@@ -102,7 +102,7 @@ export default function NotificationBell() {
                         })}
                       </p>
                     </div>
-                    <button className="cursor-pointer"
+                    <button
                       onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id); }}
                       className="absolute right-3 top-4 hidden group-hover:block p-1 text-gray-300 hover:text-red-500 rounded-xl hover:bg-red-50 transition-all opacity-0 hover:opacity-100"
                     >

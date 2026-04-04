@@ -117,7 +117,7 @@ const Register = () => {
                   placeholder="Minimal 6 karakter"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors text-sm pr-12"
                 />
-                <button className="cursor-pointer"
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors p-1 cursor-pointer"
@@ -151,7 +151,7 @@ const Register = () => {
                   placeholder="Ulangi password"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors text-sm pr-12"
                 />
-                <button className="cursor-pointer"
+                <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors p-1 cursor-pointer"

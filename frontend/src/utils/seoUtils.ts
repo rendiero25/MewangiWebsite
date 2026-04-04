@@ -132,7 +132,6 @@ export const generateArticleSchema = (
   title: string,
   description: string,
   image: string,
-  url: string,
   author: string,
   publishedDate: string,
   modifiedDate: string
@@ -142,7 +141,7 @@ export const generateArticleSchema = (
     '@type': 'NewsArticle',
     headline: title,
     description: description,
-    image: [image],
+    image: image,
     datePublished: publishedDate,
     dateModified: modifiedDate,
     author: {

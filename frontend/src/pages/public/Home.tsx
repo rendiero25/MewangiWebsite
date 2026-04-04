@@ -9,7 +9,7 @@ import { TextPlugin } from "gsap/TextPlugin";
 
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 interface Article { _id: string; title: string; slug: string; category: string; coverImage?: string; author: { username: string; avatar?: string }; createdAt: string; excerpt?: string; }
 interface Review { _id: string; title: string; author: { username: string; avatar?: string }; rating: { overall: number }; createdAt: string; }
@@ -915,7 +915,7 @@ export default function Home() {
                   <div className="h-44 overflow-hidden bg-gradient-to-br from-indigo-500/10 to-blue-500/10 relative">
                     {article.coverImage ? (
                       <img
-                        src={article.coverImage.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${article.coverImage}` : article.coverImage}
+                        src={article.coverImage.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${article.coverImage}` : article.coverImage}
                         alt={article.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
