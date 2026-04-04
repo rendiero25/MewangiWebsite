@@ -13,6 +13,7 @@ const Warning = require('../models/Warning');
 const BannedIP = require('../models/BannedIP');
 const Category = require('../models/Category');
 const Settings = require('../models/Settings');
+const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
 
 // ==================== APPROVAL ====================
 
@@ -435,7 +436,7 @@ const createPerfume = async (req, res) => {
       concentration,
       year,
       gender,
-      image: req.file ? `/uploads/${req.file.filename}` : '',
+      image: req.file ? getUploadedUrl(req) : '',
       createdBy: req.user._id,
     });
 
@@ -465,7 +466,7 @@ const updatePerfume = async (req, res) => {
     if (concentration) perfume.concentration = concentration;
     if (year) perfume.year = year;
     if (gender) perfume.gender = gender;
-    if (req.file) perfume.image = `/uploads/${req.file.filename}`;
+    if (req.file) perfume.image = getUploadedUrl(req);
 
     await perfume.save();
 

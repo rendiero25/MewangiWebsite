@@ -42,16 +42,16 @@ async function build() {
     }
   });
 
-  const uploadsDest = path.join(distDir, 'uploads');
-  fs.ensureDirSync(uploadsDest);
-  fs.writeFileSync(path.join(uploadsDest, '.gitkeep'), '');
-
   // 4. Salin hasil build frontend ke dist/public
   console.log('🚚 Menyalin hasil build frontend ke dist/public...');
   fs.copySync(
     path.join(rootDir, 'frontend', 'dist'),
     path.join(distDir, 'public')
   );
+
+  const publicUploads = path.join(distDir, 'public', 'uploads');
+  fs.ensureDirSync(publicUploads);
+  fs.writeFileSync(path.join(publicUploads, '.gitkeep'), '');
 
   // 5. Buat production package.json di dist
   console.log('📄 Mengatur package.json untuk production...');

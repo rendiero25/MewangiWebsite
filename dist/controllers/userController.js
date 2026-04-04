@@ -51,7 +51,7 @@ const updateProfile = async (req, res) => {
     if (req.file) {
       // Hapus avatar lama jika ada dan bukan default
       if (user.avatar && user.avatar.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '..', user.avatar);
+        const oldPath = path.join(__dirname, '..', 'public', user.avatar.replace(/^\//, ''));
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }

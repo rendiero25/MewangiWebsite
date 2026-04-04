@@ -7,7 +7,7 @@ const { protect, optionalProtect } = require('../middleware/auth');
 
 // Multer config
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'uploads')),
+  destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'public', 'uploads')),
   filename: (req, file, cb) => cb(null, `avatar-${Date.now()}${path.extname(file.originalname)}`)
 });
 

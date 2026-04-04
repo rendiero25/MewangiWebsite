@@ -1,5 +1,6 @@
 const Article = require('../models/Article');
 const ArticleComment = require('../models/ArticleComment');
+const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 
@@ -93,7 +94,7 @@ const createArticle = async (req, res) => {
       category,
       tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : [],
       author: req.user._id,
-      coverImage: req.file ? `/uploads/${req.file.filename}` : '',
+      coverImage: req.file ? getUploadedUrl(req) : '',
       status: status === 'draft' ? 'draft' : 'pending',
     });
 
@@ -146,7 +147,7 @@ const updateArticle = async (req, res) => {
     article.excerpt = excerpt || article.excerpt;
     article.category = category || article.category;
     if (tags) article.tags = Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim());
-    if (req.file) article.coverImage = `/uploads/${req.file.filename}`;
+    if (req.file) article.coverImage = getUploadedUrl(req);
     article.status = status === 'draft' ? 'draft' : 'pending';
     article.rejectionReason = '';
 
@@ -214,7 +215,7 @@ const addArticleComment = async (req, res) => {
       article: article._id,
       author: req.user._id,
       quote: req.body.quoteId || null,
-      image: req.file ? `/uploads/${req.file.filename}` : '',
+      image: req.file ? getUploadedUrl(req) : '',
     });
 
     await comment.populate('author', 'username avatar');

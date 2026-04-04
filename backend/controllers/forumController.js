@@ -5,6 +5,7 @@ const Category = require("../models/Category");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const { filterBadWords } = require("../utils/moderation");
+const { getUploadedUrl } = require("../utils/uploadedMediaUrl");
 
 // @desc    Get semua topik forum
 // @route   GET /api/forum
@@ -338,7 +339,7 @@ const addComment = async (req, res) => {
       parentComment: req.body.parentComment || null,
       quote: req.body.quote || null,
       mentions: req.body.mentions || [],
-      image: req.file ? `/uploads/${req.file.filename}` : null,
+      image: req.file ? getUploadedUrl(req) : null,
     });
 
     // Update reply count dan lastReplyAt

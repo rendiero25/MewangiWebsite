@@ -5,7 +5,9 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-const uploadsDir = path.join(__dirname, 'uploads');
+// Upload di public/uploads: dilayani sama seperti /assets/ (CDN Hostinger mengembalikan 422
+// "Invalid source image" bila origin mengirim HTML SPA untuk URL gambar yang tidak ada).
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 const connectDB = require('./config/db');
@@ -73,7 +75,6 @@ app.use(helmet({
 app.use('/api/', apiLimiter);
 app.use('/api/', checkIPBan);
 
-// Static folder for uploads
 app.use('/uploads', express.static(uploadsDir));
 
 // API Routes
@@ -96,6 +97,10 @@ app.use('/', sitemapRoutes);
 // Static Folder for Frontend Production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'public')));
+
+  app.get(/^\/uploads\/.+/, (req, res) => {
+    res.status(404).type('text/plain').send('Not found');
+  });
 
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'public', 'index.html'));

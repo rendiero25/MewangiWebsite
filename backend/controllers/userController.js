@@ -4,6 +4,8 @@ const ArticleComment = require('../models/ArticleComment');
 const ReviewComment = require('../models/ReviewComment');
 const path = require('path');
 const fs = require('fs');
+const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
+const { destroyCloudinaryAssetByUrl } = require('../config/cloudinary');
 
 // @desc    Update profil user
 // @route   PUT /api/users/profile
@@ -49,14 +51,15 @@ const updateProfile = async (req, res) => {
     }
 
     if (req.file) {
-      // Hapus avatar lama jika ada dan bukan default
       if (user.avatar && user.avatar.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '..', user.avatar);
+        const oldPath = path.join(__dirname, '..', 'public', user.avatar.replace(/^\//, ''));
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }
+      } else if (user.avatar && user.avatar.includes('res.cloudinary.com')) {
+        await destroyCloudinaryAssetByUrl(user.avatar);
       }
-      user.avatar = `/uploads/${req.file.filename}`;
+      user.avatar = getUploadedUrl(req);
     }
 
     await user.save();

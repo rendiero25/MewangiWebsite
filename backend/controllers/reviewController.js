@@ -4,6 +4,7 @@ const Perfume = require('../models/Perfume');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { filterBadWords } = require('../utils/moderation');
+const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
 
 // @desc    Get semua review (approved only untuk public)
 // @route   GET /api/reviews
@@ -89,7 +90,7 @@ const createReview = async (req, res) => {
       rating,
       occasion,
       season,
-      image: req.file ? `/uploads/${req.file.filename}` : '',
+      image: req.file ? getUploadedUrl(req) : '',
       status: 'pending',
     });
 
@@ -147,7 +148,7 @@ const updateReview = async (req, res) => {
     review.rating = rating || review.rating;
     review.occasion = occasion || review.occasion;
     review.season = season || review.season;
-    if (req.file) review.image = `/uploads/${req.file.filename}`;
+    if (req.file) review.image = getUploadedUrl(req);
     review.status = 'pending';
     review.rejectionReason = '';
 
@@ -201,7 +202,7 @@ const addReviewComment = async (req, res) => {
       review: review._id,
       author: req.user._id,
       quote: req.body.quoteId || null,
-      image: req.file ? `/uploads/${req.file.filename}` : '',
+      image: req.file ? getUploadedUrl(req) : '',
     });
 
     await comment.populate('author', 'username avatar');
