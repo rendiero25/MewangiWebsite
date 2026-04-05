@@ -13,25 +13,40 @@ function getAllowedOrigins() {
     'http://127.0.0.1:5175',
   ]);
 
-  const primary = process.env.FRONTEND_URL?.replace(/\/$/, '');
-  if (primary) {
-    origins.add(primary);
-  }
+  const addWithWwwVariations = (url) => {
+    if (!url) return;
+    const cleanUrl = url.trim().replace(/\/$/, '').toLowerCase();
+    if (!cleanUrl) return;
+    
+    origins.add(cleanUrl);
+    
+    // Auto-add www or non-www variation
+    if (cleanUrl.includes('://www.')) {
+      origins.add(cleanUrl.replace('://www.', '://'));
+    } else if (cleanUrl.includes('://')) {
+      origins.add(cleanUrl.replace('://', '://www.'));
+    }
+  };
+
+  addWithWwwVariations(process.env.FRONTEND_URL);
 
   const extra = process.env.CORS_ORIGINS;
   if (extra) {
-    extra.split(',').forEach((o) => {
-      const trimmed = o.trim().replace(/\/$/, '');
-      if (trimmed) origins.add(trimmed);
-    });
+    extra.split(',').forEach((o) => addWithWwwVariations(o));
   }
 
-  return [...origins];
+  const allowedList = [...origins];
+  if (process.env.NODE_ENV === 'production') {
+    console.log('[CORS] Allowed Origins:', allowedList.join(', '));
+  }
+  
+  return allowedList;
 }
 
 function isOriginAllowed(origin) {
   if (!origin) return true;
-  return getAllowedOrigins().includes(origin);
+  const allowed = getAllowedOrigins();
+  return allowed.includes(origin.toLowerCase());
 }
 
 module.exports = { getAllowedOrigins, isOriginAllowed };

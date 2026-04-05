@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import AdminReports from './AdminReports';
 import { MdBlock, MdCheckCircle } from 'react-icons/md';
 import Avatar from '../../components/common/Avatar';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -86,12 +87,35 @@ export default function AdminPanel() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  const confirmAction = (message: string, onConfirm: () => void) => {
+    toast.custom((t) => (
+      <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-white shadow-lg rounded-xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4 flex-col gap-3`}>
+        <p className="text-sm font-medium text-gray-900">{message}</p>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            onClick={() => { toast.dismiss(t.id); onConfirm(); }}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            Ya, Lanjutkan
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
+  };
+
   const handleReviewAction = async (id: string, status: 'approved' | 'rejected', reason: string = '') => {
     try {
       await axios.put(`${API_URL}/admin/reviews/${id}/status`, { status, rejectionReason: reason }, { headers });
       fetchAll();
       if (viewingItem?.data._id === id) setViewingItem(null);
-    } catch { alert('Gagal mengupdate review.'); }
+      toast.success(`Review berhasil di-${status}`);
+    } catch { toast.error('Gagal mengupdate review.'); }
   };
 
   const handleArticleAction = async (id: string, status: 'approved' | 'rejected', reason: string = '') => {
@@ -99,7 +123,8 @@ export default function AdminPanel() {
       await axios.put(`${API_URL}/admin/articles/${id}/status`, { status, rejectionReason: reason }, { headers });
       fetchAll();
       if (viewingItem?.data._id === id) setViewingItem(null);
-    } catch { alert('Gagal mengupdate artikel.'); }
+      toast.success(`Artikel berhasil di-${status}`);
+    } catch { toast.error('Gagal mengupdate artikel.'); }
   };
 
   const handleTopicAction = async (id: string, status: 'approved' | 'rejected', reason: string = '') => {
@@ -107,50 +132,59 @@ export default function AdminPanel() {
       await axios.put(`${API_URL}/admin/topics/${id}/status`, { status, rejectionReason: reason }, { headers });
       fetchAll();
       if (viewingItem?.data._id === id) setViewingItem(null);
-    } catch { alert('Gagal mengupdate topik.'); }
+      toast.success(`Topik berhasil di-${status}`);
+    } catch { toast.error('Gagal mengupdate topik.'); }
   };
 
   const handleDeleteReview = async (id: string) => {
-    if (!confirm('Hapus review ini secara permanen?')) return;
-    try {
-      await axios.delete(`${API_URL}/reviews/${id}`, { headers });
-      setOnlineReviews(prev => prev.filter(r => r._id !== id));
-      setStats(prev => prev ? { ...prev, pendingReviews: prev.pendingReviews } : null); // Trigger refresh or just use fetchAll
-      fetchAll();
-    } catch { alert('Gagal menghapus review.'); }
+    confirmAction('Hapus review ini secara permanen?', async () => {
+      try {
+        await axios.delete(`${API_URL}/reviews/${id}`, { headers });
+        setOnlineReviews(prev => prev.filter(r => r._id !== id));
+        fetchAll();
+        toast.success('Review berhasil dihapus');
+      } catch { toast.error('Gagal menghapus review.'); }
+    });
   };
 
   const handleDeleteArticle = async (id: string) => {
-    if (!confirm('Hapus artikel ini secara permanen?')) return;
-    try {
-      await axios.delete(`${API_URL}/articles/${id}`, { headers });
-      setOnlineArticles(prev => prev.filter(a => a._id !== id));
-      fetchAll();
-    } catch { alert('Gagal menghapus artikel.'); }
+    confirmAction('Hapus artikel ini secara permanen?', async () => {
+      try {
+        await axios.delete(`${API_URL}/articles/${id}`, { headers });
+        setOnlineArticles(prev => prev.filter(a => a._id !== id));
+        fetchAll();
+        toast.success('Artikel berhasil dihapus');
+      } catch { toast.error('Gagal menghapus artikel.'); }
+    });
   };
 
   const handleDeleteTopic = async (id: string) => {
-    if (!confirm('Hapus topik forum ini secara permanen?')) return;
-    try {
-      await axios.delete(`${API_URL}/forum/${id}`, { headers });
-      setOnlineTopics(prev => prev.filter(t => t._id !== id));
-      fetchAll();
-    } catch { alert('Gagal menghapus topik.'); }
+    confirmAction('Hapus topik forum ini secara permanen?', async () => {
+      try {
+        await axios.delete(`${API_URL}/forum/${id}`, { headers });
+        setOnlineTopics(prev => prev.filter(t => t._id !== id));
+        fetchAll();
+        toast.success('Topik berhasil dihapus');
+      } catch { toast.error('Gagal menghapus topik.'); }
+    });
   };
 
   const handleRoleChange = async (id: string, role: string) => {
     try {
       await axios.put(`${API_URL}/admin/users/${id}/role`, { role }, { headers });
       setUsers((prev) => prev.map((u) => u._id === id ? { ...u, role } : u));
-    } catch { alert('Gagal mengubah role.'); }
+      toast.success('Role berhasil diubah');
+    } catch { toast.error('Gagal mengubah role.'); }
   };
 
   const handleDeleteUser = async (id: string) => {
-    if (!confirm('Hapus user ini?')) return;
-    try {
-      await axios.delete(`${API_URL}/admin/users/${id}`, { headers });
-      setUsers((prev) => prev.filter((u) => u._id !== id));
-    } catch { alert('Gagal menghapus user.'); }
+    confirmAction('Hapus user ini?', async () => {
+      try {
+        await axios.delete(`${API_URL}/admin/users/${id}`, { headers });
+        setUsers((prev) => prev.filter((u) => u._id !== id));
+        toast.success('User berhasil dihapus');
+      } catch { toast.error('Gagal menghapus user.'); }
+    });
   };
 
   const handleBanUser = async (id: string) => {
@@ -162,15 +196,18 @@ export default function AdminPanel() {
     try {
       await axios.post(`${API_URL}/admin/users/${id}/ban`, { reason, duration: Number(duration) }, { headers });
       setUsers(prev => prev.map(u => u._id === id ? { ...u, isBanned: true } : u));
-    } catch { alert('Gagal memblokir user.'); }
+      toast.success('User berhasil diblokir');
+    } catch { toast.error('Gagal memblokir user.'); }
   };
 
   const handleUnbanUser = async (id: string) => {
-    if (!confirm('Buka blokir user ini?')) return;
-    try {
-      await axios.post(`${API_URL}/admin/users/${id}/unban`, {}, { headers });
-      setUsers(prev => prev.map(u => u._id === id ? { ...u, isBanned: false } : u));
-    } catch { alert('Gagal membuka blokir user.'); }
+    confirmAction('Buka blokir user ini?', async () => {
+      try {
+        await axios.post(`${API_URL}/admin/users/${id}/unban`, {}, { headers });
+        setUsers(prev => prev.map(u => u._id === id ? { ...u, isBanned: false } : u));
+        toast.success('Blokir user dibuka');
+      } catch { toast.error('Gagal membuka blokir user.'); }
+    });
   };
 
   const tabs: { key: Tab; label: string; count?: number }[] = [

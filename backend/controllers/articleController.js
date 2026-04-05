@@ -10,7 +10,7 @@ const User = require('../models/User');
 const getArticles = async (req, res) => {
   try {
     const { page = 1, limit = 25, category, search } = req.query;
-    const query = { status: 'approved' };
+    const query = { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] };
 
     if (category && category !== 'Semua') query.category = category;
     if (search) query.$text = { $search: search };
@@ -39,7 +39,7 @@ const getArticles = async (req, res) => {
 const getArticleBySlug = async (req, res) => {
   try {
     const article = await Article.findOneAndUpdate(
-      { slug: req.params.slug, status: 'approved' },
+      { slug: req.params.slug, $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] },
       { $inc: { views: 1 } },
       { new: true }
     ).populate('author', 'username avatar bio');
@@ -154,6 +154,26 @@ const updateArticle = async (req, res) => {
     await article.save();
     await article.populate('author', 'username avatar');
 
+    // Notify admins if not draft
+    if (article.status === 'pending') {
+      try {
+        const admins = await User.find({ role: 'admin' });
+        const socket = require('../socket');
+        await Promise.all(admins.map(async (admin) => {
+          const notification = await Notification.create({
+            recipient: admin._id,
+            sender: req.user._id,
+            type: 'new_article_admin',
+            message: `Artikel diedit (pending): "${article.title}" oleh ${req.user.username}`,
+            link: `/admin`
+          });
+          socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
+        }));
+      } catch (notifyErr) {
+        console.error('Notification Error (Update Article):', notifyErr);
+      }
+    }
+
     res.json(article);
   } catch (error) {
     console.error('Update Article Error:', error);
@@ -204,9 +224,12 @@ const getMyArticles = async (req, res) => {
 // @access  Private (verified member)
 const addArticleComment = async (req, res) => {
   try {
-    const article = await Article.findById(req.params.id);
+    const article = await Article.findOne({
+      _id: req.params.id,
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
+    });
 
-    if (!article || article.status !== 'approved') {
+    if (!article) {
       return res.status(404).json({ message: 'Artikel tidak ditemukan' });
     }
 
@@ -294,7 +317,7 @@ const dislikeComment = async (req, res) => {
 const getTopCategories = async (req, res) => {
   try {
     const categories = await Article.aggregate([
-      { $match: { status: 'approved' } },
+      { $match: { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
@@ -316,7 +339,7 @@ const getRelatedArticles = async (req, res) => {
     const related = await Article.find({
       _id: { $ne: article._id },
       category: article.category,
-      status: 'approved'
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
     })
     .limit(5)
     .select('title slug createdAt');

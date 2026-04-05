@@ -4,6 +4,7 @@ const Perfume = require('../models/Perfume');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { filterBadWords } = require('../utils/moderation');
+const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
 
 // @desc    Get semua review (approved only untuk public)
 // @route   GET /api/reviews
@@ -11,7 +12,7 @@ const { filterBadWords } = require('../utils/moderation');
 const getReviews = async (req, res) => {
   try {
     const { page = 1, limit = 25, perfume, search, occasion, season } = req.query;
-    const query = { status: 'approved' };
+    const query = { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] };
 
     if (perfume) query.perfume = perfume;
     if (occasion) query.occasion = occasion;
@@ -42,8 +43,10 @@ const getReviews = async (req, res) => {
 // @access  Public
 const getReviewById = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id)
-      .populate('author', 'username avatar');
+    const review = await Review.findOne({
+      _id: req.params.id,
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
+    }).populate('author', 'username avatar');
 
     if (!review) {
       return res.status(404).json({ message: 'Review tidak ditemukan' });
@@ -89,7 +92,7 @@ const createReview = async (req, res) => {
       rating,
       occasion,
       season,
-      image: req.file ? `/uploads/${req.file.filename}` : '',
+      image: req.file ? getUploadedUrl(req) : '',
       status: 'pending',
     });
 
@@ -147,12 +150,30 @@ const updateReview = async (req, res) => {
     review.rating = rating || review.rating;
     review.occasion = occasion || review.occasion;
     review.season = season || review.season;
-    if (req.file) review.image = `/uploads/${req.file.filename}`;
+    if (req.file) review.image = getUploadedUrl(req);
     review.status = 'pending';
     review.rejectionReason = '';
 
     await review.save();
     await review.populate('author', 'username avatar');
+
+    // Notify admins
+    try {
+      const admins = await User.find({ role: 'admin' });
+      const socket = require('../socket');
+      await Promise.all(admins.map(async (admin) => {
+        const notification = await Notification.create({
+          recipient: admin._id,
+          sender: req.user._id,
+          type: 'new_review_admin',
+          message: `Review diedit (pending): "${review.title}" oleh ${req.user.username}`,
+          link: `/admin`
+        });
+        socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
+      }));
+    } catch (notifyErr) {
+      console.error('Notification Error (Update Review):', notifyErr);
+    }
 
     res.json(review);
   } catch (error) {
@@ -190,9 +211,12 @@ const deleteReview = async (req, res) => {
 // @access  Private (verified member)
 const addReviewComment = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
+    const review = await Review.findOne({
+      _id: req.params.id,
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
+    });
 
-    if (!review || review.status !== 'approved') {
+    if (!review) {
       return res.status(404).json({ message: 'Review tidak ditemukan' });
     }
 
@@ -201,7 +225,7 @@ const addReviewComment = async (req, res) => {
       review: review._id,
       author: req.user._id,
       quote: req.body.quoteId || null,
-      image: req.file ? `/uploads/${req.file.filename}` : '',
+      image: req.file ? getUploadedUrl(req) : '',
     });
 
     await comment.populate('author', 'username avatar');
@@ -282,7 +306,7 @@ const dislikeComment = async (req, res) => {
 const getTopCategories = async (req, res) => {
   try {
     const categories = await Review.aggregate([
-      { $match: { status: 'approved' } },
+      { $match: { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] } },
       { $group: { _id: '$occasion', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
@@ -304,7 +328,7 @@ const getRelatedReviews = async (req, res) => {
     const related = await Review.find({
       _id: { $ne: review._id },
       occasion: review.occasion,
-      status: 'approved'
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
     })
     .limit(5)
     .select('title createdAt');

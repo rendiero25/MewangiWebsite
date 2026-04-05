@@ -47,6 +47,10 @@ const forumTopicSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending', // Require admin approval like articles and reviews
   },
+  hasBeenApproved: {
+    type: Boolean,
+    default: false,
+  },
   rejectionReason: {
     type: String,
     default: '',

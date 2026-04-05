@@ -5,8 +5,8 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-// Upload di public/uploads: dilayani sama seperti /assets/ (CDN Hostinger mengembalikan 422
-// "Invalid source image" bila origin mengirim HTML SPA untuk URL gambar yang tidak ada).
+// Unggah baru: Cloudinary jika CLOUDINARY_URL (atau cloud_name + key + secret) di .env.
+// /uploads tetap dilayani untuk data lama yang masih menyimpan path relatif /uploads/...
 const uploadsDir = path.join(__dirname, 'public', 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -53,7 +53,8 @@ app.use(cors({
     if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.error(`[CORS] Rejected Origin: ${origin}`);
+      callback(new Error(`CORS Error: Origin ${origin || 'unknown'} is not allowed. Check FRONTEND_URL/CORS_ORIGINS.`));
     }
   },
   credentials: true,
@@ -113,7 +114,17 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('[Global Error Handler]:', err.stack);
+  
+  // Specific handling for CORS errors to avoid generic 500
+  if (err.message && err.message.includes('CORS Error')) {
+    return res.status(403).json({ 
+      message: 'Akses Ditolak (CORS)', 
+      error: err.message,
+      tip: 'Pastikan FRONTEND_URL di Hostinger sudah sesuai dengan domain yang Anda gunakan saat ini.'
+    });
+  }
+
   res.status(500).json({ message: 'Something broke!', error: err.message });
 });
 

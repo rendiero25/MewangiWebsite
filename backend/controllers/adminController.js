@@ -64,6 +64,7 @@ const updateReviewStatus = async (req, res) => {
     }
 
     review.status = status;
+    if (status === 'approved') review.hasBeenApproved = true;
     if (status === 'rejected' && rejectionReason) {
       review.rejectionReason = rejectionReason;
     }
@@ -136,6 +137,7 @@ const updateArticleStatus = async (req, res) => {
     }
 
     article.status = status;
+    if (status === 'approved') article.hasBeenApproved = true;
     if (status === 'rejected' && rejectionReason) {
       article.rejectionReason = rejectionReason;
     }
@@ -200,6 +202,7 @@ const updateTopicStatus = async (req, res) => {
     const topic = await ForumTopic.findById(req.params.id);
     if (!topic) return res.status(404).json({ message: 'Topik tidak ditemukan' });
     topic.status = status;
+    if (status === 'approved') topic.hasBeenApproved = true;
     if (status === 'rejected' && rejectionReason) topic.rejectionReason = rejectionReason;
     await topic.save();
 

@@ -124,8 +124,8 @@ const login = async (req, res) => {
     // Cek password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      // Increment login attempts
-      user.loginAttempts += 1;
+      // Increment login attempts safely for old users
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
       if (user.loginAttempts >= 5) {
         user.lockUntil = Date.now() + 30 * 60 * 1000; // Kunci 30 menit
       }

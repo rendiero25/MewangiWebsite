@@ -42,6 +42,10 @@ const articleSchema = new mongoose.Schema({
     enum: ['draft', 'pending', 'approved', 'rejected'],
     default: 'draft',
   },
+  hasBeenApproved: {
+    type: Boolean,
+    default: false,
+  },
   rejectionReason: {
     type: String,
     default: '',

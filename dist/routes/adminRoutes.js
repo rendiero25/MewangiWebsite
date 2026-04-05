@@ -60,8 +60,8 @@ router.delete('/categories/:id', deleteCategory);
 router.post('/ip-ban', banIP);
 
 // Perfume management
-router.post('/perfumes', upload.single('image'), createPerfume);
-router.put('/perfumes/:id', upload.single('image'), updatePerfume);
+router.post('/perfumes', upload.single('image'), upload.cloudinaryUpload('perfumes'), createPerfume);
+router.put('/perfumes/:id', upload.single('image'), upload.cloudinaryUpload('perfumes'), updatePerfume);
 router.delete('/perfumes/:id', deletePerfume);
 
 module.exports = router;

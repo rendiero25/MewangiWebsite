@@ -11,7 +11,7 @@ import Footer from './components/layout/Footer';
 import ChatPopup from './components/chat/ChatPopup';
 import Breadcrumbs from './components/common/Breadcrumbs';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-
+import { Toaster } from 'react-hot-toast';
 // Public Pages
 import Home from './pages/public/Home';
 import Login from './pages/public/Login';
@@ -168,6 +168,7 @@ function App() {
                     </Route>
                   </Routes>
                   </Router>
+                  <Toaster position="top-right" />
                 </BreadcrumbProvider>
               </ChatProvider>
             </NotificationProvider>

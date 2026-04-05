@@ -26,7 +26,7 @@ const getTopics = async (req, res) => {
       userId,
     } = req.query;
 
-    const query = { status: "approved" };
+    const query = { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] };
 
     // Filter Kategori
     if (category && category !== "Semua") {
@@ -102,7 +102,7 @@ const getTopicById = async (req, res) => {
     const query = mongoose.isValidObjectId(id) ? { _id: id } : { slug: id };
 
     const topic = await ForumTopic.findOneAndUpdate(
-      { ...query, status: "approved" },
+      { ...query, $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] },
       { $inc: { views: 1 } },
       { new: true },
     )
@@ -272,6 +272,24 @@ const updateTopic = async (req, res) => {
 
     await topic.save();
     await topic.populate("author", "username avatar");
+
+    // Notify admins
+    try {
+      const admins = await User.find({ role: "admin" });
+      const socket = require('../socket');
+      await Promise.all(admins.map(async (admin) => {
+        const notification = await Notification.create({
+          recipient: admin._id,
+          sender: req.user._id,
+          type: "system",
+          message: `Topik diedit (pending): "${topic.title}" oleh ${req.user.username || 'Member'}`,
+          link: `/admin`
+        });
+        socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
+      }));
+    } catch (notifyErr) {
+      console.error('Notification Error (Update Topic):', notifyErr);
+    }
 
     res.json(topic);
   } catch (error) {
@@ -524,7 +542,7 @@ const dislikeComment = async (req, res) => {
 const getTopCategories = async (req, res) => {
   try {
     const categories = await ForumTopic.aggregate([
-      { $match: { status: "approved" } },
+      { $match: { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] } },
       { $group: { _id: "$category", count: { $sum: 1 } } },
       {
         $lookup: {
@@ -559,7 +577,7 @@ const getRelatedTopics = async (req, res) => {
     const related = await ForumTopic.find({
       _id: { $ne: topic._id },
       category: topic.category,
-      status: "approved",
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
     })
       .limit(5)
       .select("title createdAt");

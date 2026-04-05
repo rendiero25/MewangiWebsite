@@ -15,13 +15,20 @@ router.get('/:id', getReviewById);
 router.get('/:id/related', getRelatedReviews);
 
 // Protected
-router.post('/', protect, verified, upload.single('image'), createReview);
+router.post('/', protect, verified, upload.single('image'), upload.cloudinaryUpload('reviews'), createReview);
 router.get('/my/list', protect, getMyReviews);
-router.put('/:id', protect, verified, upload.single('image'), updateReview);
+router.put('/:id', protect, verified, upload.single('image'), upload.cloudinaryUpload('reviews'), updateReview);
 router.delete('/:id', protect, deleteReview);
 
 // Comments
-router.post('/:id/comments', protect, verified, upload.single('image'), addReviewComment);
+router.post(
+  '/:id/comments',
+  protect,
+  verified,
+  upload.single('image'),
+  upload.cloudinaryUpload('review-comments'),
+  addReviewComment
+);
 router.post('/comments/:id/like', protect, likeComment);
 router.post('/comments/:id/dislike', protect, dislikeComment);
 router.delete('/comments/:commentId', protect, deleteReviewComment);
