@@ -341,7 +341,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-primary mb-6"
             >
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span>Komunitas Parfum Indonesia #1</span>
+              <span>Komunitas Parfum Pertama di Indonesia</span>
             </div>
 
             {/* Title dengan SplitText effect */}
@@ -489,7 +489,7 @@ export default function Home() {
                     />
                   </svg>
                 ),
-                title: "Review Mendalam",
+                title: "Review Jujur",
                 desc: "Baca dan tulis review terstruktur dengan rating longevity, sillage, value for money, dan notes. Bantu komunitas membuat keputusan pembelian yang tepat.",
                 color: "from-amber-400 to-orange-500",
                 icon_bg: "from-amber-400/20 to-orange-500/20",

@@ -185,6 +185,7 @@ const createTopic = async (req, res) => {
       isAnnouncement: (req.user.role === 'admin' && isAnnouncement) || false,
       isFeatured: (req.user.role === 'admin' && isFeatured) || false,
       author: req.user._id,
+      image: req.file ? getUploadedUrl(req) : "",
       status,
     });
 

@@ -243,17 +243,20 @@ const addArticleComment = async (req, res) => {
 
     await comment.populate('author', 'username avatar');
 
-    console.log(`[Notification] Triggered for article: ${article._id}. Author: ${article.author}. Commenter: ${req.user._id}`);
-    const notification = await Notification.create({
-      recipient: article.author,
-      sender: req.user._id,
-      type: 'comment_article',
-      message: `${req.user.username} mengomentari artikel Anda: "${article.title}"`,
-      link: `/blog/${article.slug}`
-    });
+    // Notify article author (if not the commenter)
+    if (article.author.toString() !== req.user._id.toString()) {
+      console.log(`[Notification] Triggered for article: ${article._id}. Author: ${article.author}. Commenter: ${req.user._id}`);
+      const notification = await Notification.create({
+        recipient: article.author,
+        sender: req.user._id,
+        type: 'comment_article',
+        message: `${req.user.username} mengomentari artikel Anda: "${article.title}"`,
+        link: `/blog/${article.slug}`
+      });
 
-    const socket = require('../socket');
-    socket.getIO().to(article.author.toString()).emit('new_notification', notification);
+      const socket = require('../socket');
+      socket.getIO().to(article.author.toString()).emit('new_notification', notification);
+    }
 
     res.status(201).json(comment);
   } catch (error) {

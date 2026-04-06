@@ -37,7 +37,7 @@ connectDB();
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Higher limit for development
+  max: process.env.NODE_ENV === 'production' ? 1000 : 2000, // Higher limit
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' }

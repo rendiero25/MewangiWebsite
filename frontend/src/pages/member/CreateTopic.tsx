@@ -24,6 +24,8 @@ export default function CreateTopic() {
   const [tags, setTags] = useState('');
   const [prefix, setPrefix] = useState('');
   const [type, setType] = useState('normal');
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [loadingCats, setLoadingCats] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -53,17 +55,24 @@ export default function CreateTopic() {
     setError('');
     try {
       const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      formData.append('category', category);
+      formData.append('prefix', prefix);
+      formData.append('type', type);
+      tagArray.forEach((t) => formData.append('tags', t));
+      if (image) formData.append('image', image);
+
       await axios.post(
         `${API_URL}/forum`,
+        formData,
         { 
-          title, 
-          content, 
-          category, 
-          tags: tagArray,
-          prefix,
-          type
-        },
-        { headers: { Authorization: `Bearer ${user?.token}` } }
+          headers: { 
+            Authorization: `Bearer ${user?.token}`,
+            'Content-Type': 'multipart/form-data',
+          } 
+        }
       );
       navigate('/dashboard?tab=forum');
     } catch (err: unknown) {
@@ -98,17 +107,36 @@ export default function CreateTopic() {
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column: Icon/Illustration */}
+              {/* Left Column: Image Upload */}
               <div className="lg:col-span-1">
-                <div className="aspect-square bg-indigo-50/50 rounded-xl border-2 border-dashed border-indigo-100 flex flex-col items-center justify-center p-8 text-center group transition-colors hover:bg-indigo-50">
-                  <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-indigo-500 mb-4 group-hover:scale-110 transition-transform">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-700">Diskusi Forum</p>
-                  <p className="text-xs text-gray-500 mt-1">Gunakan judul yang menarik untuk memicu diskusi berkualitas.</p>
-                </div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">Cover Topik (Opsional)</p>
+                <label className="flex flex-col items-center justify-center w-full h-80 border-2 border-dashed border-indigo-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all overflow-hidden group">
+                  {imagePreview ? (
+                    <div className="relative w-full h-full">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white text-xs font-medium">Klik untuk ganti cover</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center p-6">
+                      <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-500 group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-600">Upload Cover</p>
+                      <p className="text-xs text-gray-400 mt-1">Sertakan gambar untuk menarik perhatian</p>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImage(file);
+                      setImagePreview(URL.createObjectURL(file));
+                    }
+                  }} />
+                </label>
               </div>
 
               {/* Right Column: Fields */}
@@ -148,8 +176,6 @@ export default function CreateTopic() {
                       <option value="[QUESTION]">❓ [QUESTION]</option>
                       <option value="[SOLVED]">✅ [SOLVED]</option>
                       <option value="[TUTORIAL]">📖 [TUTORIAL]</option>
-                      <option value="[WTS]">💰 [WTS]</option>
-                      <option value="[WTB]">🔎 [WTB]</option>
                     </select>
                   </div>
                   <div>
@@ -166,7 +192,7 @@ export default function CreateTopic() {
                       {loadingCats ? (
                         <option>Memuat kategori...</option>
                       ) : (
-                        categories.map((cat) => (
+                        categories.filter(c => c.name !== 'Jual Beli').map((cat) => (
                           <option key={cat._id} value={cat._id}>{cat.name}</option>
                         ))
                       )}

@@ -94,7 +94,8 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
     }
   };
 
-  const imageUrl = comment.image && (comment.image.startsWith('http') ? comment.image : `${API_URL.replace('/api', '')}${comment.image}`);
+  const imgPath = comment.image ? (comment.image.startsWith('/') ? comment.image : `/${comment.image}`) : '';
+  const imageUrl = comment.image && (comment.image.startsWith('http') ? comment.image : `${API_URL.replace('/api', '')}${imgPath}`);
 
   return (
     <div className={`flex flex-col gap-1 py-4 ${isMe ? 'items-end' : 'items-start'}`}>

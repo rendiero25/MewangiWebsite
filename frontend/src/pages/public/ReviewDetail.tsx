@@ -90,11 +90,11 @@ export default function ReviewDetail() {
     try {
       const { data } = await axios.get(`${API_URL}/reviews/${id}`);
       setReview(data.review);
-      setComments(data.comments);
+      setComments(Array.isArray(data.comments) ? data.comments : []);
       setBreadcrumbTitle(location.pathname, data.review.title);
       
       const relatedRes = await axios.get(`${API_URL}/reviews/${data.review._id}/related`);
-      setRelatedReviews(relatedRes.data);
+      setRelatedReviews(Array.isArray(relatedRes.data) ? relatedRes.data : []);
     } catch {
       setError('Review tidak ditemukan.');
     } finally {
@@ -220,11 +220,11 @@ export default function ReviewDetail() {
                   <div className="flex-1 flex flex-col justify-between py-2">
                     <div className="space-y-4">
                       <div className="flex flex-wrap gap-2">
-                        {review.occasion.map(o => (
-                          <span key={o} className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl">{o}</span>
+                        {(Array.isArray(review.occasion) ? review.occasion : typeof review.occasion === 'string' ? [review.occasion] : []).map(o => (
+                          <span key={o as string} className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl">{o as string}</span>
                         ))}
-                        {review.season.map(s => (
-                          <span key={s} className="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-wider rounded-xl">{s}</span>
+                        {(Array.isArray(review.season) ? review.season : typeof review.season === 'string' ? [review.season] : []).map(s => (
+                          <span key={s as string} className="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-wider rounded-xl">{s as string}</span>
                         ))}
                       </div>
                       

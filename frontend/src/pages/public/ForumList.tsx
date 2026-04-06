@@ -179,7 +179,7 @@ export default function ForumList() {
             >
               Semua
             </button>
-            {!loadingCats && categories.map((cat) => (
+            {!loadingCats && categories.filter(c => c.name !== 'Jual Beli').map((cat) => (
               <button
                 key={cat._id}
                 onClick={() => { setActiveCategory(cat.slug); setPage(1); }}
