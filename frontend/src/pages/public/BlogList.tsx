@@ -125,7 +125,7 @@ export default function BlogList() {
 
         {/* Result count */}
         {!loading && (
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-black mb-4">
             {total} artikel ditemukan
             {search && <> untuk "<span className="font-medium text-gray-600">{search}</span>"</>}
           </p>

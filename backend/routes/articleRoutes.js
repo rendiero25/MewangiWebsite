@@ -3,12 +3,13 @@ const router = express.Router();
 const { protect, verified } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const {
-  getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles, addArticleComment, deleteArticleComment, likeComment, dislikeComment, getTopCategories, getRelatedArticles
+  getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, getMyArticles, addArticleComment, deleteArticleComment, likeComment, dislikeComment, getTopCategories, getRelatedArticles, likeArticle, dislikeArticle, getTopArticles
 } = require('../controllers/articleController');
 
 // Public
 router.get('/', getArticles);
 router.get('/meta/top-categories', getTopCategories);
+router.get('/meta/top-titles', getTopArticles);
 router.get('/:slug', getArticleBySlug);
 router.get('/detail/:id/related', getRelatedArticles);
 
@@ -24,6 +25,8 @@ router.post(
   upload.cloudinaryUpload('article-comments'),
   addArticleComment
 );
+router.post('/:id/like', protect, likeArticle);
+router.post('/:id/dislike', protect, dislikeArticle);
 router.post('/comments/:id/like', protect, likeComment);
 router.post('/comments/:id/dislike', protect, dislikeComment);
 router.delete('/comments/:commentId', protect, deleteArticleComment);

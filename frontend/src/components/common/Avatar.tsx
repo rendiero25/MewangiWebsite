@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 interface AvatarProps {
@@ -11,7 +11,7 @@ interface AvatarProps {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const BASE_URL = API_URL.replace('/api', '');
+const BASE_URL = API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '');
 
 const sizeClasses = {
   xs: 'w-6 h-6',
@@ -24,9 +24,14 @@ const sizeClasses = {
 };
 
 const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', className = '', username, href }) => {
-  const fullSrc = src 
-    ? (src.startsWith('http') ? src : `${BASE_URL}${src}`)
-    : null;
+  const fullSrc = useMemo(() => {
+    if (!src) return null;
+    if (src.startsWith('http')) return src;
+    
+    // Ensure relative paths start with /
+    const cleanPath = src.startsWith('/') ? src : `/${src}`;
+    return `${BASE_URL}${cleanPath}`;
+  }, [src]);
 
   const sizeClass = sizeClasses[size];
   

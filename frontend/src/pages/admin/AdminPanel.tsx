@@ -752,7 +752,11 @@ export default function AdminPanel() {
                     <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
                   </div>
                   {viewingItem.data.image && (
-                    <img src={`${API_URL.replace('/api', '')}${viewingItem.data.image}`} alt="Review" className="w-full max-h-80 object-cover rounded-xl border border-gray-100" />
+                    <img 
+                      src={viewingItem.data.image.startsWith('http') ? viewingItem.data.image : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${viewingItem.data.image.startsWith('/') ? viewingItem.data.image : `/${viewingItem.data.image}`}`} 
+                      alt="Review" 
+                      className="w-full max-h-80 object-cover rounded-xl border border-gray-100" 
+                    />
                   )}
                   <div className="flex flex-wrap gap-4">
                     {viewingItem.data.occasion && viewingItem.data.occasion.length > 0 && (
@@ -798,7 +802,11 @@ export default function AdminPanel() {
                     <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>
                   </div>
                   {(viewingItem.data as PendingArticle).coverImage && (
-                    <img src={`${API_URL.replace('/api', '')}${(viewingItem.data as PendingArticle).coverImage}`} alt="Article" className="w-full max-h-96 object-cover rounded-xl border border-gray-100" />
+                    <img 
+                      src={(viewingItem.data as PendingArticle).coverImage!.startsWith('http') ? (viewingItem.data as PendingArticle).coverImage : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${(viewingItem.data as PendingArticle).coverImage!.startsWith('/') ? (viewingItem.data as PendingArticle).coverImage : `/${(viewingItem.data as PendingArticle).coverImage}`}`} 
+                      alt="Article" 
+                      className="w-full max-h-96 object-cover rounded-xl border border-gray-100" 
+                    />
                   )}
                   {(viewingItem.data as PendingArticle).excerpt && (
                     <div className="p-4 bg-gray-50 border-l-4 border-indigo-500 rounded-xl-r-xl italic text-gray-600 text-sm">

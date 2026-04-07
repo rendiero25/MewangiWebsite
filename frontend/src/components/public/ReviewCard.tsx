@@ -55,7 +55,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         {review.image && (
           <div className="h-40 bg-gray-100 overflow-hidden">
             <ImageWithLazyLoad
-              src={review.image.startsWith('http') ? review.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${review.image}`}
+              src={review.image.startsWith('http') ? review.image : `${(import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '').replace(/\/api\/$/, '')}${review.image.startsWith('/') ? review.image : `/${review.image}`}`}
               alt={review.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               placeholderClassName="h-40 w-full"

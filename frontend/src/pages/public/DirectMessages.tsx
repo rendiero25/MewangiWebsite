@@ -4,9 +4,10 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { MdSend, MdArrowBack, MdSearch, MdMoreVert, MdChat } from 'react-icons/md';
 import io from 'socket.io-client';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const SOCKET_URL = API_URL.replace('/api', '');
+const SOCKET_URL = API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '');
 
 interface User {
   _id: string;
@@ -230,15 +231,11 @@ export default function DirectMessages() {
                   className={`flex items-center gap-4 p-4 cursor-pointer transition-all hover:bg-gray-50 ${selectedUser?._id === conv.user._id ? 'bg-primary/5 border-r-4 border-primary' : ''}`}
                 >
                   <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
-                      {conv.user.avatar ? (
-                        <img src={conv.user.avatar.startsWith('http') ? conv.user.avatar : `${API_URL.replace('/api', '')}${conv.user.avatar}`} alt={conv.user.username} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                          {conv.user.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
+                    <Avatar 
+                      src={conv.user.avatar} 
+                      username={conv.user.username} 
+                      size="md" 
+                    />
                     {conv.unread && <div className="absolute top-0 right-0 w-3.5 h-3.5 bg-secondary border-2 border-white rounded-full"></div>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -268,15 +265,11 @@ export default function DirectMessages() {
                   <button onClick={() => setSelectedUser(null)} className="md:hidden p-2 text-gray-400 hover:text-primary transition-colors">
                     <MdArrowBack size={24} />
                   </button>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-100 shadow-sm">
-                    {selectedUser.avatar ? (
-                      <img src={selectedUser.avatar.startsWith('http') ? selectedUser.avatar : `${API_URL.replace('/api', '')}${selectedUser.avatar}`} alt={selectedUser.username} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                        {selectedUser.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
+                  <Avatar 
+                    src={selectedUser.avatar} 
+                    username={selectedUser.username} 
+                    size="lg" 
+                  />
                   <div>
                     <h3 className="text-sm sm:text-base font-black text-gray-900">{selectedUser.username}</h3>
                     <p className="text-[10px] sm:text-xs text-emerald-500 font-bold flex items-center gap-1">

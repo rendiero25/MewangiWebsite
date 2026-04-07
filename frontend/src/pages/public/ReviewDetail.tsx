@@ -249,7 +249,7 @@ export default function ReviewDetail() {
                   <div className="w-full md:w-[320px] shrink-0">
                     <div className="h-full relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
                       <img 
-                        src={review.image?.startsWith('http') ? review.image : `${API_URL.replace('/api', '')}${review.image}`} 
+                        src={review.image?.startsWith('http') ? review.image : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${review.image?.startsWith('/') ? review.image : `/${review.image}`}`} 
                         alt={review.title} 
                         className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700" 
                       />
@@ -586,7 +586,7 @@ export default function ReviewDetail() {
                     <Link key={t._id} to={`/review/${t._id}`} className="group bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-2xl transition-all overflow-hidden flex flex-col h-full">
                       <div className="aspect-16/10 overflow-hidden bg-gray-100">
                         {t.image ? (
-                          <img src={t.image.startsWith('http') ? t.image : `${API_URL.replace('/api', '')}${t.image}`} alt={t.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          <img src={t.image.startsWith('http') ? t.image : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${t.image.startsWith('/') ? t.image : `/${t.image}`}`} alt={t.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-200"><svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg></div>
                         )}

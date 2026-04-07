@@ -59,7 +59,7 @@ export default function Profile() {
         }
       });
       if (user.avatar) {
-        setAvatarPreview(user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`);
+        setAvatarPreview(user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${user.avatar.startsWith('/') ? user.avatar : `/${user.avatar}`}`);
       }
     }
   }, [user]);

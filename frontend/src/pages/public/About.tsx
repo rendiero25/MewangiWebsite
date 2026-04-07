@@ -1,13 +1,23 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
 import ScrollSmoother from 'gsap/ScrollSmoother';
 
-gsap.registerPlugin(ScrollSmoother);
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 export default function About() {
   useEffect(() => {
-    // ScrollSmoother removed to fix scrolling issues
+    const ctx = gsap.context(() => {
+      ScrollSmoother.create({
+        wrapper: '#smooth-wrapper',
+        content: '#smooth-content',
+        smooth: 1.5,
+        effects: true,
+      });
+    });
+
+    return () => ctx.revert();
   }, []);
 
   const [activeFeature, setActiveFeature] = useState(0);
@@ -86,8 +96,9 @@ export default function About() {
     },
   ];
   return (
-    <div className="min-h-screen bg-white">
-      <style>{`
+    <div id="smooth-wrapper" className="bg-white">
+      <div id="smooth-content">
+        <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-15px) rotate(2deg); }
@@ -105,7 +116,7 @@ export default function About() {
         .rotate-x-2 { transform: rotateX(5deg); }
       `}</style>
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 overflow-hidden bg-gradient-to-br from-primary/5 via-white to-secondary/5">
+      <section className="relative pt-10 pb-20 overflow-hidden bg-gradient-to-b from-white to-third">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-6 animate-fade-in">
@@ -113,7 +124,7 @@ export default function About() {
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
             Membangun Komunitas <br />
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
               Pencinta Parfum Indonesia
             </span>
           </h1>
@@ -190,15 +201,15 @@ export default function About() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="p-8 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-8 rounded-xl bg-third/25 hover:shadow-md transition-shadow">
               <div className="text-4xl font-bold text-primary mb-2">Terbuka</div>
               <p className="text-gray-600 uppercase tracking-widest text-sm font-semibold">Semua Genre Parfum</p>
             </div>
-            <div className="p-8 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-8 rounded-xl bg-third/25 hover:shadow-md transition-shadow">
               <div className="text-4xl font-bold text-secondary mb-2">Lokal</div>
               <p className="text-gray-600 uppercase tracking-widest text-sm font-semibold">Dukung Brand Indonesia</p>
             </div>
-            <div className="p-8 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-8 rounded-xl bg-third/25 hover:shadow-md transition-shadow">
               <div className="text-4xl font-bold text-emerald-500 mb-2">Aktif</div>
               <p className="text-gray-600 uppercase tracking-widest text-sm font-semibold">Diskusi Setiap Hari</p>
             </div>
@@ -207,11 +218,11 @@ export default function About() {
       </section>
 
       {/* Interactive Kenapa Mewangi Section */}
-      <section className="py-24 bg-gray-50 overflow-hidden">
+      <section className="py-20 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
-              Kenapa <span className="text-primary text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Mewangi</span>?
+              Kenapa <span className="text-primary text-transparent bg-clip-text bg-linear-to-r from-primary to-secondary">Mewangi?</span>
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">Platform komunitas terlengkap bagi pecinta wewangian di Indonesia.</p>
           </div>
@@ -241,13 +252,13 @@ export default function About() {
             </div>
             
             {/* Visual Display Interactive Viewer */}
-            <div className="w-full lg:w-1/2 hidden lg:flex justify-center items-center h-[550px] bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-xl relative group">
+            <div className="w-full lg:w-1/2 hidden lg:flex justify-center items-center h-[550px] bg-white rounded-xl overflow-hidden border border-gray-100 shadow-xl relative group">
                {/* Animated background shape */}
                <div className={`absolute -inset-20 bg-gradient-to-tr opacity-20 blur-3xl rounded-full transition-colors duration-1000 ${features[activeFeature].color}`}></div>
                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
                
                <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-12 text-center">
-                  <div 
+                   <div 
                     key={`icon-${activeFeature}`} 
                     className={`w-36 h-36 rounded-3xl bg-gradient-to-br ${features[activeFeature].color} flex items-center justify-center text-white mb-10 shadow-2xl animate-[float_4s_ease-in-out_infinite]`}
                     style={{ animation: 'float 4s ease-in-out infinite' }}
@@ -265,35 +276,40 @@ export default function About() {
       </section>
 
       {/* Perjalanan Sempurna Section */}
-      <section className="py-24 bg-white relative overflow-hidden">
+      <section className="py-20 bg-white relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-[0.02]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20 animate-fade-in-up">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-5">
-              Perjalanan <span className="relative">Sempurna<div className="absolute -bottom-2 left-0 w-full h-1 bg-secondary/50 transform -skew-x-12"></div></span> Kamu
+              Perjalanan <span className="relative text-primary">Sempurna<div className="absolute -bottom-2 left-0 w-full h-1 bg-secondary/50 transform -skew-x-12"></div></span> Kamu
             </h2>
-            <p className="text-lg text-gray-600">Jajaki dunia wewangian dengan 4 langkah mulus.</p>
+            <p className="text-lg text-black">Jajaki dunia wewangian dengan 4 langkah mulus.</p>
           </div>
           
           <div className="relative group/timeline max-w-5xl mx-auto">
             {/* Magic connecting line */}
             <div className="absolute top-1/2 left-0 w-full h-1.5 bg-gray-100 -translate-y-1/2 rounded-full overflow-hidden hidden md:block">
-              <div className="h-full bg-gradient-to-r from-primary via-secondary to-primary w-[0%] group-hover/timeline:w-[100%] transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"></div>
+              <div className="h-full bg-linear-to-r from-primary via-secondary to-primary w-[0%] group-hover/timeline:w-[100%] transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)]"></div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-4 relative z-10">
               {steps.map((step, idx) => (
                 <div key={idx} className="relative group perspective" style={{ perspective: '1000px' }}>
-                  <div className="w-24 h-24 mx-auto bg-white border-4 border-gray-100 group-hover:border-primary rounded-full flex items-center justify-center text-4xl shadow-xl transition-all duration-500 transform group-hover:-translate-y-6 group-hover:scale-110 group-hover:shadow-primary/30 mb-8 relative z-20">
+                  <div className="w-24 h-10 mx-auto bg-white rounded-full flex items-center justify-center text-4xl transition-all duration-500 transform group-hover:-translate-y-6 group-hover:scale-110 group-hover:shadow-primary/30 mb-8 relative z-20">
                     <span className="transition-transform duration-500 group-hover:rotate-12">{step.icon}</span>
                   </div>
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center transition-all duration-500 shadow-sm group-hover:shadow-2xl transform group-hover:-translate-y-4 group-hover:rotate-x-2 relative overflow-hidden h-full">
-                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-secondary scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-700 ease-out"></div>
-                    <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-black uppercase tracking-widest rounded-full mb-4">{step.step}</span>
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">{step.title}</h3>
-                    <p className="text-sm text-gray-600 mb-6">{step.desc}</p>
+
+                  <div className="bg-white border border-gray-100 rounded-xl p-6 text-center transition-all duration-500 shadow-sm group-hover:shadow-lg transform group-hover:-translate-y-4 group-hover:rotate-x-2 relative overflow-hidden h-full flex flex-col items-center">
+                    <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-primary to-secondary scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-700 ease-out"></div>
+                    
+                    <div className="transition-all duration-500 group-hover:-translate-y-5">
+                      <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-black uppercase tracking-widest rounded-full mb-2">{step.step}</span>
+                      <h3 className="text-base font-black text-gray-900 mb-2">{step.title}</h3>
+                      <p className="text-sm text-gray-600 px-2">{step.desc}</p>
+                    </div>
+
                     <div className="absolute bottom-0 inset-x-0 p-4 bg-gray-50 border-t border-gray-100 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                       <p className="text-xs text-primary font-medium">{step.details}</p>
+                       <p className="text-xs text-primary font-bold">{step.details}</p>
                     </div>
                   </div>
                 </div>
@@ -304,7 +320,7 @@ export default function About() {
       </section>
 
       {/* Story Section */}
-      <section className="py-20 bg-white">
+      <section className="pt-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-lg leading-relaxed text-gray-600">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Cerita Kami</h2>
           <p className="mb-6">
@@ -318,12 +334,13 @@ export default function About() {
           </p>
           <Link 
             to="/register" 
-            className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-white bg-gradient-to-r from-primary to-secondary rounded-xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold text-white bg-linear-to-r from-primary to-secondary rounded-xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             Mulai Perjalananmu
           </Link>
         </div>
       </section>
+      </div>
     </div>
   );
 }

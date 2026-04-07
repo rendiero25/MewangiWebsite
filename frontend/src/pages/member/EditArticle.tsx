@@ -41,7 +41,7 @@ export default function EditArticle() {
         setCategory(data.category || 'Lainnya');
         setTagsInput((data.tags && data.tags.join(', ')) || '');
         if (data.coverImage) {
-          setImagePreview(`${API_URL.replace('/api', '')}${data.coverImage}`);
+          setImagePreview(data.coverImage.startsWith('http') ? data.coverImage : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${data.coverImage.startsWith('/') ? data.coverImage : `/${data.coverImage}`}`);
         }
         setStatus(data.status || '');
         setRejectionReason(data.rejectionReason || '');
@@ -261,7 +261,7 @@ export default function EditArticle() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {submitting ? 'Mengirim...' : 'Kirim Ulang Artikel'}
               </button>

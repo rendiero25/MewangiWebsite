@@ -169,7 +169,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
               onClick={handleLike}
               disabled={isLiking}
               className={`flex items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                hasLiked ? (isMe ? 'text-white' : 'text-primary') : (isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-primary')
+                hasLiked ? (isMe ? 'text-white' : 'text-primary') : (isMe ? 'text-black hover:text-white' : 'text-gray-500 hover:text-primary')
               }`}
             >
               {hasLiked ? (
@@ -184,7 +184,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
               onClick={handleDislike}
               disabled={isLiking}
               className={`flex items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                hasDisliked ? (isMe ? 'text-white' : 'text-red-500') : (isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-red-500')
+                hasDisliked ? (isMe ? 'text-white' : 'text-red-500') : (isMe ? 'text-black hover:text-white' : 'text-gray-500 hover:text-red-500')
               }`}
             >
               {hasDisliked ? (
@@ -199,7 +199,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             {(isMe || isAdmin) && onDelete && (
               <button
                 onClick={() => onDelete(comment._id)}
-                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-red-500'}`}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-black hover:text-white' : 'text-gray-500 hover:text-red-500'}`}
               >
                 Hapus
               </button>
@@ -208,7 +208,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             {!isMe && user && onQuote && (
               <button
                 onClick={() => onQuote && onQuote(comment)}
-                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-primary'}`}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-black hover:text-white' : 'text-gray-500 hover:text-primary'}`}
               >
                 Balas
               </button>
@@ -217,7 +217,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             {!isMe && user && (
               <button
                 onClick={() => setReportModalOpen(true)}
-                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-red-500'}`}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-black hover:text-white' : 'text-gray-500 hover:text-red-500'}`}
               >
                 Laporkan
               </button>

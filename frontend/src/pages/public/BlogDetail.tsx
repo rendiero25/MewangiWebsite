@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../../components/common/Avatar";
 import { useBreadcrumbs } from "../../context/BreadcrumbContext";
+import CommentItem from '../../components/public/CommentItem';
+import SidebarDetail from '../../components/public/SidebarDetail';
+import ReportModal from "../../components/public/ReportModal";
+import { BiLike, BiSolidLike, BiDislike, BiSolidDislike } from "react-icons/bi";
 import "react-quill-new/dist/quill.snow.css";
-
-
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
@@ -27,17 +29,23 @@ interface ArticleData {
   coverImage?: string;
   author: { _id: string; username: string; avatar?: string };
   createdAt: string;
+  views?: number;
+  likes: string[];
+  dislikes: string[];
 }
 
 interface CommentData {
   _id: string;
   content: string;
   author: { _id: string; username: string; avatar?: string };
+  likes?: string[];
+  dislikes?: string[];
   createdAt: string;
 }
 
 export default function BlogDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { setBreadcrumbTitle } = useBreadcrumbs();
   const location = useLocation();
@@ -48,14 +56,21 @@ export default function BlogDetail() {
   const [error, setError] = useState("");
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [quotedComment, setQuotedComment] = useState<CommentData | null>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [articleLikes, setArticleLikes] = useState<string[]>([]);
+  const [articleDislikes, setArticleDislikes] = useState<string[]>([]);
+  const [reacting, setReacting] = useState(false);
 
   const fetchArticle = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await axios.get(`${API_URL}/articles/${slug}`);
-      // The backend returns { ...article, comments }
       setArticle(data);
       setComments(data.comments || []);
+      setArticleLikes(data.likes || []);
+      setArticleDislikes(data.dislikes || []);
       setBreadcrumbTitle(location.pathname, data.title);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -74,13 +89,17 @@ export default function BlogDetail() {
     if (!commentText.trim()) return;
     setSubmitting(true);
     try {
+      const payload: { content: string; quoteId?: string } = { content: commentText };
+      if (quotedComment) payload.quoteId = quotedComment._id;
+
       const { data } = await axios.post(
         `${API_URL}/articles/${article?._id}/comments`,
-        { content: commentText },
+        payload,
         { headers: { Authorization: `Bearer ${user?.token}` } },
       );
       setComments((prev) => [...prev, data]);
       setCommentText("");
+      setQuotedComment(null);
     } catch {
       setError("Gagal mengirim komentar.");
     } finally {
@@ -88,190 +107,288 @@ export default function BlogDetail() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white p-12 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col items-center gap-6">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 font-medium">Memuat Artikel...</p>
-        </div>
-      </div>
-    );
+  const handleLikeArticle = async () => {
+    if (!user || reacting || !article) return;
+    setReacting(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/articles/${article._id}/like`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setArticleLikes(data.likes);
+      setArticleDislikes(data.dislikes);
+    } catch (err) {
+      console.error("Gagal menyukai artikel:", err);
+    } finally {
+      setReacting(false);
+    }
+  };
 
-  if (error || !article)
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-xl shadow-xl border border-gray-100 max-w-sm w-full text-center">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-            ⚠️
-          </div>
-          <p className="text-gray-900 font-bold mb-2">
-            {error || "Artikel tidak ditemukan"}
-          </p>
-          <Link to="/blog" className="text-primary font-bold hover:underline">
-            Kembali ke Blog
-          </Link>
-        </div>
+  const handleDislikeArticle = async () => {
+    if (!user || reacting || !article) return;
+    setReacting(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/articles/${article._id}/dislike`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setArticleLikes(data.likes);
+      setArticleDislikes(data.dislikes);
+    } catch (err) {
+      console.error("Gagal tidak menyukai artikel:", err);
+    } finally {
+      setReacting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('Hapus komentar ini?')) return;
+    try {
+      await axios.delete(`${API_URL}/articles/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+    } catch {
+      setError('Gagal menghapus komentar.');
+    }
+  };
+
+  const handleDeleteArticle = async () => {
+    if (!article || !confirm('Hapus artikel ini?')) return;
+    try {
+      await axios.delete(`${API_URL}/articles/${article._id}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      navigate('/blog');
+    } catch {
+      setError('Gagal menghapus artikel.');
+    }
+  };
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error || !article) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center p-8 bg-white rounded-xl shadow-xl">
+        <p className="text-gray-500 mb-4">{error || 'Data tidak ditemukan'}</p>
+        <Link to="/blog" className="text-primary font-bold hover:underline">← Kembali ke Artikel</Link>
       </div>
-    );
+    </div>
+  );
 
   const isOwner = user && user._id === article.author._id;
   const isAdmin = user && user.role === "admin";
-  const colorClass =
-    categoryColors[article.category] || categoryColors["Lainnya"];
+  const colorClass = categoryColors[article.category] || categoryColors["Lainnya"];
 
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+          
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-2 transition-colors">
-              ← Kembali ke Blog
-            </Link> */}
-
+          <div className="lg:col-span-3 space-y-5">
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              {/* Header: 1 Row Layout */}
-              <div className="p-6 sm:p-10 border-b border-gray-100">
-                <div className="flex flex-col md:flex-row gap-8 items-center">
-                  {/* Image Left */}
+              {/* Header section: Image & Data (1 Row) */}
+              <div className="px-8 py-4 sm:px-12 sm:py-8">
+                <div className="flex flex-col md:flex-row gap-5 items-stretch">
+                  {/* Left: Image */}
                   {article.coverImage && (
-                    <div className="w-full md:w-2/5 aspect-4/3 rounded-xl overflow-hidden shadow-lg">
-                      <img
-                        src={
-                          article.coverImage.startsWith("http")
-                            ? article.coverImage
-                            : `${API_URL.replace("/api", "")}${article.coverImage}`
-                        }
-                        alt={article.title}
-                        className="w-full h-full object-cover transition-transform hover:scale-105 duration-700"
-                      />
+                    <div className="w-full md:w-[320px] shrink-0">
+                      <div className="h-full relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
+                        <img 
+                          src={article.coverImage.startsWith('http') ? article.coverImage : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${article.coverImage.startsWith('/') ? article.coverImage : `/${article.coverImage}`}`} 
+                          alt={article.title} 
+                          className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700" 
+                        />
+                      </div>
                     </div>
                   )}
 
-                  {/* Data Right */}
-                  <div className="flex-1 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${colorClass}`}
-                      >
-                        {article.category}
-                      </span>
-                    </div>
+                  {/* Right: Data */}
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`px-3 py-1 text-[10px] font-black rounded-xl ${colorClass}`}>{article.category}</span>
+                      </div>
+                      
+                      <h1 className="text-3xl font-bold text-gray-900 leading-[1.3]">
+                        {article.title}
+                      </h1>
 
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
-                      {article.title}
-                    </h1>
-
-                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100/50">
-                      <Avatar
-                        src={article.author.avatar}
-                        size="lg"
-                        alt={article.author.username}
-                        username={article.author.username}
-                      />
-                      <div>
-                        <Link
-                          to={`/profile/${article.author.username}`}
-                          className="text-sm font-bold text-gray-900 hover:text-primary transition-colors block"
-                        >
-                          {article.author.username}
-                        </Link>
-                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
-                          Penulis •{" "}
-                          {new Date(article.createdAt).toLocaleDateString(
-                            "id-ID",
-                            { day: "numeric", month: "short", year: "numeric" },
-                          )}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <Avatar src={article.author.avatar} size="sm" alt={article.author.username} username={article.author.username} />
+                        <div className="flex flex-col">
+                           <Link to={`/profile/${article.author.username}`} className="text-xs font-black text-gray-800 hover:text-primary transition-colors">{article.author.username}</Link>
+                           <span className="text-[10px] text-gray-500 font-bold">Penulis • {new Date(article.createdAt).toLocaleDateString()} {article.views !== undefined && `• ${article.views} Dilihat`}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Content Below */}
-              <div className="p-6 sm:p-10">
-                <div
-                  className="prose prose-lg max-w-none text-gray-700 leading-relaxed ql-editor"
+              {/* Body: Full Width Content */}
+              <div className="px-8 py-4 sm:px-12">
+                <div 
+                  className="prose prose-lg max-w-none text-black leading-[1.8] ql-editor p-0!"
                   dangerouslySetInnerHTML={{ __html: article.content }}
                 />
               </div>
 
-              {/* Actions */}
-              <div className="px-10 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-                <div className="flex items-center gap-6 text-xs text-gray-400 font-medium">
-                  <span className="flex items-center gap-1">
-                    📅 {new Date(article.createdAt).toLocaleDateString()}
+              {/* Actions Footer */}
+              <div className="px-8 py-4 sm:px-12 sm:py-6 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex flex-wrap items-center gap-6">
+                  {/* Reactions */}
+                  <div className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-1 group/like">
+                      <button
+                        onClick={handleLikeArticle}
+                        disabled={reacting || !user}
+                        className={`p-2 rounded-full transition-all cursor-pointer ${
+                          user && articleLikes.includes(user._id)
+                            ? "text-primary bg-primary/10 font-bold"
+                            : "text-gray-400 hover:text-primary hover:bg-primary/5"
+                        }`}
+                        title="Suka"
+                      >
+                        {user && articleLikes.includes(user._id) ? (
+                          <BiSolidLike className="w-5 h-5" />
+                        ) : (
+                          <BiLike className="w-5 h-5" />
+                        )}
+                      </button>
+                      <span
+                        className={`text-sm font-bold min-w-4 text-center ${user && articleLikes.includes(user._id) ? "text-primary" : "text-gray-700"}`}
+                      >
+                        {articleLikes.length}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 group/dislike">
+                      <button
+                        onClick={handleDislikeArticle}
+                        disabled={reacting || !user}
+                        className={`p-2 rounded-full transition-all cursor-pointer ${
+                          user && articleDislikes.includes(user._id)
+                            ? "text-red-500 bg-red-100 font-bold"
+                            : "text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        }`}
+                        title="Tidak Suka"
+                      >
+                        {user && articleDislikes.includes(user._id) ? (
+                          <BiSolidDislike className="w-5 h-5" />
+                        ) : (
+                          <BiDislike className="w-5 h-5" />
+                        )}
+                      </button>
+                      <span
+                        className={`text-sm font-bold min-w-4 text-center ${user && articleDislikes.includes(user._id) ? "text-red-500" : "text-gray-700"}`}
+                      >
+                        {articleDislikes.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="flex items-center gap-1.5 text-black text-xs">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    {article.views || 0} Dilihat
                   </span>
-                  <span className="flex items-center gap-1">
-                    💬 {comments.length} Komentar
+
+                  <span className="flex items-center gap-1 text-black text-xs">
+                    💬 {comments.length} komentar
                   </span>
                 </div>
-                {(isOwner || isAdmin) && (
-                  <div className="flex gap-4">
-                    {isOwner && (
-                      <Link
-                        to={`/blog/edit/${article._id}`}
-                        className="text-xs font-bold text-primary hover:underline"
+
+                <div className="flex items-center gap-3">
+                  {user && !isOwner && (
+                    <button
+                      onClick={() => setReportModalOpen(true)}
+                      className="text-xs font-bold text-black hover:text-red-500 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      🚩 Laporkan
+                    </button>
+                  )}
+                  {(isOwner || isAdmin) && (
+                    <div className="flex gap-4">
+                      {isOwner && (
+                        <Link
+                          to={`/blog/edit/${article._id}`}
+                          className="text-xs font-bold text-gray-600 hover:text-primary transition-colors"
+                        >
+                          Edit
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleDeleteArticle}
+                        className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors cursor-pointer"
                       >
-                        Edit Artikel
-                      </Link>
-                    )}
-                  </div>
-                )}
+                        Hapus
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </article>
 
-            {/* Comments Section */}
-            <section className="space-y-6">
-              <h2 className="text-2xl font-black text-gray-900 px-2 flex items-center gap-3">
-                Diskusi Komunitas
-                <span className="text-sm font-normal text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
-                  {comments.length}
-                </span>
+            <ReportModal
+              isOpen={reportModalOpen}
+              onClose={() => setReportModalOpen(false)}
+              targetType="Article"
+              targetId={article._id}
+            />
+
+            {/* Chat Section */}
+            <section className="space-y-6 pt-5">
+              <h2 className="text-xl font-bold text-black">
+                Diskusi ({comments.length})
               </h2>
 
-              <div className="bg-white rounded-4xl border border-gray-100 p-8 shadow-sm">
+              <div className="bg-third/50 rounded-xl border border-gray-100 p-6 space-y-2">
                 {comments.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400 space-y-2">
-                    <p className="font-bold">Belum ada diskusi.</p>
-                    <p className="text-xs">
-                      Jadilah yang pertama untuk memberikan komentar!
-                    </p>
-                  </div>
+                  <p className="text-center text-gray-400 py-10">
+                    Belum ada diskusi. Mulai percakapan!
+                  </p>
                 ) : (
-                  <div className="space-y-6">
-                    {comments.map((comment) => (
-                      <div
-                        key={comment._id}
-                        className="flex gap-4 items-start group"
-                      >
-                        <Avatar
-                          src={comment.author.avatar}
-                          size="md"
-                          alt={comment.author.username}
-                          username={comment.author.username}
-                        />
-                        <div className="flex-1 bg-gray-50 rounded-2xl p-4 transition-colors group-hover:bg-gray-100/80">
-                          <div className="flex justify-between items-center mb-2">
-                            <Link
-                              to={`/profile/${comment.author.username}`}
-                              className="text-xs font-bold text-gray-900 hover:text-primary transition-colors"
-                            >
-                              {comment.author.username}
-                            </Link>
-                            <span className="text-[10px] text-gray-400 font-medium">
-                              {new Date(comment.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {comment.content}
-                          </p>
-                        </div>
-                      </div>
+                  <>
+                    {(user ? comments : comments.slice(0, 5)).map((c) => (
+                      <CommentItem
+                        key={c._id}
+                        comment={{ ...c, article: article._id }}
+                        onDelete={handleDeleteComment}
+                        onQuote={(qc) => {
+                          setQuotedComment(qc);
+                          commentInputRef.current?.focus();
+                          commentInputRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }}
+                      />
                     ))}
-                  </div>
+                    {!user && comments.length > 5 && (
+                      <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 mt-4">
+                        <p className="text-sm text-gray-500 mb-3 font-medium">
+                          Hanya 5 komentar terbaru yang ditampilkan.
+                        </p>
+                        <Link
+                          to="/login"
+                          className="inline-block bg-primary text-white px-8 py-2 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all cursor-pointer"
+                        >
+                          Masuk untuk Melihat Selengkapnya
+                        </Link>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -279,39 +396,74 @@ export default function BlogDetail() {
               {user ? (
                 <form
                   onSubmit={handleAddComment}
-                  className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm"
+                  className="bg-white rounded-xl border border-gray-300 p-3"
                 >
-                  <h3 className="text-sm font-bold text-gray-900 mb-4">
-                    Tambahkan Komentar
-                  </h3>
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Tulis pendapat Anda di sini..."
-                    className="w-full p-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
-                    rows={3}
-                  />
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={submitting || !commentText.trim()}
-                      className="bg-primary text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
-                    >
-                      {submitting ? "Mengirim..." : "Kirim Komentar"}
-                    </button>
+                  {error && (
+                    <p className="text-red-500 text-xs mb-3 italic">
+                      ⚠️ {error}
+                    </p>
+                  )}
+
+                  {quotedComment && (
+                    <div className="p-3 bg-gray-50 border-primary rounded-xl flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] font-bold text-primary mb-1">
+                          Membalas @{quotedComment.author.username}
+                        </p>
+                        <div
+                          className="text-xs text-gray-500 line-clamp-1 italic"
+                          dangerouslySetInnerHTML={{
+                            __html: quotedComment.content,
+                          }}
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setQuotedComment(null)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="relative rounded-xl transition-all overflow-hidden">
+                    <textarea
+                      ref={commentInputRef}
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder={
+                        quotedComment
+                          ? `Balas @${quotedComment.author.username}...`
+                          : "Tulis balasan Anda..."
+                      }
+                      rows={2}
+                      className="w-full p-4 bg-transparent transition-all resize-none text-sm focus:outline-none focus:ring-0"
+                    />
+
+                    <div className="flex items-center justify-end px-4 py-3">
+                      <button
+                        type="submit"
+                        disabled={submitting || !commentText.trim()}
+                        className="bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
+                      >
+                        {submitting ? (
+                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          "Kirim Balasan"
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </form>
               ) : (
-                <div className="p-8 bg-primary rounded-3xl text-center shadow-xl shadow-primary/20">
-                  <p className="text-white font-bold mb-4">
-                    Ingin bergabung dalam diskusi?
-                  </p>
-                  <Link
-                    to="/login"
-                    className="inline-block bg-white text-primary px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all"
-                  >
-                    Masuk Sekarang
-                  </Link>
+                <div className="p-6 bg-gray-100 rounded-xl text-center text-sm text-gray-500 italic">
+                  Silakan {" "}
+                  <Link to="/login" className="text-primary font-bold hover:underline">Masuk</Link> {" "}
+                  untuk bergabung dalam diskusi ini.
                 </div>
               )}
             </section>
@@ -319,39 +471,9 @@ export default function BlogDetail() {
 
           {/* Sidebar */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-24">
-              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 transition-transform hover:scale-110 duration-700" />
-                <h3 className="text-sm font-black text-gray-900 mb-6 uppercase tracking-widest relative z-10">
-                  Tentang Penulis
-                </h3>
-                <div className="relative z-10 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar
-                      src={article.author.avatar}
-                      size="lg"
-                      alt={article.author.username}
-                      username={article.author.username}
-                    />
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">
-                        {article.author.username}
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
-                        Community Member
-                      </p>
-                    </div>
-                  </div>
-                  <Link
-                    to={`/profile/${article.author.username}`}
-                    className="block w-full py-3 bg-gray-50 text-gray-600 rounded-xl text-[10px] font-black uppercase text-center tracking-widest hover:bg-primary hover:text-white transition-all"
-                  >
-                    Lihat Profil
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <SidebarDetail type="blog" />
           </div>
+
         </div>
       </div>
     </div>

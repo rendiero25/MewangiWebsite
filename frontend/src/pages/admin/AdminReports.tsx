@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { MdCancel, MdDelete, MdVisibility } from 'react-icons/md';
+import Avatar from '../../components/common/Avatar';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -110,15 +111,12 @@ export default function AdminReports() {
               <div className="p-6 flex-1 space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden shrink-0">
-                      {report.reporter.avatar ? (
-                        <img src={report.reporter.avatar.startsWith('http') ? report.reporter.avatar : `${API_URL.replace('/api', '')}${report.reporter.avatar}`} alt={report.reporter.username} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                          {report.reporter.username.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
+                    <Avatar 
+                      src={report.reporter.avatar} 
+                      size="md" 
+                      alt={report.reporter.username} 
+                      username={report.reporter.username} 
+                    />
                     <div>
                       <h4 className="text-sm font-bold text-gray-900">{report.reporter.username}</h4>
                       <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Melaporkan {report.targetType}</p>

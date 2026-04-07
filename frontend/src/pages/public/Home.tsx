@@ -438,16 +438,16 @@ export default function Home() {
               className="flex items-center justify-center gap-8 sm:gap-16 mt-16 flex-wrap"
             >
               {[
-                { value: stats?.totalUsers.toLocaleString('id-ID') || "1,250", label: "Member Aktif" },
-                { value: stats?.totalPerfumes.toLocaleString('id-ID') || "520", label: "Parfum Terdaftar" },
-                { value: stats?.totalReviews.toLocaleString('id-ID') || "2,890", label: "Review Produk" },
-                { value: stats ? (stats.totalTopics + stats.totalArticles).toLocaleString('id-ID') : "15K+", label: "Konten Edukasi" },
+                { value: stats?.totalUsers.toLocaleString('id-ID') || "", label: "Member Aktif" },
+                { value: stats?.totalTopics.toLocaleString('id-ID') || "", label: "Total Forum" },
+                { value: stats?.totalReviews.toLocaleString('id-ID') || "", label: "Review Produk" },
+                { value: stats?.totalArticles.toLocaleString('id-ID') || "", label: "Total Artikel" },
               ].map((stat) => (
                 <div key={stat.label} className="stat-item text-center">
-                  <p className="text-2xl sm:text-3xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  <p className="text-2xl sm:text-3xl lg:text-6xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
                     {stat.value}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  <p className="text-xs sm:text-lg text-black mt-1">
                     {stat.label}
                   </p>
                 </div>
@@ -854,7 +854,7 @@ export default function Home() {
                   <div className="h-44 overflow-hidden bg-liniear-to-br from-amber-400/10 to-orange-500/10 relative shrink-0">
                     {review.image ? (
                       <img
-                        src={review.image.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${review.image}` : review.image}
+                        src={review.image.startsWith('http') ? review.image : `${import.meta.env.VITE_API_URL?.replace(/\/api$/, '').replace(/\/api\/$/, '') || 'http://localhost:3000'}${review.image.startsWith('/') ? review.image : `/${review.image}`}`}
                         alt={review.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -994,7 +994,7 @@ export default function Home() {
                   <div className="h-44 overflow-hidden bg-gradient-to-br from-indigo-500/10 to-blue-500/10 relative">
                     {article.coverImage ? (
                       <img
-                        src={article.coverImage.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${article.coverImage}` : article.coverImage}
+                        src={article.coverImage.startsWith('http') ? article.coverImage : `${import.meta.env.VITE_API_URL?.replace(/\/api$/, '').replace(/\/api\/$/, '') || 'http://localhost:3000'}${article.coverImage.startsWith('/') ? article.coverImage : `/${article.coverImage}`}`}
                         alt={article.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -1037,60 +1037,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Showcase Section dengan ScrollTrigger */}
-      <section className="pt-20 lg:pt-28 bg-white" ref={showcaseStatsRef}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              {
-                value: stats?.totalUsers.toLocaleString('id-ID') || "1,250",
-                label: "Member Aktif",
-                icon: "👥",
-                trend: "+40%",
-              },
-              {
-                value: stats?.totalPerfumes.toLocaleString('id-ID') || "520",
-                label: "Parfum & Brand",
-                icon: "🎁",
-                trend: "+25%",
-              },
-              {
-                value: stats?.totalReviews.toLocaleString('id-ID') || "2,890",
-                label: "Reviews Total",
-                icon: "⭐",
-                trend: "+60%",
-              },
-              {
-                value: stats ? (stats.totalTopics + stats.totalArticles).toLocaleString('id-ID') : "15K+",
-                label: "Konten Edukasi",
-                icon: "💬",
-                trend: "+85%",
-              },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="stat-item text-center p-6 rounded-xl bg-linear-to-br from-primary to-secondary hover:shadow-lg border border-gray-100 transition-all duration-300"
-              >
-                <div className="text-4xl mb-2">{stat.icon}</div>
-                  <p className="text-2xl sm:text-3xl font-bold text-black mb-2">
-                  {stat.value}
-                </p>
-                <p className="text-gray-600 text-sm mb-2">
-                  {stat.label}
-                </p>
-                <p className="text-xs font-semibold text-gray-500 bg-gray-100 inline-block px-3 py-1 rounded-full">
-                   Real Time Stats
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Enhanced CTA Section dengan ScrollTrigger */}
-      <section className="cta-section py-20">
+      <section className="cta-section pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-primary via-secondary to-primary p-12 sm:p-16 lg:p-20 text-center">
+          <div className="relative overflow-hidden rounded-xl bg-linear-to-r from-primary via-secondary to-primary p-12 sm:p-16 lg:p-20 text-center">
             {/* Animated background */}
             <div className="absolute inset-0 opacity-30">
               <svg
@@ -1200,7 +1150,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Section untuk membantu konversi */}
-      <section className="py-20 bg-linear-to-b from-third/25 to-third/25">
+      <section className="py-20 bg-linear-to-b from-third/25 via-third/25 to-transparent">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
