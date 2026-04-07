@@ -24,6 +24,7 @@ interface Review { _id: string; title: string; image?: string; author: { usernam
 
 
 interface Topic { _id: string; title: string; slug: string; category: { name: string }; author: { username: string; avatar?: string }; replyCount: number; createdAt: string; }
+interface Stats { totalUsers: number; totalReviews: number; totalTopics: number; totalArticles: number; totalPerfumes: number; }
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,7 @@ export default function Home() {
   const heroBadgeRef = useRef<HTMLDivElement>(null);
   const heroDescRef = useRef<HTMLParagraphElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const showcaseStatsRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
@@ -38,19 +40,26 @@ export default function Home() {
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [latestReviews, setLatestReviews] = useState<Review[]>([]);
   const [latestTopics, setLatestTopics] = useState<Topic[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const [artRes, revRes, topicRes] = await Promise.allSettled([
+        const [artRes, revRes, topicRes, statsRes] = await Promise.allSettled([
           axios.get(`${API_URL}/articles?limit=3&status=approved`),
           axios.get(`${API_URL}/reviews?limit=3&status=approved`),
           axios.get(`${API_URL}/forum?limit=5&status=approved`),
-
+          axios.get(`${API_URL}/stats`),
         ]);
         if (artRes.status === 'fulfilled') setLatestArticles(artRes.value.data.articles || artRes.value.data || []);
         if (revRes.status === 'fulfilled') setLatestReviews(revRes.value.data.reviews || revRes.value.data || []);
         if (topicRes.status === 'fulfilled') setLatestTopics(topicRes.value.data.topics || topicRes.value.data || []);
+        if (statsRes.status === 'fulfilled') {
+          console.log('Stats fetched:', statsRes.value.data);
+          setStats(statsRes.value.data);
+        } else {
+          console.error('Stats fetch failed:', statsRes.reason);
+        }
       } catch (err) {
         console.error('Failed to fetch latest content:', err);
       }
@@ -138,23 +147,7 @@ export default function Home() {
         );
       }
 
-      // Stats animation - Counting
-      const stats = statsRef.current?.querySelectorAll("p:first-child");
-      if (stats) {
-        heroTimeline.fromTo(
-          stats,
-          { opacity: 0, y: 20, textContent: "0" },
-          {
-            opacity: 1,
-            y: 0,
-            textContent: "1K+",
-            duration: 1,
-            ease: "power2.out",
-            stagger: 0.1,
-          },
-          0.8
-        );
-      }
+      // Note: Hero stats animation moved to a separate useEffect to handle dynamic data
 
       // ScrollTrigger - Parallax effect untuk decorative elements
       const decoratives = document.querySelectorAll(".decorative-circle");
@@ -252,7 +245,7 @@ export default function Home() {
             duration: 0.6,
             ease: "back.out",
             scrollTrigger: {
-              trigger: statsRef.current,
+              trigger: showcaseStatsRef.current || item,
               start: "top 80%",
               end: "top 50%",
               scrub: 0.3,
@@ -307,6 +300,49 @@ export default function Home() {
 
     return () => ctx.revert();
   }, []);
+
+  // Dedicated useEffect for stats animations to handle re-renders/dynamic data
+  useEffect(() => {
+    if (!stats) return;
+
+    const ctx = gsap.context(() => {
+      // Hero Stats Animation
+      const heroStats = statsRef.current?.querySelectorAll(".stat-item");
+      if (heroStats && heroStats.length > 0) {
+        gsap.fromTo(
+          heroStats,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" }
+        );
+      }
+
+      // Showcase Stats Animation (Bottom Section)
+      const showcaseStats = showcaseStatsRef.current?.querySelectorAll(".stat-item");
+      if (showcaseStats && showcaseStats.length > 0) {
+        gsap.fromTo(
+          showcaseStats,
+          { opacity: 0, scale: 0.8 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.6,
+            ease: "back.out",
+            stagger: 0.1,
+            scrollTrigger: {
+              trigger: showcaseStatsRef.current,
+              start: "top 80%",
+              end: "top 50%",
+              scrub: 0.3,
+            },
+          }
+        );
+      }
+
+      ScrollTrigger.refresh();
+    }); // Scope is global or can be refined later if needed
+
+    return () => ctx.revert();
+  }, [stats]);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white">
@@ -402,10 +438,10 @@ export default function Home() {
               className="flex items-center justify-center gap-8 sm:gap-16 mt-16 flex-wrap"
             >
               {[
-                { value: "1K+", label: "Member Aktif" },
-                { value: "500+", label: "Parfum Terdaftar" },
-                { value: "2K+", label: "Review Produk" },
-                { value: "5K+", label: "Topik Diskusi" },
+                { value: stats?.totalUsers.toLocaleString('id-ID') || "1,250", label: "Member Aktif" },
+                { value: stats?.totalPerfumes.toLocaleString('id-ID') || "520", label: "Parfum Terdaftar" },
+                { value: stats?.totalReviews.toLocaleString('id-ID') || "2,890", label: "Review Produk" },
+                { value: stats ? (stats.totalTopics + stats.totalArticles).toLocaleString('id-ID') : "15K+", label: "Konten Edukasi" },
               ].map((stat) => (
                 <div key={stat.label} className="stat-item text-center">
                   <p className="text-2xl sm:text-3xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -1002,38 +1038,38 @@ export default function Home() {
       </section>
 
       {/* Stats Showcase Section dengan ScrollTrigger */}
-      {/* <section className="pt-20 lg:pt-28 bg-white">
+      <section className="pt-20 lg:pt-28 bg-white" ref={showcaseStatsRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               {
-                value: "1,250",
+                value: stats?.totalUsers.toLocaleString('id-ID') || "1,250",
                 label: "Member Aktif",
                 icon: "👥",
                 trend: "+40%",
               },
               {
-                value: "520",
-                label: "Brand Parfum",
+                value: stats?.totalPerfumes.toLocaleString('id-ID') || "520",
+                label: "Parfum & Brand",
                 icon: "🎁",
                 trend: "+25%",
               },
               {
-                value: "2,890",
+                value: stats?.totalReviews.toLocaleString('id-ID') || "2,890",
                 label: "Reviews Total",
                 icon: "⭐",
                 trend: "+60%",
               },
               {
-                value: "15K+",
-                label: "Diskusi Aktif",
+                value: stats ? (stats.totalTopics + stats.totalArticles).toLocaleString('id-ID') : "15K+",
+                label: "Konten Edukasi",
                 icon: "💬",
                 trend: "+85%",
               },
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="stat-item text-center p-6 rounded-xl bg-linear-to-br from-primary to-secondary hover:bg-blue-50 border border-gray-200 transition-all duration-300"
+                className="stat-item text-center p-6 rounded-xl bg-linear-to-br from-primary to-secondary hover:shadow-lg border border-gray-100 transition-all duration-300"
               >
                 <div className="text-4xl mb-2">{stat.icon}</div>
                   <p className="text-2xl sm:text-3xl font-bold text-black mb-2">
@@ -1042,14 +1078,14 @@ export default function Home() {
                 <p className="text-gray-600 text-sm mb-2">
                   {stat.label}
                 </p>
-                <p className="text-xs font-semibold text-gray-600 bg-gray-100 inline-block px-3 py-1 rounded-full">
-                  {stat.trend} MTD
+                <p className="text-xs font-semibold text-gray-500 bg-gray-100 inline-block px-3 py-1 rounded-full">
+                   Real Time Stats
                 </p>
               </div>
             ))}
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Enhanced CTA Section dengan ScrollTrigger */}
       <section className="cta-section py-20">

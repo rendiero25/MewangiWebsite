@@ -27,6 +27,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const sitemapRoutes = require('./routes/sitemapRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const checkIPBan = require('./middleware/ipBan');
@@ -91,6 +92,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/stats', statsRoutes);
 
 // SEO Routes (Sitemap & Robots)
 app.use('/', sitemapRoutes);
