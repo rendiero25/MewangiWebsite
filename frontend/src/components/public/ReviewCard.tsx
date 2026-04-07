@@ -12,6 +12,7 @@ interface ReviewCardProps {
     occasion: string[];
     season: string[];
     image?: string;
+    views: number;
     createdAt: string;
   };
 }
@@ -75,8 +76,8 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           </div>
 
           {/* Preview */}
-          <p className="text-sm text-gray-500 line-clamp-2 mb-3">
-            {review.content.replace(/<[^>]*>/g, '').slice(0, 120)}
+          <p className="text-sm text-black line-clamp-2 mb-3">
+            {review.content?.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').slice(0, 120)}
           </p>
 
           {/* Tags */}
@@ -92,7 +93,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
           )}
 
           {/* Meta */}
-          <div className="flex items-center gap-2 text-xs text-gray-400 pt-3 border-t border-gray-50">
+          <div className="flex items-center gap-2 text-xs text-gray-500 pt-3 border-t border-gray-50">
             <Avatar src={review.author?.avatar} size="xs" alt={review.author?.username} username={review.author?.username} />
             {review.author?.username ? (
               <Link to={`/profile/${review.author.username}`} className="font-medium text-gray-600 hover:text-primary transition-colors">{review.author.username}</Link>
@@ -101,6 +102,13 @@ export default function ReviewCard({ review }: ReviewCardProps) {
             )}
             <span>·</span>
             <span>{timeAgo(review.createdAt)}</span>
+            <span className="flex items-center gap-1 ml-auto text-gray-500">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {review.views || 0}
+            </span>
           </div>
         </div>
       </div>

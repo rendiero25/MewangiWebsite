@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import ReportModal from './ReportModal';
 import Avatar from '../common/Avatar';
+import { BiLike, BiSolidLike, BiDislike, BiSolidDislike } from 'react-icons/bi';
+
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -94,8 +96,21 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
     }
   };
 
-  const imgPath = comment.image ? (comment.image.startsWith('/') ? comment.image : `/${comment.image}`) : '';
-  const imageUrl = comment.image && (comment.image.startsWith('http') ? comment.image : `${API_URL.replace('/api', '')}${imgPath}`);
+  const imageUrl = useMemo(() => {
+    if (!comment.image) return null;
+    if (comment.image.startsWith('http')) return comment.image;
+    
+    const baseUrl = API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '');
+    const cleanPath = comment.image.startsWith('/') ? comment.image : `/${comment.image}`;
+    
+    // Ensure /uploads/ prefix if it's a relative path
+    if (!cleanPath.startsWith('/uploads/') && !comment.image.includes('://')) {
+      return `${baseUrl}/uploads${cleanPath}`;
+    }
+    
+    return `${baseUrl}${cleanPath}`;
+  }, [comment.image]);
+
 
   return (
     <div className={`flex flex-col gap-1 py-4 ${isMe ? 'items-end' : 'items-start'}`}>
@@ -112,7 +127,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             ) : (
               <span className="text-xs font-semibold text-gray-900">User Terhapus</span>
             )}
-            <span className="text-[10px] text-gray-400">
+            <span className="text-[10px] text-gray-500">
               {timeAgo(comment.createdAt)}
             </span>
           </div>
@@ -126,7 +141,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             </div>
           )}
 
-          <div className={`p-4 rounded-2xl text-sm shadow-md transition-all duration-300 ${
+          <div className={`p-2 rounded-2xl text-sm transition-all duration-300 ${
             isMe 
               ? 'bg-primary text-white rounded-tr-none' 
               : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
@@ -143,42 +158,48 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             )}
             
             <div 
-              className={`prose prose-xs sm:prose-sm max-w-none wrap-break-word ql-editor leading-relaxed ${isMe ? 'text-white' : 'text-gray-700'}`}
+              className={`prose prose-xs sm:prose-sm max-w-none wrap-break-word ql-editor leading-relaxed ${isMe ? 'text-white' : 'font-medium text-black'}`}
               dangerouslySetInnerHTML={{ __html: comment.content }}
             />
           </div>
 
           {/* Actions: Like, Dislike, Delete */}
-          <div className="flex items-center gap-3 mt-1 px-1">
+          <div className="flex items-center gap-3 mt-3 px-1">
             <button 
               onClick={handleLike}
               disabled={isLiking}
               className={`flex items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                hasLiked ? (isMe ? 'text-white' : 'text-primary') : (isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-primary')
+                hasLiked ? (isMe ? 'text-white' : 'text-primary') : (isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-primary')
               }`}
             >
-              <svg className={`w-3 h-3 ${hasLiked ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.708C19.743 10 20.5 10.895 20.5 12c0 .285-.06.559-.165.81l-2.484 5.962C17.653 19.345 16.94 20 16.14 20H13M14 10V5a2 2 0 00-2-2h-3L4.444 8.222C4.153 8.514 4 8.91 4 9.322V19a2 2 0 002 2h3.585c.613 0 1.2-.243 1.633-.677L14 17" />
-              </svg>
+              {hasLiked ? (
+                <BiSolidLike className="w-3.5 h-3.5" />
+              ) : (
+                <BiLike className="w-3.5 h-3.5" />
+              )}
               {likes.length}
             </button>
+
             <button 
               onClick={handleDislike}
               disabled={isLiking}
               className={`flex items-center gap-1 text-[10px] font-medium transition-colors cursor-pointer ${
-                hasDisliked ? (isMe ? 'text-white' : 'text-red-500') : (isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-red-500')
+                hasDisliked ? (isMe ? 'text-white' : 'text-red-500') : (isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-red-500')
               }`}
             >
-              <svg className={`w-3 h-3 ${hasDisliked ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.292C4.257 14 3.5 13.105 3.5 12c0-.285.06-.559.165-.81l2.484-5.962C6.347 4.655 7.06 4 7.86 4H11M10 14v5a2 2 0 002 2h3l4.556-5.222C20.847 15.486 21 15.09 21 14.678V5a2 2 0 00-2-2h-3.585a2.307 2.307 0 00-1.633.677L10 7" />
-              </svg>
+              {hasDisliked ? (
+                <BiSolidDislike className="w-3.5 h-3.5" />
+              ) : (
+                <BiDislike className="w-3.5 h-3.5" />
+              )}
               {dislikes.length}
             </button>
+
             
             {(isMe || isAdmin) && onDelete && (
               <button
                 onClick={() => onDelete(comment._id)}
-                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-red-500'}`}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-red-500'}`}
               >
                 Hapus
               </button>
@@ -187,7 +208,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             {!isMe && user && onQuote && (
               <button
                 onClick={() => onQuote && onQuote(comment)}
-                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-primary'}`}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-primary'}`}
               >
                 Balas
               </button>
@@ -196,7 +217,7 @@ export default function CommentItem({ comment, onDelete, onQuote }: CommentItemP
             {!isMe && user && (
               <button
                 onClick={() => setReportModalOpen(true)}
-                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-red-500'}`}
+                className={`text-[10px] transition-colors cursor-pointer ${isMe ? 'text-white/60 hover:text-white' : 'text-gray-500 hover:text-red-500'}`}
               >
                 Laporkan
               </button>

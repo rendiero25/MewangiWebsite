@@ -4,14 +4,16 @@ import { useAuth } from '../../context/AuthContext';
 import Cropper, { type Area } from 'react-easy-crop';
 import { MdFacebook } from 'react-icons/md';
 import { FaInstagram, FaTiktok, FaTwitter, FaLinkedin } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
+
+
 
   const [formData, setFormData] = useState({
     username: '',
@@ -129,8 +131,7 @@ export default function Profile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setSuccess('');
-    setError('');
+
 
     try {
       const data = new FormData();
@@ -154,14 +155,14 @@ export default function Profile() {
 
       // Update context
       updateUser(response.data);
-      setSuccess('Profil berhasil diperbarui!');
+      toast.success('Profil berhasil diperbarui!');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'Gagal memperbarui profil.');
-      } else {
-        setError('Terjadi kesalahan yang tidak diketahui.');
-      }
+      const msg = axios.isAxiosError(err) 
+        ? err.response?.data?.message || 'Gagal memperbarui profil.' 
+        : 'Terjadi kesalahan yang tidak diketahui.';
+      toast.error(msg);
     } finally {
+
       setLoading(false);
     }
   };
@@ -355,11 +356,7 @@ export default function Profile() {
                 />
               </div>
 
-              {message() && (
-                <div className={`p-4 rounded-xl text-center text-sm font-medium ${success ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                  {success || error}
-                </div>
-              )}
+
 
               <div className="pt-4">
                 <button
@@ -449,7 +446,5 @@ export default function Profile() {
     </div>
   );
 
-  function message() {
-    return success || error;
-  }
+
 }

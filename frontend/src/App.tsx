@@ -1,4 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -66,7 +68,19 @@ function MainLayout() {
 }
 
 
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
+
   return (
     <HelmetProvider>
       <ThemeProvider>
@@ -76,7 +90,9 @@ function App() {
               <ChatProvider>
                 <BreadcrumbProvider>
                   <Router>
+                    <ScrollToTop />
                   <Routes>
+
                     {/* Main pages (with navbar/footer) */}
                     <Route element={<MainLayout />}>
                       <Route path="/" element={<Home />} />

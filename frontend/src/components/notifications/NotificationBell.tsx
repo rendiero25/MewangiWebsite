@@ -28,7 +28,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 text-gray-400 hover:text-primary transition-colors cursor-pointer rounded-full hover:bg-gray-100"
+        className="relative p-1 text-primary hover:text-primary transition-colors cursor-pointer rounded-full hover:bg-gray-100"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -72,9 +72,9 @@ export default function NotificationBell() {
                     className={`relative p-4 flex gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.isRead ? 'bg-primary/5' : ''}`}
                     onClick={() => handleNotificationClick(notification._id, notification.link, notification.isRead)}
                   >
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       {notification.sender ? (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
+                        <div className="w-10 h-10 rounded-full bg-liniear-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold">
                           {notification.sender.avatar ? (
                             <img src={notification.sender.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                           ) : (

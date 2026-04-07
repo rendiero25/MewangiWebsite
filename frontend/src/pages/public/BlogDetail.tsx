@@ -4,6 +4,9 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../../components/common/Avatar";
 import { useBreadcrumbs } from "../../context/BreadcrumbContext";
+import "react-quill-new/dist/quill.snow.css";
+
+
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 

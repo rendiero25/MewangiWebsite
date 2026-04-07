@@ -90,11 +90,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
+    setUser((prev) => {
+      if (!prev) return null;
+      const updatedUser = { ...prev, ...userData };
       localStorage.setItem('mewangi_user', JSON.stringify(updatedUser));
-    }
+      return updatedUser;
+    });
   };
 
   const logout = () => {

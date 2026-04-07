@@ -5,13 +5,15 @@ const {
   getTopics, getTopicById, createTopic, updateTopic, deleteTopic, 
   addComment, deleteComment, getMyTopics, getTopicForEdit,
   likeComment, dislikeComment, getTopCategories, getRelatedTopics,
-  likeTopic, dislikeTopic
+  likeTopic, dislikeTopic, getTopTopics
 } = require('../controllers/forumController');
 
 // Public
 router.get('/', getTopics);
 router.get('/meta/top-categories', getTopCategories);
+router.get('/meta/top-titles', getTopTopics);
 router.get('/:id', getTopicById);
+
 router.get('/:id/related', getRelatedTopics);
 
 // Protected

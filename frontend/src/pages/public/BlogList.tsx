@@ -112,14 +112,15 @@ export default function BlogList() {
                 onClick={() => { setActiveCategory(cat); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                   activeCategory === cat
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:border-indigo-300 hover:text-indigo-600'
+                    ? 'bg-primary text-white shadow-md shadow-primary/25'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/30 hover:text-primary'
                 }`}
               >
                 {cat}
               </button>
             ))}
           </div>
+
         </div>
 
         {/* Result count */}

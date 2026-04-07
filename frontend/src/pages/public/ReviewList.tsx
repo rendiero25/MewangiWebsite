@@ -15,6 +15,7 @@ interface ReviewData {
   occasion: string[];
   season: string[];
   image?: string;
+  views: number;
   createdAt: string;
 }
 
@@ -72,7 +73,7 @@ export default function ReviewList() {
               <h1 className="text-3xl sm:text-4xl font-bold text-black mb-2">
                 Review <span className="text-amber-500">Parfum</span>
               </h1>
-              <p className="text-gray-500 text-sm sm:text-base">
+              <p className="text-black text-sm sm:text-base">
                 Baca review mendalam dari komunitas. Longevity, sillage, dan value for money.
               </p>
             </div>
@@ -107,17 +108,17 @@ export default function ReviewList() {
             </svg>
           </form>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Acara:</span>
+              <span className="text-xs font-semibold text-black mr-2">Acara:</span>
               {occasions.map((occ) => (
                 <button
                   key={occ}
                   onClick={() => { setActiveOccasion(occ); setPage(1); }}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                     activeOccasion === occ
-                      ? 'bg-amber-500 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-amber-300'
+                      ? 'bg-primary text-white shadow-md shadow-primary/25'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/30 hover:text-primary'
                   }`}
                 >
                   {occ}
@@ -125,27 +126,29 @@ export default function ReviewList() {
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Musim:</span>
+              <span className="text-xs font-semibold text-black mr-2">Musim:</span>
               {seasons.map((s) => (
                 <button
                   key={s}
                   onClick={() => { setActiveSeason(s); setPage(1); }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                     activeSeason === s
-                      ? 'bg-orange-500 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'
+                      ? 'bg-primary text-white shadow-md shadow-primary/25'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/30 hover:text-primary'
                   }`}
                 >
                   {s}
                 </button>
               ))}
             </div>
+
           </div>
+
         </div>
 
         {/* Result count */}
         {!loading && (
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-black mb-4">
             {total} review ditemukan
             {search && <> untuk "<span className="font-medium text-gray-600">{search}</span>"</>}
           </p>

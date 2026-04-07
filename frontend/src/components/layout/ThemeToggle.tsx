@@ -13,7 +13,7 @@ export default function ThemeToggle() {
       {/* Theme Toggle */}
       <button
         onClick={toggleTheme}
-        className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl"
+        className="cursor-pointer p-2 text-primary hover:text-primary transition-colors hover:bg-primary/5 rounded-xl"
         title={theme === 'light' ? 'Beralih ke dark mode' : 'Beralih ke light mode'}
         aria-label={theme === 'light' ? 'Beralih ke dark mode' : 'Beralih ke light mode'}
       >
@@ -24,7 +24,7 @@ export default function ThemeToggle() {
       <div className="relative">
         <button
           onClick={() => setShowFontMenu(!showFontMenu)}
-          className="p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl font-bold"
+          className="cursor-pointer p-2 text-primary hover:text-primary transition-colors hover:bg-primary/5 rounded-xl font-bold"
           title="Ukuran font"
           aria-label="Atur ukuran font"
         >
@@ -47,7 +47,7 @@ export default function ThemeToggle() {
                   setFontSize('small');
                   setShowFontMenu(false);
                 }}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                className={`cursor-pointer w-full text-left px-4 py-2.5 text-sm transition-colors ${
                   fontSize === 'small'
                     ? 'bg-primary/10 text-primary font-semibold'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -62,7 +62,7 @@ export default function ThemeToggle() {
                   setFontSize('medium');
                   setShowFontMenu(false);
                 }}
-                className={`w-full text-left px-4 py-2.5 text-base transition-colors ${
+                className={`cursor-pointer w-full text-left px-4 py-2.5 text-base transition-colors ${
                   fontSize === 'medium'
                     ? 'bg-primary/10 text-primary font-semibold'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -77,7 +77,7 @@ export default function ThemeToggle() {
                   setFontSize('large');
                   setShowFontMenu(false);
                 }}
-                className={`w-full text-left px-4 py-2.5 text-lg transition-colors ${
+                className={`cursor-pointer w-full text-left px-4 py-2.5 text-lg transition-colors ${
                   fontSize === 'large'
                     ? 'bg-primary/10 text-primary font-semibold'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'

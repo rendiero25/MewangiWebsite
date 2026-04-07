@@ -93,19 +93,21 @@ export default function TopicCard({ topic }: TopicCardProps) {
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${colorClass}`}>
                 {topic.category?.name || 'Lainnya'}
               </span>
+
+              {topic.prefix && <span className="text-primary/70 font-bold shrink-0">{topic.prefix}</span>}
             </div>
 
             {/* Title */}
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-2 mb-1.5 flex items-center gap-2">
-              {topic.prefix && <span className="text-primary/70 font-bold shrink-0">{topic.prefix}</span>}
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-primary transition-colors truncate mb-1.5">
               {topic.title}
             </h3>
+
 
             {/* Tags */}
             {topic.tags && topic.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {topic.tags.map(tag => (
-                  <span key={tag} className="text-[10px] bg-gray-50 text-gray-400 px-2 py-0.5 rounded border border-gray-100 group-hover:border-primary/20 group-hover:text-primary/60 transition-colors">
+                  <span key={tag} className="text-[10px] bg-third text-black px-2 py-0.5 rounded border border-gray-100 group-hover:border-primary/20 group-hover:text-black transition-colors">
                     #{tag}
                   </span>
                 ))}
@@ -113,7 +115,7 @@ export default function TopicCard({ topic }: TopicCardProps) {
             )}
 
             {/* Meta */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               {topic.author?.username ? (
                 <Link to={`/profile/${topic.author.username}`} className="font-medium text-gray-600 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>{topic.author.username}</Link>
               ) : (

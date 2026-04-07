@@ -8,6 +8,9 @@ import CommentItem from '../../components/public/CommentItem';
 import SidebarDetail from '../../components/public/SidebarDetail';
 import Avatar from '../../components/common/Avatar';
 import { useBreadcrumbs } from '../../context/BreadcrumbContext';
+import { BiLike, BiSolidLike, BiDislike, BiSolidDislike } from "react-icons/bi";
+import 'react-quill-new/dist/quill.snow.css';
+import ReportModal from "../../components/public/ReportModal";
 
 gsap.registerPlugin(ScrollSmoother);
 
@@ -16,7 +19,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 function StarRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between group">
-      <span className="text-[10px] uppercase font-black text-gray-400 tracking-widest group-hover:text-amber-600 transition-colors">{label}</span>
+      <span className="text-[10px] uppercase font-black text-black group-hover:text-amber-600 transition-colors">{label}</span>
       <div className="flex items-center gap-1.5">
         <div className="flex items-center gap-0.5">
           {[1, 2, 3, 4, 5].map((star) => (
@@ -45,6 +48,9 @@ interface ReviewData {
   occasion: string[];
   season: string[];
   image?: string;
+  views: number;
+  likes: string[];
+  dislikes: string[];
   createdAt: string;
 }
 
@@ -52,16 +58,16 @@ interface CommentData {
   _id: string;
   content: string;
   author: { _id: string; username: string; avatar?: string };
-  createdAt: string;
   likes?: string[];
   dislikes?: string[];
-  review?: string;
+  createdAt: string;
 }
 
 interface RelatedReview {
   _id: string;
   title: string;
   image?: string;
+  views: number;
   createdAt: string;
 }
 
@@ -84,6 +90,10 @@ export default function ReviewDetail() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const [quotedComment, setQuotedComment] = useState<CommentData | null>(null);
+  const [reviewLikes, setReviewLikes] = useState<string[]>([]);
+  const [reviewDislikes, setReviewDislikes] = useState<string[]>([]);
+  const [reacting, setReacting] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const fetchReview = useCallback(async () => {
     setLoading(true);
@@ -91,6 +101,8 @@ export default function ReviewDetail() {
       const { data } = await axios.get(`${API_URL}/reviews/${id}`);
       setReview(data.review);
       setComments(Array.isArray(data.comments) ? data.comments : []);
+      setReviewLikes(data.review.likes || []);
+      setReviewDislikes(data.review.dislikes || []);
       setBreadcrumbTitle(location.pathname, data.review.title);
       
       const relatedRes = await axios.get(`${API_URL}/reviews/${data.review._id}/related`);
@@ -160,6 +172,38 @@ export default function ReviewDetail() {
     }
   };
 
+  const handleLikeReview = async () => {
+    if (!user || reacting) return;
+    setReacting(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/reviews/${id}/like`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setReviewLikes(data.likes);
+      setReviewDislikes(data.dislikes);
+    } catch (err) {
+      console.error("Gagal menyukai review:", err);
+    } finally {
+      setReacting(false);
+    }
+  };
+
+  const handleDislikeReview = async () => {
+    if (!user || reacting) return;
+    setReacting(true);
+    try {
+      const { data } = await axios.post(`${API_URL}/reviews/${id}/dislike`, {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      setReviewLikes(data.likes);
+      setReviewDislikes(data.dislikes);
+    } catch (err) {
+      console.error("Gagal tidak menyukai review:", err);
+    } finally {
+      setReacting(false);
+    }
+  };
+
   const handleDeleteReview = async () => {
     if (!review || !confirm('Hapus review ini?')) return;
     try {
@@ -196,18 +240,14 @@ export default function ReviewDetail() {
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-10">
-            {/* <Link to="/review" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary transition-colors font-medium">
-              ← Kembali ke Katalog Review
-            </Link> */}
-
+          <div className="lg:col-span-3 space-y-5">
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               {/* Header section: Image & Data (1 Row) */}
-              <div className="p-8 sm:p-12 border-b border-gray-100">
-                <div className="flex flex-col md:flex-row gap-10 items-center">
+              <div className="px-8 py-4 sm:px-12 sm:py-8">
+                <div className="flex flex-col md:flex-row gap-5 items-stretch">
                   {/* Left: Image */}
                   <div className="w-full md:w-[320px] shrink-0">
-                    <div className="relative aspect-4/3 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
+                    <div className="h-full relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
                       <img 
                         src={review.image?.startsWith('http') ? review.image : `${API_URL.replace('/api', '')}${review.image}`} 
                         alt={review.title} 
@@ -217,18 +257,18 @@ export default function ReviewDetail() {
                   </div>
 
                   {/* Right: Data */}
-                  <div className="flex-1 flex flex-col justify-between py-2">
+                  <div className="flex-1 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex flex-wrap gap-2">
                         {(Array.isArray(review.occasion) ? review.occasion : typeof review.occasion === 'string' ? [review.occasion] : []).map(o => (
-                          <span key={o as string} className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl">{o as string}</span>
+                          <span key={o as string} className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-xl">{o as string}</span>
                         ))}
                         {(Array.isArray(review.season) ? review.season : typeof review.season === 'string' ? [review.season] : []).map(s => (
-                          <span key={s as string} className="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-wider rounded-xl">{s as string}</span>
+                          <span key={s as string} className="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black rounded-xl">{s as string}</span>
                         ))}
                       </div>
                       
-                      <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-[1.1]">
+                      <h1 className="text-3xl font-bold text-gray-900 leading-[1.3]">
                         {review.title}
                       </h1>
 
@@ -236,16 +276,17 @@ export default function ReviewDetail() {
                         <Avatar src={review.author.avatar} size="sm" alt={review.author.username} username={review.author.username} />
                         <div className="flex flex-col">
                            <Link to={`/profile/${review.author.username}`} className="text-xs font-black text-gray-800 hover:text-primary transition-colors">{review.author.username}</Link>
-                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Contributor • {new Date(review.createdAt).toLocaleDateString()}</span>
+                           <span className="text-[10px] text-gray-500 font-bold">Contributor • {new Date(review.createdAt).toLocaleDateString()} • {review.views || 0} Dilihat</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Ratings Grid */}
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-6 bg-gray-50/80 rounded-xl border border-gray-100/50">
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-6 bg-third/25 rounded-xl border border-gray-100/50">
                       <StarRow label="Longevity" value={review.rating.longevity} />
                       <StarRow label="Sillage" value={review.rating.sillage} />
                       <StarRow label="Value" value={review.rating.valueForMoney} />
+
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 sm:border-none sm:mt-0 sm:pt-0">
                          <span className="text-[10px] uppercase font-black text-amber-600 tracking-widest">Overall Score</span>
                          <span className="text-xl font-black text-amber-600">{review.rating.overall}/5</span>
@@ -256,106 +297,282 @@ export default function ReviewDetail() {
               </div>
 
               {/* Body: Full Width Content */}
-              <div className="p-8 sm:p-12">
+              <div className="px-8 py-4 sm:px-12">
                 <div 
-                  className="prose prose-lg max-w-none text-gray-700 leading-[1.8] ql-editor"
+                  className="prose prose-lg max-w-none text-black leading-[1.8] ql-editor p-0!"
                   dangerouslySetInnerHTML={{ __html: review.content }}
                 />
               </div>
 
               {/* Actions Footer */}
-              <div className="px-12 py-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400">
-                <div className="flex gap-6 items-center">
-                  <span className="flex items-center gap-1.5"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> Review Reader</span>
-                  <span className="flex items-center gap-1.5"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> {comments.length} Comments</span>
-                </div>
-                {(isOwner || isAdmin) && (
-                  <div className="flex gap-4">
-                    {isOwner && <Link to={`/review/edit/${review._id}`} className="text-primary hover:text-primary/70 transition-colors">Edit</Link>}
-                    <button onClick={handleDeleteReview} className="text-red-500 hover:text-red-400 transition-colors cursor-pointer">Delete Record</button>
+              <div className="px-8 py-4 sm:px-12 sm:py-6 bg-gray-50/50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex flex-wrap items-center gap-6">
+                  {/* Reactions */}
+                  <div className="flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-1 group/like">
+                      <button
+                        onClick={handleLikeReview}
+                        disabled={reacting || !user}
+                        className={`p-2 rounded-full transition-all cursor-pointer ${
+                          user && reviewLikes.includes(user._id)
+                            ? "text-primary bg-primary/10 font-bold"
+                            : "text-gray-400 hover:text-primary hover:bg-primary/5"
+                        }`}
+                        title="Suka"
+                      >
+                        {user && reviewLikes.includes(user._id) ? (
+                          <BiSolidLike className="w-5 h-5" />
+                        ) : (
+                          <BiLike className="w-5 h-5" />
+                        )}
+                      </button>
+                      <span
+                        className={`text-sm font-bold min-w-4 text-center ${user && reviewLikes.includes(user._id) ? "text-primary" : "text-gray-700"}`}
+                      >
+                        {reviewLikes.length}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 group/dislike">
+                      <button
+                        onClick={handleDislikeReview}
+                        disabled={reacting || !user}
+                        className={`p-2 rounded-full transition-all cursor-pointer ${
+                          user && reviewDislikes.includes(user._id)
+                            ? "text-red-500 bg-red-100 font-bold"
+                            : "text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        }`}
+                        title="Tidak Suka"
+                      >
+                        {user && reviewDislikes.includes(user._id) ? (
+                          <BiSolidDislike className="w-5 h-5" />
+                        ) : (
+                          <BiDislike className="w-5 h-5" />
+                        )}
+                      </button>
+                      <span
+                        className={`text-sm font-bold min-w-4 text-center ${user && reviewDislikes.includes(user._id) ? "text-red-500" : "text-gray-700"}`}
+                      >
+                        {reviewDislikes.length}
+                      </span>
+                    </div>
                   </div>
-                )}
+
+                  <span className="flex items-center gap-1.5 text-black text-xs">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    {review.views || 0} Dilihat
+                  </span>
+
+                  <span className="flex items-center gap-1 text-black text-xs">
+                    💬 {comments.length} komentar
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {user && !isOwner && (
+                    <button
+                      onClick={() => setReportModalOpen(true)}
+                      className="text-xs font-bold text-black hover:text-red-500 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      🚩 Laporkan
+                    </button>
+                  )}
+                  {(isOwner || isAdmin) && (
+                    <div className="flex gap-4">
+                      {isOwner && (
+                        <Link
+                          to={`/review/edit/${review._id}`}
+                          className="text-xs font-bold text-gray-600 hover:text-primary transition-colors"
+                        >
+                          Edit
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleDeleteReview}
+                        className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors cursor-pointer"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </article>
 
-            {/* Discussions Section */}
-            <section className="space-y-6">
-              <h2 className="text-2xl font-black text-gray-900 px-4">User Discussions</h2>
-              
-              <div className="bg-white rounded-4xl border border-gray-100 p-8 shadow-sm">
+            <ReportModal
+              isOpen={reportModalOpen}
+              onClose={() => setReportModalOpen(false)}
+              targetType="Review"
+              targetId={review._id}
+            />
+
+            {/* Chat Section */}
+            <section className="space-y-6 pt-5">
+              <h2 className="text-xl font-bold text-black">
+                Diskusi ({comments.length})
+              </h2>
+
+              <div className="bg-third/50 rounded-xl border border-gray-100 p-6 space-y-2">
                 {comments.length === 0 ? (
-                  <p className="text-center text-gray-400 py-10 font-medium">No discussions yet. Share your thoughts!</p>
+                  <p className="text-center text-gray-400 py-10">
+                    Belum ada diskusi. Mulai percakapan!
+                  </p>
                 ) : (
-                  <div className="space-y-2">
-                    {(user ? comments : comments.slice(0, 5)).map(c => (
-                      <CommentItem 
-                        key={c._id} 
-                        comment={{...c, review: review._id}} 
+                  <>
+                    {(user ? comments : comments.slice(0, 5)).map((c) => (
+                      <CommentItem
+                        key={c._id}
+                        comment={{ ...c, review: review._id }}
                         onDelete={handleDeleteComment}
                         onQuote={(qc) => {
                           setQuotedComment(qc);
                           commentInputRef.current?.focus();
-                          commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          commentInputRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
                         }}
                       />
                     ))}
-                  </div>
+                    {!user && comments.length > 5 && (
+                      <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 mt-4">
+                        <p className="text-sm text-gray-500 mb-3 font-medium">
+                          Hanya 5 komentar terbaru yang ditampilkan.
+                        </p>
+                        <Link
+                          to="/login"
+                          className="inline-block bg-primary text-white px-8 py-2 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all cursor-pointer"
+                        >
+                          Masuk untuk Melihat Selengkapnya
+                        </Link>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* Add Comment */}
+              {/* Comment Input */}
               {user ? (
-                <form onSubmit={handleAddComment} className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-                  {error && <p className="text-red-500 text-xs mb-3 italic">⚠️ {error}</p>}
+                <form
+                  onSubmit={handleAddComment}
+                  className="bg-white rounded-xl border border-gray-300 p-3"
+                >
+                  {error && (
+                    <p className="text-red-500 text-xs mb-3 italic">
+                      ⚠️ {error}
+                    </p>
+                  )}
+
                   {quotedComment && (
-                    <div className="mb-3 p-3 bg-gray-50 border-l-4 border-primary rounded-r-xl flex justify-between items-start">
+                    <div className="p-3 bg-gray-50 border-primary rounded-xl flex justify-between items-start">
                       <div>
-                        <p className="text-[10px] font-bold text-primary mb-1">Membalas @{quotedComment.author.username}</p>
-                        <div className="text-xs text-gray-500 line-clamp-1 italic" dangerouslySetInnerHTML={{ __html: quotedComment.content }} />
+                        <p className="text-[10px] font-bold text-primary mb-1">
+                          Membalas @{quotedComment.author.username}
+                        </p>
+                        <div
+                          className="text-xs text-gray-500 line-clamp-1 italic"
+                          dangerouslySetInnerHTML={{
+                            __html: quotedComment.content,
+                          }}
+                        />
                       </div>
-                      <button onClick={() => setQuotedComment(null)} className="text-gray-400 hover:text-red-500 transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+
+                      <button
+                        type="button"
+                        onClick={() => setQuotedComment(null)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     </div>
                   )}
-                  <textarea 
-                    ref={commentInputRef}
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder={quotedComment ? `Balas @${quotedComment.author.username}...` : "Add to the conversation..."}
-                    rows={3}
-                    className="w-full p-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all resize-none text-sm"
-                  />
-                  <div className="mt-4 flex items-center justify-between">
-                    <label className="cursor-pointer p-2 text-gray-400 hover:text-primary transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <input type="file" className="hidden" accept="image/*" ref={fileInputRef} onChange={handleFileChange} />
-                    </label>
-                    <button 
-                      type="submit" 
-                      disabled={submitting}
-                      className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-                    >
-                      {submitting ? '...' : 'Post Reply'}
-                    </button>
+
+                  <div className="relative rounded-xl transition-all overflow-hidden">
+                    <textarea
+                      ref={commentInputRef}
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder={
+                        quotedComment
+                          ? `Balas @${quotedComment.author.username}...`
+                          : "Tulis balasan Anda..."
+                      }
+                      rows={2}
+                      className="w-full p-4 bg-transparent transition-all resize-none text-sm focus:outline-none focus:ring-0"
+                    />
+
+                    {imagePreview && (
+                      <div className="px-4 pb-4">
+                        <div className="relative w-24 h-24 group">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-xl shadow-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCommentImage(null);
+                              setImagePreview("");
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg cursor-pointer transform transition hover:scale-110"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        <label
+                          className="cursor-pointer p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                          title="Unggah Gambar"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*,image/gif"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                          />
+                        </label>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
+                      >
+                        {submitting ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          "Kirim Balasan"
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  {imagePreview && (
-                    <div className="mt-3 relative w-32 h-32">
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl border border-gray-100" />
-                      <button onClick={() => {setCommentImage(null); setImagePreview('');}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg cursor-pointer">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                    </div>
-                  )}
                 </form>
               ) : (
-                <div className="p-10 bg-amber-600 rounded-2xl text-center text-white shadow-2xl shadow-amber-200">
-                  <p className="font-black text-xl mb-6 uppercase tracking-widest">Join the Discussion</p>
-                  <Link to="/login" className="inline-block bg-white text-amber-600 px-12 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-colors shadow-xl">
-                    Authorized Access Only
-                  </Link>
+                <div className="p-6 bg-gray-100 rounded-xl text-center text-sm text-gray-500 italic">
+                  Silakan {" "}
+                  <Link to="/login" className="text-primary font-bold hover:underline">Masuk</Link> {" "}
+                  untuk bergabung dalam diskusi ini.
                 </div>
               )}
             </section>
@@ -369,7 +586,7 @@ export default function ReviewDetail() {
                     <Link key={t._id} to={`/review/${t._id}`} className="group bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-2xl transition-all overflow-hidden flex flex-col h-full">
                       <div className="aspect-16/10 overflow-hidden bg-gray-100">
                         {t.image ? (
-                          <img src={`${API_URL.replace('/api', '')}${t.image}`} alt={t.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          <img src={t.image.startsWith('http') ? t.image : `${API_URL.replace('/api', '')}${t.image}`} alt={t.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-200"><svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" /></svg></div>
                         )}

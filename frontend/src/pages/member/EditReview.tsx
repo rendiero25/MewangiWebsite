@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
+
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const occasions = ['Sehari-hari', 'Kantor', 'Kencan', 'Pesta', 'Olahraga', 'Formal'];
@@ -287,6 +289,7 @@ export default function EditReview() {
                   className="h-64 mb-12 sm:mb-10 text-sm"
                 />
               </div>
+
             </div>
 
 

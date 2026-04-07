@@ -82,8 +82,9 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
+  // Re-fetch when token or basic profile changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.token]);
+  }, [user?.token, user?.username, user?.avatar]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 

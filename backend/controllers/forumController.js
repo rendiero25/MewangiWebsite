@@ -537,9 +537,6 @@ const dislikeComment = async (req, res) => {
   }
 };
 
-// @desc    Get top categories forum
-// @route   GET /api/forum/meta/top-categories
-// @access  Public
 const getTopCategories = async (req, res) => {
   try {
     const categories = await ForumTopic.aggregate([
@@ -560,12 +557,13 @@ const getTopCategories = async (req, res) => {
     ]);
     res.json(categories);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Gagal mengambil kategori", error: error.message });
+    res.status(500).json({ message: "Gagal mengambil kategori", error: error.message });
   }
 };
 
+// @desc    Get related topics
+// @route   GET /api/forum/:id/related
+// @access  Public
 const getRelatedTopics = async (req, res) => {
   try {
     const { id } = req.params;
@@ -575,22 +573,47 @@ const getRelatedTopics = async (req, res) => {
     if (!topic)
       return res.status(404).json({ message: "Topik tidak ditemukan" });
 
-    const related = await ForumTopic.find({
-      _id: { $ne: topic._id },
-      category: topic.category,
-      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
-    })
-      .limit(5)
-      .select("title createdAt");
+    const related = await ForumTopic.aggregate([
+      {
+        $match: {
+          _id: { $ne: topic._id },
+          $or: [
+            { status: "approved" },
+            { status: "pending", hasBeenApproved: true },
+          ],
+        },
+      },
+      { $sample: { size: 4 } },
+      { $project: { title: 1, createdAt: 1, slug: 1 } },
+    ]);
 
     res.json(related);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Gagal mengambil topik terkait", error: error.message });
+    res.status(500).json({ message: "Gagal mengambil topik terkait", error: error.message });
   }
 };
 
+// @desc    Get top titles forum (trending)
+// @route   GET /api/forum/meta/top-titles
+// @access  Public
+const getTopTopics = async (req, res) => {
+  try {
+    const topics = await ForumTopic.find({
+      $or: [{ status: "approved" }, { status: "pending", hasBeenApproved: true }],
+    })
+      .sort({ views: -1 })
+      .limit(5)
+      .select("title slug views");
+
+    res.json(topics);
+  } catch (error) {
+    res.status(500).json({ message: "Gagal mengambil topik terpopuler", error: error.message });
+  }
+};
+
+// @desc    Like topik
+// @route   POST /api/forum/:id/like
+// @access  Private
 const likeTopic = async (req, res) => {
   try {
     const { id } = req.params;
@@ -634,6 +657,9 @@ const likeTopic = async (req, res) => {
   }
 };
 
+// @desc    Dislike topik
+// @route   POST /api/forum/:id/dislike
+// @access  Private
 const dislikeTopic = async (req, res) => {
   try {
     const { id } = req.params;
@@ -692,4 +718,5 @@ module.exports = {
   dislikeComment,
   getTopCategories,
   getRelatedTopics,
+  getTopTopics,
 };

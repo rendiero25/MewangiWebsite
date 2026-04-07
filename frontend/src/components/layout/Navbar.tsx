@@ -54,13 +54,13 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Right Actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             <ThemeToggle />
             {user ? (
               <div className="flex items-center gap-3">
                 <button 
                   onClick={toggleChat}
-                  className="relative p-2 text-gray-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                  className="relative p-2 text-primary hover:text-primary transition-colors hover:bg-primary/5 rounded-xl block focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                   title="Pesan"
                   aria-label="Direct messages"
                 >
@@ -71,11 +71,13 @@ export default function Navbar() {
                     </span>
                   )}
                 </button>
+
                 <NotificationBell />
+                
                 <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                   aria-expanded={profileOpen}
                   aria-haspopup="menu"
                   aria-label={`Toggle profile menu for ${user.username}`}

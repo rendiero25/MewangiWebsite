@@ -7,12 +7,22 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TextPlugin } from "gsap/TextPlugin";
 
+import sitiAvatar from "../../assets/sitinurhaliza.jpg";
+import raraAvatar from "../../assets/rarajonggrang.jpg";
+import dwiAvatar from "../../assets/dwisasongko.jpg";
+
+import Avatar from "../../components/common/Avatar";
+
 gsap.registerPlugin(ScrollTrigger, TextPlugin);
+
+
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 interface Article { _id: string; title: string; slug: string; category: string; coverImage?: string; author: { username: string; avatar?: string }; createdAt: string; excerpt?: string; }
-interface Review { _id: string; title: string; author: { username: string; avatar?: string }; rating: { overall: number }; createdAt: string; }
+interface Review { _id: string; title: string; image?: string; author: { username: string; avatar?: string }; rating: { overall: number }; createdAt: string; }
+
+
 interface Topic { _id: string; title: string; slug: string; category: { name: string }; author: { username: string; avatar?: string }; replyCount: number; createdAt: string; }
 
 export default function Home() {
@@ -35,7 +45,8 @@ export default function Home() {
         const [artRes, revRes, topicRes] = await Promise.allSettled([
           axios.get(`${API_URL}/articles?limit=3&status=approved`),
           axios.get(`${API_URL}/reviews?limit=3&status=approved`),
-          axios.get(`${API_URL}/forum?limit=3&status=approved`),
+          axios.get(`${API_URL}/forum?limit=5&status=approved`),
+
         ]);
         if (artRes.status === 'fulfilled') setLatestArticles(artRes.value.data.articles || artRes.value.data || []);
         if (revRes.status === 'fulfilled') setLatestReviews(revRes.value.data.reviews || revRes.value.data || []);
@@ -411,9 +422,9 @@ export default function Home() {
           {/* Scroll Indicator dengan animation */}
           <div
             ref={scrollIndicatorRef}
-            className="flex flex-col items-center justify-center mt-20 opacity-50"
+            className="flex flex-col items-center justify-center mt-20"
           >
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-md text-primary mb-2">
               Scroll untuk lanjut
             </p>
             <svg
@@ -436,15 +447,15 @@ export default function Home() {
       {/* Features Section dengan ScrollTrigger */}
       <section
         ref={featuresRef}
-        className="py-20 lg:py-28 bg-third/25"
+        className="py-20 bg-third/25"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Title dengan animation */}
           <div className="text-center mb-20">
-            <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
-              Kenapa <span className="highlight-text text-primary">Mewangi</span>?
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
+              <span className="highlight-text text-secondary">Kenapa Mewangi?</span>
             </h2>
-            <p className="text-primary max-w-2xl mx-auto text-lg leading-relaxed">
+            <p className="text-black max-w-2xl mx-auto text-lg leading-relaxed">
               Platform lengkap untuk para pecinta parfum di Indonesia. Dengan
               fitur-fitur canggih, moderasi terbaik, dan komunitas yang ramah.
             </p>
@@ -455,7 +466,7 @@ export default function Home() {
               {
                 icon: (
                   <svg
-                    className="w-7 h-7"
+                    className="w-15 h-15"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -476,7 +487,7 @@ export default function Home() {
               {
                 icon: (
                   <svg
-                    className="w-7 h-7"
+                    className="w-15 h-15"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -497,7 +508,7 @@ export default function Home() {
               {
                 icon: (
                   <svg
-                    className="w-7 h-7"
+                    className="w-15 h-15"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -518,7 +529,7 @@ export default function Home() {
               {
                 icon: (
                   <svg
-                    className="w-7 h-7"
+                    className="w-15 h-15"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -539,7 +550,7 @@ export default function Home() {
               {
                 icon: (
                   <svg
-                    className="w-7 h-7"
+                    className="w-15 h-15"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -560,7 +571,7 @@ export default function Home() {
               {
                 icon: (
                   <svg
-                    className="w-7 h-7"
+                    className="w-15 h-15"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -608,15 +619,15 @@ export default function Home() {
       </section>
 
       {/* How It Works - The Perfect Journey */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Title */}
           <div className="text-center mb-20">
-            <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
-              Perjalanan Sempurna Kamu di{" "}
-              <span className="highlight-text text-primary">Mewangi</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
+              <span className="highlight-text text-black">
+                Perjalanan Sempurna Kamu di{" "}Mewangi</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            <p className="text-black max-w-2xl mx-auto text-lg">
               Bergabunglah dalam 4 langkah mudah dan mulai jelajahi dunia
               parfum bersama ribuan enthusiast lainnya.
             </p>
@@ -678,7 +689,7 @@ export default function Home() {
 
                 {/* Details reveal on hover */}
                 <div className="pt-4 border-t border-gray-300 dark:border-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                  <p className="text-xs dark:text-black italic">
                     {item.details}
                   </p>
                 </div>
@@ -692,13 +703,13 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section dengan scroll animation */}
-      <section className="py-20 lg:py-28 bg-linear-to-b from-white to-third/25">
+      <section className="pb-20 bg-linear-to-b from-white to-third/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
-              Apa Kata Komunitas?
+            <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
+              <span className="highlight-text text-black">Apa Kata Komunitas?</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-black max-w-2xl mx-auto">
               Dengarkan pengalaman ribuan pengguna Mewangi yang telah menemukan
               parfum impian mereka.
             </p>
@@ -713,7 +724,7 @@ export default function Home() {
                 content:
                   "Mewangi benar-benar mengubah cara saya memilih parfum. Reviewnya detail dan komunitynya sangat helpful!",
                 rating: 5,
-                avatar: "👩‍🦰",
+                avatar: sitiAvatar,
               },
               {
                 author: "Rara Jonggrang",
@@ -722,7 +733,7 @@ export default function Home() {
                 content:
                   "Platform terbaik untuk share fragrance knowledge. Moderatornya profesional dan diskusinya berkualitas.",
                 rating: 5,
-                avatar: "👩‍💼",
+                avatar: raraAvatar,
               },
               {
                 author: "Dwi Sasongko",
@@ -731,7 +742,7 @@ export default function Home() {
                 content:
                   "Sebagai seller, Mewangi membantu saya understand customer preferences dengan lebih baik.",
                 rating: 5,
-                avatar: "👨‍💻",
+                avatar: dwiAvatar,
               },
             ].map((testimonial) => (
               <div
@@ -748,18 +759,25 @@ export default function Home() {
                 </div>
 
                 {/* Quote */}
-                <p className="text-gray-700 italic mb-6 leading-relaxed">
+                <p className="text-black italic mb-6 font-medium">
                   &quot;{testimonial.content}&quot;
                 </p>
 
                 {/* Author */}
                 <div className="flex items-center gap-4 pt-6 border-t border-gray-200">
-                  <div className="text-4xl">{testimonial.avatar}</div>
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 shrink-0">
+                    <img 
+                      src={testimonial.avatar} 
+                      alt={testimonial.author} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
                   <div>
                     <p className="font-bold text-black">
                       {testimonial.author}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-black">
                       {testimonial.role} • {testimonial.city}
                     </p>
                   </div>
@@ -773,7 +791,7 @@ export default function Home() {
       {/* ===== LATEST CONTENT SECTIONS ===== */}
 
       {/* Latest Reviews */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div>
@@ -782,7 +800,7 @@ export default function Home() {
                 Terbaru
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-black">Review <span className="text-amber-500">Terpilih</span></h2>
-              <p className="text-gray-500 mt-2 text-sm">Review parfum terbaru dari komunitas Mewangi.</p>
+              <p className="text-black mt-2 text-sm">Review parfum terbaru dari komunitas Mewangi.</p>
             </div>
             <Link to="/review" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary transition-colors group">
               Lihat Semua
@@ -794,10 +812,31 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestReviews.slice(0, 3).map((review, idx) => (
                 <Link key={review._id} to={`/review/${review._id}`}
-                  className="group relative bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-2xl hover:shadow-amber-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                  className="group flex flex-col bg-white border border-gray-100 rounded-2xl hover:shadow-2xl hover:shadow-amber-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
                 >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-[4rem] -mr-6 -mt-6 group-hover:bg-amber-100 transition-colors" />
-                  <div className="relative">
+                  {/* Review Image */}
+                  <div className="h-44 overflow-hidden bg-liniear-to-br from-amber-400/10 to-orange-500/10 relative shrink-0">
+                    {review.image ? (
+                      <img
+                        src={review.image.startsWith('/') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${review.image}` : review.image}
+                        alt={review.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center group-hover:from-amber-400/20 group-hover:to-orange-500/20 transition-all">
+                         <svg className="w-12 h-12 text-amber-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                         </svg>
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-xs px-2 py-1 rounded-lg text-[10px] font-black text-amber-600 shadow-sm border border-amber-100">
+                      RANK #{idx + 1}
+                    </div>
+                  </div>
+
+                  <div className="p-6 flex flex-col flex-1 relative">
+
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1">
                         {[1,2,3,4,5].map(s => (
@@ -806,18 +845,21 @@ export default function Home() {
                           </svg>
                         ))}
                       </div>
-                      <span className="text-[10px] text-gray-400 font-medium">#{idx + 1}</span>
+                      <span className="text-[16px] text-gray-400 font-medium">#{idx + 1}</span>
                     </div>
                     <h3 className="font-bold text-gray-900 mb-3 leading-snug group-hover:text-amber-600 transition-colors line-clamp-2">{review.title}</h3>
-                    <div className="flex items-center gap-2 mt-auto">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-black">
-                        {review.author?.username?.[0]?.toUpperCase() || '?'}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-gray-700">{review.author?.username || 'Anonymous'}</p>
-                        <p className="text-[10px] text-gray-400">{new Date(review.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    <div className="flex items-center gap-3 mt-auto pt-4 border-t border-gray-50">
+                      <Avatar 
+                        src={review.author?.avatar}
+                        username={review.author?.username}
+                        size="sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-black truncate">{review.author?.username || 'Anonymous'}</p>
+                        <p className="text-[10px] text-primary">{new Date(review.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
                       </div>
                     </div>
+
                   </div>
                 </Link>
               ))}
@@ -834,7 +876,7 @@ export default function Home() {
       </section>
 
       {/* Latest Forum Topics */}
-      <section className="py-20 lg:py-28 bg-third/25">
+      <section className="py-20 bg-third/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div>
@@ -843,7 +885,7 @@ export default function Home() {
                 Diskusi Aktif
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-black">Topik <span className="text-primary">Forum</span></h2>
-              <p className="text-gray-500 mt-2 text-sm">Ikut bergabung dalam diskusi parfum terkini.</p>
+              <p className="text-black mt-2 text-sm">Ikut bergabung dalam diskusi parfum terkini.</p>
             </div>
             <Link to="/forum" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary transition-colors group">
               Lihat Semua
@@ -853,7 +895,8 @@ export default function Home() {
 
           {latestTopics.length > 0 ? (
             <div className="space-y-4">
-              {latestTopics.slice(0, 3).map((topic, idx) => (
+              {latestTopics.slice(0, 5).map((topic, idx) => (
+
                 <Link key={topic._id} to={`/forum/${topic._id}`}
                   className="group flex items-center gap-5 bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-xl hover:shadow-emerald-100/40 hover:-translate-y-0.5 hover:border-primary/20 transition-all duration-300"
                 >
@@ -863,7 +906,7 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 truncate group-hover:text-primary transition-colors">{topic.title}</h3>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-400">{topic.author?.username || 'Anonymous'}</span>
+                      <span className="text-xs text-black">{topic.author?.username || 'Anonymous'}</span>
                       {topic.category?.name && (
                         <span className="text-[10px] px-2 py-0.5 bg-primary/5 text-primary rounded-full font-bold">{topic.category.name}</span>
                       )}
@@ -889,7 +932,7 @@ export default function Home() {
       </section>
 
       {/* Latest Articles */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12">
             <div>
@@ -898,7 +941,7 @@ export default function Home() {
                 Blog & Edukasi
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-black">Artikel <span className="text-indigo-600">Terbaru</span></h2>
-              <p className="text-gray-500 mt-2 text-sm">Perluas pengetahuanmu seputar dunia parfum.</p>
+              <p className="text-black mt-2 text-sm">Perluas pengetahuanmu seputar dunia parfum.</p>
             </div>
             <Link to="/blog" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary transition-colors group">
               Lihat Semua
@@ -931,14 +974,17 @@ export default function Home() {
                       <span className="inline-block text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-bold mb-3">{article.category}</span>
                     )}
                     <h3 className="font-bold text-gray-900 leading-snug mb-3 group-hover:text-indigo-600 transition-colors line-clamp-2">{article.title}</h3>
-                    {article.excerpt && <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed">{article.excerpt}</p>}
+                    {article.excerpt && <p className="text-xs text-black line-clamp-2 mb-4 leading-relaxed">{article.excerpt}</p>}
                     <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white text-[10px] font-black">
-                        {article.author?.username?.[0]?.toUpperCase() || '?'}
-                      </div>
-                      <p className="text-xs text-gray-500 font-medium">{article.author?.username || 'Anonymous'}</p>
-                      <span className="text-gray-300">·</span>
-                      <p className="text-xs text-gray-400">{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                      <Avatar 
+                        src={article.author?.avatar}
+                        username={article.author?.username}
+                        size="sm"
+                      />
+                      <p className="text-xs text-black font-medium">{article.author?.username || 'Anonymous'}</p>
+
+                      <span className="text-black">·</span>
+                      <p className="text-xs text-primary">{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
                     </div>
                   </div>
                 </Link>
@@ -956,7 +1002,7 @@ export default function Home() {
       </section>
 
       {/* Stats Showcase Section dengan ScrollTrigger */}
-      <section className="pt-20 lg:pt-28 bg-white">
+      {/* <section className="pt-20 lg:pt-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -1003,10 +1049,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Enhanced CTA Section dengan ScrollTrigger */}
-      <section className="cta-section py-20 lg:py-28">
+      <section className="cta-section py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-primary via-secondary to-primary p-12 sm:p-16 lg:p-20 text-center">
             {/* Animated background */}
@@ -1118,13 +1164,13 @@ export default function Home() {
       </section>
 
       {/* FAQ Section untuk membantu konversi */}
-      <section className="py-20 lg:py-28 bg-linear-to-b from-third/25 to-third/25">
+      <section className="py-20 bg-linear-to-b from-third/25 to-third/25">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-black mb-4">
               Pertanyaan Umum
             </h2>
-            <p className="text-gray-600">
+            <p className="text-black">
               Jawaban untuk pertanyaan yang sering ditanyakan oleh anggota baru.
             </p>
           </div>
@@ -1158,7 +1204,7 @@ export default function Home() {
                     ▼
                   </span>
                 </summary>
-                <p className="text-gray-600 mt-4">{faq.a}</p>
+                <p className="text-primary mt-4">{faq.a}</p>
               </details>
             ))}
           </div>
