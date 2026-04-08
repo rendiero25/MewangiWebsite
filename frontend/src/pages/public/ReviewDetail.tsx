@@ -577,6 +577,11 @@ export default function ReviewDetail() {
               )}
             </section>
 
+            {/* Mobile Sidebar */}
+            <div className="lg:hidden mt-8">
+              <SidebarDetail type="review" />
+            </div>
+
             {/* Related Reviews */}
             {relatedReviews.length > 0 && (
               <section className="space-y-6 pt-10">

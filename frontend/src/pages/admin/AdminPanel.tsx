@@ -3,13 +3,14 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminReports from './AdminReports';
+import AdminSettings from './AdminSettings';
 import { MdBlock, MdCheckCircle } from 'react-icons/md';
 import Avatar from '../../components/common/Avatar';
 import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users' | 'reports';
+type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users' | 'reports' | 'settings';
 
 interface Stats { 
   totalUsers: number; 
@@ -217,7 +218,8 @@ export default function AdminPanel() {
     { key: 'articles', label: 'Artikel', count: pendingArticles.length },
     { key: 'topics', label: 'Topik Forum', count: pendingTopics.length },
     { key: 'users', label: 'Users' },
-    { key: 'reports', label: 'Laporan', count: 0 }, // We can fetch count if needed
+    { key: 'reports', label: 'Laporan', count: 0 },
+    { key: 'settings', label: 'Pengaturan' },
   ];
 
   return (
@@ -728,6 +730,9 @@ export default function AdminPanel() {
         )}
         {activeTab === 'reports' && (
           <AdminReports />
+        )}
+        {activeTab === 'settings' && (
+          <AdminSettings />
         )}
       </div>
 

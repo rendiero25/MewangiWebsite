@@ -531,6 +531,11 @@ export default function BlogDetail() {
                 </div>
               )}
             </section>
+
+            {/* Mobile Sidebar */}
+            <div className="lg:hidden mt-10">
+              <SidebarDetail type="blog" />
+            </div>
           </div>
 
           {/* Sidebar */}

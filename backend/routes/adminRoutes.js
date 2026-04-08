@@ -25,7 +25,7 @@ router.get('/audit-logs', getAuditLogs);
 
 // Global Settings
 router.get('/settings', getSettings);
-router.put('/settings', updateSettings);
+router.put('/settings', upload.single('aboutMissionImage'), upload.cloudinaryUpload('settings'), updateSettings);
 
 // Review approval
 router.get('/reviews/pending', getPendingReviews);

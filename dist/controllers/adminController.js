@@ -663,16 +663,42 @@ const getSettings = async (req, res) => {
   }
 };
 
+// @desc    Get Public Settings (Subset)
+// @route   GET /api/settings
+// @access  Public
+const getPublicSettings = async (req, res) => {
+  try {
+    const settings = await Settings.findOne().select('forumName forumDescription logo aboutMissionImage');
+    if (!settings) {
+      return res.json({
+        forumName: 'Mewangi Forum',
+        forumDescription: 'Komunitas pecinta parfum Indonesia',
+        logo: '',
+        aboutMissionImage: ''
+      });
+    }
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil pengaturan publik', error: error.message });
+  }
+};
+
 // @desc    Update Global Settings
 // @route   PUT /api/admin/settings
 // @access  Private (admin only)
 const updateSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      updateData.aboutMissionImage = getUploadedUrl(req);
+    }
+
     if (!settings) {
-      settings = await Settings.create(req.body);
+      settings = await Settings.create(updateData);
     } else {
-      Object.assign(settings, req.body);
+      Object.assign(settings, updateData);
       await settings.save();
     }
 
@@ -786,7 +812,7 @@ module.exports = {
   banUser, unbanUser, issueWarning,
   banIP, getAuditLogs,
   createCategory, updateCategory, deleteCategory,
-  getSettings, updateSettings,
+  getSettings, updateSettings, getPublicSettings,
   adminUpdateUser,
   createPerfume, updatePerfume, deletePerfume,
   getDashboardStats,

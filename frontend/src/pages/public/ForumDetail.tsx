@@ -686,6 +686,11 @@ export default function ForumDetail() {
               )}
             </section>
 
+            {/* Mobile Sidebar */}
+            <div className="lg:hidden">
+              <SidebarDetail type="forum" />
+            </div>
+
             {/* Other Discussions */}
             <section className="space-y-4">
               <h3 className="text-lg font-bold text-gray-900 px-1">

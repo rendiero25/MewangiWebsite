@@ -29,6 +29,10 @@ const settingsSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  aboutMissionImage: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

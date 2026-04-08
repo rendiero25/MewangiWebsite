@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import ScrollSmoother from 'gsap/ScrollSmoother';
@@ -8,6 +9,25 @@ gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 export default function About() {
   const [activeFeature, setActiveFeature] = useState(0);
+  const [missionImage, setMissionImage] = useState<string>('');
+  
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/settings`);
+        if (res.data.aboutMissionImage) {
+          setMissionImage(res.data.aboutMissionImage.startsWith('http') 
+            ? res.data.aboutMissionImage 
+            : `${API_URL.replace('/api', '')}${res.data.aboutMissionImage}`);
+        }
+      } catch (err) {
+        console.error('Gagal memuat pengaturanAbout:', err);
+      }
+    };
+    fetchSettings();
+  }, [API_URL]);
 
   const features = [
 // ... (rest of features stays the same)
@@ -127,17 +147,10 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative">
-              <div className="aspect-square rounded-xl overflow-hidden shadow-2xl rotate-3 scale-95 border-8 border-white">
+              <div className="aspect-square rounded-xl overflow-hidden shadow-2xl rotate-3 scale-75 border-8 border-white">
                 <img 
-                  src="https://images.unsplash.com/photo-1541643600914-78b084683601?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
-                  alt="Parfum" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -left-6 aspect-square w-48 rounded-xl overflow-hidden shadow-xl -rotate-6 border-4 border-white hidden sm:block">
-                <img 
-                  src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
-                  alt="Parfum" 
+                  src={missionImage || "https://images.unsplash.com/photo-1541643600914-78b084683601?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"} 
+                  alt="Misi Mewangi" 
                   className="w-full h-full object-cover"
                 />
               </div>

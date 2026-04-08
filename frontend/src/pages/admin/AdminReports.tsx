@@ -77,8 +77,8 @@ export default function AdminReports() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
         <div>
-          <h2 className="text-xl font-black text-gray-900 mb-1">Queue Laporan Komunitas</h2>
-          <p className="text-sm text-gray-500">Tinjau dan tangani konten yang dilaporkan oleh user.</p>
+          <h2 className="text-xl font-bold text-black mb-1">Queue Laporan Komunitas</h2>
+          <p className="text-sm text-black">Tinjau dan tangani konten yang dilaporkan oleh user.</p>
         </div>
         
         <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100">
