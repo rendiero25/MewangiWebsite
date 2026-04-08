@@ -171,28 +171,6 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50/50 py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Header Stats */}
-          {user?.statistik && (
-            <div className="bg-linear-to-r from-primary/10 to-secondary/10 px-8 py-6 border-b border-gray-100 grid grid-cols-4 gap-4 text-center">
-              <div>
-                <p className="text-xl font-bold text-primary">{user.statistik.posts}</p>
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Posts</p>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-primary">{user.statistik.threads}</p>
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Threads</p>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-primary">{user.statistik.reactions}</p>
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Reactions</p>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-primary">{user.statistik.reputation}</p>
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Reputation</p>
-              </div>
-            </div>
-          )}
-
           <div className="p-8 sm:p-12">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Avatar Upload */}

@@ -49,20 +49,47 @@ import DirectMessages from './pages/public/DirectMessages';
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
 
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ScrollSmoother } from 'gsap/ScrollSmoother';
+
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
 // Layout wrapper with Navbar & Footer
 function MainLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Only initialize ScrollSmoother on desktop/large screens if preferred, 
+    // or everywhere if the user wants it.
+    const ctx = gsap.context(() => {
+      ScrollSmoother.create({
+        wrapper: '#smooth-wrapper',
+        content: '#smooth-content',
+        smooth: 1.2,
+        effects: true,
+      });
+    });
+
+    return () => ctx.revert();
+  }, [location.pathname]); // Re-init or refresh on route change if needed
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <SkipToMain />
+    <div id="smooth-wrapper" className="bg-gray-50/50">
       <Navbar />
-      <main id="main-content" className="flex-1" tabIndex={-1}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-          <Breadcrumbs />
+      <div id="smooth-content">
+        <div className="flex flex-col min-h-screen">
+          <SkipToMain />
+          <main id="main-content" className="flex-1" tabIndex={-1}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+              <Breadcrumbs />
+            </div>
+            <Outlet />
+          </main>
+          <Footer />
         </div>
-        <Outlet />
-      </main>
+      </div>
       <ChatPopup />
-      <Footer />
     </div>
   );
 }

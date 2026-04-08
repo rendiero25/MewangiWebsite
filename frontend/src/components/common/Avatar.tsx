@@ -8,6 +8,7 @@ interface AvatarProps {
   className?: string;
   username?: string;
   href?: string;
+  disableLink?: boolean;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -23,7 +24,7 @@ const sizeClasses = {
   'full': 'w-full h-full',
 };
 
-const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', className = '', username, href }) => {
+const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', className = '', username, href, disableLink = false }) => {
   const fullSrc = useMemo(() => {
     if (!src) return null;
     if (src.startsWith('http')) return src;
@@ -35,7 +36,7 @@ const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', clas
 
   const sizeClass = sizeClasses[size];
   
-  const profileLink = href || (username ? `/profile/${username}` : null);
+  const profileLink = !disableLink && (href || (username ? `/profile/${username}` : null));
 
   const avatarContent = (
     <div className={`${sizeClass} rounded-full overflow-hidden bg-gray-50 flex items-center justify-center shrink-0 border border-gray-100 dark:border-gray-800 shadow-xs ${className}`}>
@@ -65,7 +66,7 @@ const Avatar: React.FC<AvatarProps> = ({ src, alt = 'Profile', size = 'md', clas
   );
 
   if (profileLink) {
-    return <Link to={profileLink} className="no-underline hover:opacity-80 transition-opacity">{avatarContent}</Link>;
+    return <Link to={profileLink} className="no-underline hover:opacity-80 transition-opacity" onClick={(e) => e.stopPropagation()}>{avatarContent}</Link>;
   }
 
   return avatarContent;

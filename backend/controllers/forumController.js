@@ -434,6 +434,7 @@ const getMyTopics = async (req, res) => {
   try {
     const topics = await ForumTopic.find({ author: req.user._id })
       .select("-content")
+      .populate("category", "name")
       .sort({ createdAt: -1 });
 
     res.json(topics);

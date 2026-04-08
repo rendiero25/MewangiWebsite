@@ -2,6 +2,9 @@ const User = require('../models/User');
 const ForumComment = require('../models/ForumComment');
 const ArticleComment = require('../models/ArticleComment');
 const ReviewComment = require('../models/ReviewComment');
+const ForumTopic = require('../models/ForumTopic');
+const Article = require('../models/Article');
+const Review = require('../models/Review');
 const path = require('path');
 const fs = require('fs');
 const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
@@ -255,4 +258,54 @@ const unfollowUser = async (req, res) => {
   }
 };
 
-module.exports = { updateProfile, getTopMembers, getUserProfile, followUser, unfollowUser };
+// @desc    Get user activity
+// @route   GET /api/users/profile/:id/activity
+// @access  Public
+const getUserActivity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let query = { _id: id };
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      query = { username: id };
+    }
+    const user = await User.findOne(query);
+    if (!user) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    const userId = user._id;
+
+    const [topics, articles, reviews] = await Promise.all([
+      ForumTopic.find({ author: userId, status: 'approved' })
+        .select('title createdAt slug category')
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+      Article.find({ author: userId, status: 'approved' })
+        .select('title createdAt slug category')
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+      Review.find({ author: userId, status: 'approved' })
+        .select('title createdAt')
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean()
+    ]);
+
+    // Format output
+    const formattedTopics = topics.map(t => ({ _id: t._id, title: t.title, type: 'forum', url: `/forum/${t._id}`, createdAt: t.createdAt }));
+    const formattedArticles = articles.map(a => ({ _id: a._id, title: a.title, type: 'article', url: `/blog/${a.slug}`, createdAt: a.createdAt }));
+    const formattedReviews = reviews.map(r => ({ _id: r._id, title: r.title, type: 'review', url: `/review/${r._id}`, createdAt: r.createdAt }));
+
+    const allActivities = [...formattedTopics, ...formattedArticles, ...formattedReviews]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
+
+    res.json(allActivities);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil aktivitas user', error: error.message });
+  }
+};
+
+module.exports = { updateProfile, getTopMembers, getUserProfile, getUserActivity, followUser, unfollowUser };

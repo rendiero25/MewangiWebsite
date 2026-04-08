@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../common/Avatar';
 
 interface TopicCardProps {
@@ -48,18 +48,29 @@ function timeAgo(dateStr: string) {
 }
 
 export default function TopicCard({ topic }: TopicCardProps) {
+  const navigate = useNavigate();
   const categorySlug = (topic.category?.slug || 'lainnya') as keyof typeof categoryColors;
   const colorClass = categoryColors[categorySlug] || categoryColors['lainnya'];
 
+  const handleCardClick = () => {
+    navigate(`/forum/${topic.slug || topic._id}`);
+  };
+
   return (
-    <Link
-      to={`/forum/${topic.slug || topic._id}`}
-      className="block group"
+    <div
+      onClick={handleCardClick}
+      className="block group cursor-pointer"
     >
       <div className="p-5 sm:p-6 rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
         <div className="flex items-start gap-4">
           {/* Author avatar */}
-          <Avatar src={topic.author?.avatar} size="md" alt={topic.author?.username} username={topic.author?.username} />
+          <Avatar 
+            src={topic.author?.avatar} 
+            size="md" 
+            alt={topic.author?.username} 
+            username={topic.author?.username}
+            disableLink={true}
+          />
 
           <div className="flex-1 min-w-0">
             {/* Top row: badges */}
@@ -117,7 +128,13 @@ export default function TopicCard({ topic }: TopicCardProps) {
             {/* Meta */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               {topic.author?.username ? (
-                <Link to={`/profile/${topic.author.username}`} className="font-medium text-gray-600 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>{topic.author.username}</Link>
+                <Link 
+                  to={`/profile/${topic.author.username}`} 
+                  className="font-medium text-gray-600 hover:text-primary transition-colors" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {topic.author.username}
+                </Link>
               ) : (
                 <span className="font-medium text-gray-600">User Terhapus</span>
               )}
@@ -145,6 +162,6 @@ export default function TopicCard({ topic }: TopicCardProps) {
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

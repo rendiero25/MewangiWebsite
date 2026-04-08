@@ -16,6 +16,10 @@ const forumTopicSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Konten topik wajib diisi'],
   },
+  image: {
+    type: String,
+    default: '',
+  },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',

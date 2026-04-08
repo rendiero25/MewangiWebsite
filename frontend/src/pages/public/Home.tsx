@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import gsap from "gsap";
@@ -27,6 +27,7 @@ interface Topic { _id: string; title: string; slug: string; category: { name: st
 interface Stats { totalUsers: number; totalReviews: number; totalTopics: number; totalArticles: number; totalPerfumes: number; }
 
 export default function Home() {
+  const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const heroTitleRef = useRef<HTMLHeadingElement>(null);
   const heroBadgeRef = useRef<HTMLDivElement>(null);
@@ -377,10 +378,7 @@ export default function Home() {
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,149,69,0.05) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         </div>
 
-
-
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pb-36">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-24 lg:pb-36">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge dengan animation */}
             <div
@@ -397,7 +395,7 @@ export default function Home() {
               className="text-4xl sm:text-5xl lg:text-7xl font-bold text-black leading-tight mb-6"
             >
               Temukan Dunia{" "}
-              <span className="highlight-text bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="text-primary">
                 Parfum
               </span>{" "}
               Favoritmu
@@ -406,7 +404,7 @@ export default function Home() {
             {/* Description dengan animation */}
             <p
               ref={heroDescRef}
-              className="text-lg sm:text-2xl text-gray-600 max-w-2xl xl:max-w-4xl mx-auto mb-10 leading-relaxed"
+              className="text-lg sm:text-2xl text-black max-w-2xl xl:max-w-4xl mx-auto mb-10 leading-relaxed"
             >
               Gabung bersama ribuan pecinta parfum Indonesia. Diskusikan,
               review, dan bagikan pengalaman parfum terbaikmu di Mewangi dengan
@@ -847,8 +845,9 @@ export default function Home() {
           {latestReviews.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestReviews.slice(0, 3).map((review, idx) => (
-                <Link key={review._id} to={`/review/${review._id}`}
-                  className="group flex flex-col bg-white border border-gray-100 rounded-2xl hover:shadow-2xl hover:shadow-amber-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                <div key={review._id} 
+                  onClick={() => navigate(`/review/${review._id}`)}
+                  className="group flex flex-col bg-white border border-gray-100 rounded-2xl hover:shadow-2xl hover:shadow-amber-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer"
                 >
                   {/* Review Image */}
                   <div className="h-44 overflow-hidden bg-liniear-to-br from-amber-400/10 to-orange-500/10 relative shrink-0">
@@ -889,6 +888,7 @@ export default function Home() {
                         src={review.author?.avatar}
                         username={review.author?.username}
                         size="sm"
+                        disableLink={true}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-black truncate">{review.author?.username || 'Anonymous'}</p>
@@ -897,7 +897,7 @@ export default function Home() {
                     </div>
 
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (
@@ -988,8 +988,9 @@ export default function Home() {
           {latestArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestArticles.slice(0, 3).map((article) => (
-                <Link key={article._id} to={`/blog/${article.slug}`}
-                  className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300"
+                <div key={article._id}
+                  onClick={() => navigate(`/blog/${article.slug}`)}
+                  className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                 >
                   <div className="h-44 overflow-hidden bg-gradient-to-br from-indigo-500/10 to-blue-500/10 relative">
                     {article.coverImage ? (
@@ -1016,6 +1017,7 @@ export default function Home() {
                         src={article.author?.avatar}
                         username={article.author?.username}
                         size="sm"
+                        disableLink={true}
                       />
                       <p className="text-xs text-black font-medium">{article.author?.username || 'Anonymous'}</p>
 
@@ -1023,7 +1025,7 @@ export default function Home() {
                       <p className="text-xs text-primary">{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           ) : (
@@ -1050,8 +1052,8 @@ export default function Home() {
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ filter: "drop-shadow(0 0 20px rgba(255,255,255,0.3))" }}
               >
-                <circle cx="50" cy="50" r="30" fill="white" opacity="0.1" />
-                <circle cx="350" cy="250" r="50" fill="white" opacity="0.1" />
+                <circle cx="50" cy="50" r="30" fill="white" opacity="0.1" className="svg-pulse" />
+                <circle cx="350" cy="250" r="50" fill="white" opacity="0.1" className="svg-pulse" />
                 <path
                   d="M0 150 Q 100 100, 200 150 T 400 150"
                   stroke="white"

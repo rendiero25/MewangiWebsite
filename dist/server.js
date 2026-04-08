@@ -27,6 +27,7 @@ const messageRoutes = require('./routes/messageRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const sitemapRoutes = require('./routes/sitemapRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const checkIPBan = require('./middleware/ipBan');
@@ -37,7 +38,7 @@ connectDB();
 // Rate Limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Higher limit for development
+  max: process.env.NODE_ENV === 'production' ? 1000 : 2000, // Higher limit
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.' }
@@ -91,6 +92,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/stats', statsRoutes);
 
 // SEO Routes (Sitemap & Robots)
 app.use('/', sitemapRoutes);

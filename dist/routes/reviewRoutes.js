@@ -5,14 +5,20 @@ const upload = require('../middleware/upload');
 const { 
   getReviews, getReviewById, createReview, updateReview, deleteReview, 
   addReviewComment, getMyReviews, deleteReviewComment,
-  likeComment, dislikeComment, getTopCategories, getRelatedReviews
+  likeComment, dislikeComment, getTopCategories, getRelatedReviews,
+  likeReview, dislikeReview, getTopReviews
 } = require('../controllers/reviewController');
 
 // Public
 router.get('/', getReviews);
 router.get('/meta/top-categories', getTopCategories);
+router.get('/meta/top-titles', getTopReviews);
 router.get('/:id', getReviewById);
 router.get('/:id/related', getRelatedReviews);
+
+// Reactions
+router.post('/:id/like', protect, likeReview);
+router.post('/:id/dislike', protect, dislikeReview);
 
 // Protected
 router.post('/', protect, verified, upload.single('image'), upload.cloudinaryUpload('reviews'), createReview);

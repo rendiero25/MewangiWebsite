@@ -4,8 +4,8 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../../components/common/Avatar";
 import { useBreadcrumbs } from "../../context/BreadcrumbContext";
-import CommentItem from '../../components/public/CommentItem';
-import SidebarDetail from '../../components/public/SidebarDetail';
+import CommentItem from "../../components/public/CommentItem";
+import SidebarDetail from "../../components/public/SidebarDetail";
 import ReportModal from "../../components/public/ReportModal";
 import { BiLike, BiSolidLike, BiDislike, BiSolidDislike } from "react-icons/bi";
 import "react-quill-new/dist/quill.snow.css";
@@ -89,7 +89,9 @@ export default function BlogDetail() {
     if (!commentText.trim()) return;
     setSubmitting(true);
     try {
-      const payload: { content: string; quoteId?: string } = { content: commentText };
+      const payload: { content: string; quoteId?: string } = {
+        content: commentText,
+      };
       if (quotedComment) payload.quoteId = quotedComment._id;
 
       const { data } = await axios.post(
@@ -111,9 +113,13 @@ export default function BlogDetail() {
     if (!user || reacting || !article) return;
     setReacting(true);
     try {
-      const { data } = await axios.post(`${API_URL}/articles/${article._id}/like`, {}, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      const { data } = await axios.post(
+        `${API_URL}/articles/${article._id}/like`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        },
+      );
       setArticleLikes(data.likes);
       setArticleDislikes(data.dislikes);
     } catch (err) {
@@ -127,9 +133,13 @@ export default function BlogDetail() {
     if (!user || reacting || !article) return;
     setReacting(true);
     try {
-      const { data } = await axios.post(`${API_URL}/articles/${article._id}/dislike`, {}, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      const { data } = await axios.post(
+        `${API_URL}/articles/${article._id}/dislike`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        },
+      );
       setArticleLikes(data.likes);
       setArticleDislikes(data.dislikes);
     } catch (err) {
@@ -140,53 +150,59 @@ export default function BlogDetail() {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Hapus komentar ini?')) return;
+    if (!confirm("Hapus komentar ini?")) return;
     try {
       await axios.delete(`${API_URL}/articles/comments/${commentId}`, {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       setComments((prev) => prev.filter((c) => c._id !== commentId));
     } catch {
-      setError('Gagal menghapus komentar.');
+      setError("Gagal menghapus komentar.");
     }
   };
 
   const handleDeleteArticle = async () => {
-    if (!article || !confirm('Hapus artikel ini?')) return;
+    if (!article || !confirm("Hapus artikel ini?")) return;
     try {
       await axios.delete(`${API_URL}/articles/${article._id}`, {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
-      navigate('/blog');
+      navigate("/blog");
     } catch {
-      setError('Gagal menghapus artikel.');
+      setError("Gagal menghapus artikel.");
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-
-  if (error || !article) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center p-8 bg-white rounded-xl shadow-xl">
-        <p className="text-gray-500 mb-4">{error || 'Data tidak ditemukan'}</p>
-        <Link to="/blog" className="text-primary font-bold hover:underline">← Kembali ke Artikel</Link>
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
-    </div>
-  );
+    );
+
+  if (error || !article)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-xl shadow-xl">
+          <p className="text-gray-500 mb-4">
+            {error || "Data tidak ditemukan"}
+          </p>
+          <Link to="/blog" className="text-primary font-bold hover:underline">
+            ← Kembali ke Artikel
+          </Link>
+        </div>
+      </div>
+    );
 
   const isOwner = user && user._id === article.author._id;
   const isAdmin = user && user.role === "admin";
-  const colorClass = categoryColors[article.category] || categoryColors["Lainnya"];
+  const colorClass =
+    categoryColors[article.category] || categoryColors["Lainnya"];
 
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-          
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-5">
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -195,12 +211,16 @@ export default function BlogDetail() {
                 <div className="flex flex-col md:flex-row gap-5 items-stretch">
                   {/* Left: Image */}
                   {article.coverImage && (
-                    <div className="w-full md:w-[320px] shrink-0">
-                      <div className="h-full relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
-                        <img 
-                          src={article.coverImage.startsWith('http') ? article.coverImage : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${article.coverImage.startsWith('/') ? article.coverImage : `/${article.coverImage}`}`} 
-                          alt={article.title} 
-                          className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700" 
+                    <div className="w-full md:w-[280px] shrink-0">
+                      <div className="aspect-square relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
+                        <img
+                          src={
+                            article.coverImage.startsWith("http")
+                              ? article.coverImage
+                              : `${API_URL.replace(/\/api$/, "").replace(/\/api\/$/, "")}${article.coverImage.startsWith("/") ? article.coverImage : `/${article.coverImage}`}`
+                          }
+                          alt={article.title}
+                          className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
                         />
                       </div>
                     </div>
@@ -210,18 +230,37 @@ export default function BlogDetail() {
                   <div className="flex-1 flex flex-col justify-between">
                     <div className="space-y-4">
                       <div className="flex flex-wrap gap-2">
-                        <span className={`px-3 py-1 text-[10px] font-black rounded-xl ${colorClass}`}>{article.category}</span>
+                        <span
+                          className={`px-3 py-1 text-[10px] font-black rounded-xl ${colorClass}`}
+                        >
+                          {article.category}
+                        </span>
                       </div>
-                      
+
                       <h1 className="text-3xl font-bold text-gray-900 leading-[1.3]">
                         {article.title}
                       </h1>
 
                       <div className="flex items-center gap-3">
-                        <Avatar src={article.author.avatar} size="sm" alt={article.author.username} username={article.author.username} />
+                        <Avatar
+                          src={article.author.avatar}
+                          size="sm"
+                          alt={article.author.username}
+                          username={article.author.username}
+                        />
                         <div className="flex flex-col">
-                           <Link to={`/profile/${article.author.username}`} className="text-xs font-black text-gray-800 hover:text-primary transition-colors">{article.author.username}</Link>
-                           <span className="text-[10px] text-gray-500 font-bold">Penulis • {new Date(article.createdAt).toLocaleDateString()} {article.views !== undefined && `• ${article.views} Dilihat`}</span>
+                          <Link
+                            to={`/profile/${article.author.username}`}
+                            className="text-xs font-black text-gray-800 hover:text-primary transition-colors"
+                          >
+                            {article.author.username}
+                          </Link>
+                          <span className="text-[10px] text-gray-500 font-bold">
+                            Penulis •{" "}
+                            {new Date(article.createdAt).toLocaleDateString()}{" "}
+                            {article.views !== undefined &&
+                              `• ${article.views} Dilihat`}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -231,7 +270,7 @@ export default function BlogDetail() {
 
               {/* Body: Full Width Content */}
               <div className="px-8 py-4 sm:px-12">
-                <div 
+                <div
                   className="prose prose-lg max-w-none text-black leading-[1.8] ql-editor p-0!"
                   dangerouslySetInnerHTML={{ __html: article.content }}
                 />
@@ -298,8 +337,18 @@ export default function BlogDetail() {
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </svg>
                     {article.views || 0} Dilihat
                   </span>
@@ -376,7 +425,7 @@ export default function BlogDetail() {
                       />
                     ))}
                     {!user && comments.length > 5 && (
-                      <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 mt-4">
+                      <div className="text-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 mt-4">
                         <p className="text-sm text-gray-500 mb-3 font-medium">
                           Hanya 5 komentar terbaru yang ditampilkan.
                         </p>
@@ -423,8 +472,18 @@ export default function BlogDetail() {
                         onClick={() => setQuotedComment(null)}
                         className="text-gray-400 hover:text-red-500 transition-colors"
                       >
-                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -451,7 +510,7 @@ export default function BlogDetail() {
                         className="bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 disabled:bg-gray-300 disabled:shadow-none cursor-pointer"
                       >
                         {submitting ? (
-                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           "Kirim Balasan"
                         )}
@@ -461,8 +520,13 @@ export default function BlogDetail() {
                 </form>
               ) : (
                 <div className="p-6 bg-gray-100 rounded-xl text-center text-sm text-gray-500 italic">
-                  Silakan {" "}
-                  <Link to="/login" className="text-primary font-bold hover:underline">Masuk</Link> {" "}
+                  Silakan{" "}
+                  <Link
+                    to="/login"
+                    className="text-primary font-bold hover:underline"
+                  >
+                    Masuk
+                  </Link>{" "}
                   untuk bergabung dalam diskusi ini.
                 </div>
               )}
@@ -473,7 +537,6 @@ export default function BlogDetail() {
           <div className="hidden lg:block lg:col-span-1">
             <SidebarDetail type="blog" />
           </div>
-
         </div>
       </div>
     </div>

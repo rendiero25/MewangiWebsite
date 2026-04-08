@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ImageWithLazyLoad from "../common/ImageWithLazyLoad";
 import Avatar from "../common/Avatar";
 
@@ -40,14 +40,19 @@ function timeAgo(dateStr: string) {
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {
+  const navigate = useNavigate();
   const colorClass =
     categoryColors[article.category] || categoryColors["Lainnya"];
 
+  const handleCardClick = () => {
+    navigate(`/blog/${article.slug}`);
+  };
+
   return (
-    <Link to={`/blog/${article.slug}`} className="block group">
+    <div onClick={handleCardClick} className="block group cursor-pointer">
       <div className="rounded-xl bg-white border border-gray-100 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden h-full flex flex-col">
         {/* Cover image */}
-        <div className="h-44 bg-gradient-to-br from-indigo-100 to-blue-50 overflow-hidden">
+        <div className="h-56 bg-gradient-to-br from-indigo-100 to-blue-50 overflow-hidden">
           {article.coverImage ? (
             <ImageWithLazyLoad
               src={
@@ -57,7 +62,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               }
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              placeholderClassName="h-44 w-full"
+              placeholderClassName="h-56 w-full"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -116,52 +121,64 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
           {/* Meta */}
           <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-50 mt-auto">
-            <div className="flex items-center gap-2">
-              <Avatar
-                src={article.author?.avatar}
-                size="xs"
-                alt={article.author?.username}
-                username={article.author?.username}
-              />
-              {article.author?.username ? (
-                <Link
-                  to={`/profile/${article.author.username}`}
-                  className="font-medium text-gray-600 hover:text-primary transition-colors"
-                >
-                  {article.author.username}
-                </Link>
-              ) : (
-                <span className="font-medium text-gray-600">User Terhapus</span>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <span>{timeAgo(article.createdAt)}</span>
-              <span className="inline-flex items-center gap-1">
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-                {article.views}
-              </span>
+            <div className="flex flex-col items-start justify-center gap-2">
+              <div className="flex flex-row gap-2 items-center justify-start">
+                <Avatar
+                  src={article.author?.avatar}
+                  size="xs"
+                  alt={article.author?.username}
+                  username={article.author?.username}
+                  disableLink={true}
+                />
+
+                {article.author?.username ? (
+                  <Link
+                    to={`/profile/${article.author.username}`}
+                    className="font-medium text-gray-600 hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {article.author.username}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-gray-600">
+                    User Terhapus
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-row gap-2 items-center justify-start">
+                <div className="flex items-center gap-3">
+                  <span>{timeAgo(article.createdAt)}</span>
+
+                  <span className="inline-flex items-center gap-1">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+
+                    {article.views}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

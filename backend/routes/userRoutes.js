@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { updateProfile, getTopMembers, getUserProfile, followUser, unfollowUser } = require('../controllers/userController');
+const { updateProfile, getTopMembers, getUserProfile, getUserActivity, followUser, unfollowUser } = require('../controllers/userController');
 const { protect, optionalProtect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
@@ -15,6 +15,9 @@ router.put(
 
 // @route   GET /api/users/profile/:id
 router.get('/profile/:id', optionalProtect, getUserProfile);
+
+// @route   GET /api/users/profile/:id/activity
+router.get('/profile/:id/activity', getUserActivity);
 
 // @route   GET /api/users/top-members
 router.get('/top-members', getTopMembers);

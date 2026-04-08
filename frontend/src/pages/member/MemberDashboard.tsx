@@ -29,7 +29,7 @@ interface MyTopic {
   _id: string;
   title: string;
   status: string;
-  category: string;
+  category: string | { name: string };
   createdAt: string;
   rejectionReason?: string;
 }
@@ -210,7 +210,7 @@ export default function MemberDashboard() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Halo, <span className="text-primary">{user?.username}</span>! 👋
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Kelola review dan artikel yang sudah kamu tulis.</p>
+          <p className="text-sm text-black mt-1">Kelola review, forum, dan artikel yang sudah kamu tulis.</p>
         </div>
 
         {/* Stats */}
@@ -223,9 +223,9 @@ export default function MemberDashboard() {
             { label: 'Total Topik', value: topics.length, color: 'from-pink-400 to-rose-500' },
             { label: 'Topik Pending', value: topics.filter(t => t.status === 'pending').length, color: 'from-sky-400 to-cyan-500' },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4">
-              <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
-              <p className={`text-2xl font-bold bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
+            <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col justify-between items-start">
+              <p className="text-2xl text-black font-normal mb-5">{stat.label}</p>
+              <p className={`text-5xl font-bold bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
                 {loading ? '—' : stat.value}
               </p>
             </div>
@@ -233,9 +233,9 @@ export default function MemberDashboard() {
         </div>
 
         {/* Global Search Bar (Pop-out results only) */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-8 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-100 mb-8 shadow-sm">
           <div className="relative group">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -255,13 +255,13 @@ export default function MemberDashboard() {
                 <div className="p-2">
                   {searchReviews.length > 0 && (
                     <div className="mb-2">
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Reviews</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider">Reviews</h4>
                       {searchReviews.slice(0, 5).map(r => (
                         <div key={r._id} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group">
                           <p className="text-xs font-bold text-gray-900 truncate">{r.title}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${r.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : r.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>{r.status}</span>
-                            <span className="text-[9px] text-gray-400 font-medium">Review</span>
+                            <span className="text-[9px] text-gray-500 font-medium">Review</span>
                           </div>
                         </div>
                       ))}
@@ -269,13 +269,13 @@ export default function MemberDashboard() {
                   )}
                   {searchArticles.length > 0 && (
                     <div className="mb-2">
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Artikel</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider">Artikel</h4>
                       {searchArticles.slice(0, 5).map(a => (
                         <div key={a._id} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group">
                           <p className="text-xs font-bold text-gray-900 truncate">{a.title}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${a.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : a.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>{a.status}</span>
-                            <span className="text-[9px] text-gray-400 font-medium">Artikel</span>
+                            <span className="text-[9px] text-gray-500 font-medium">Artikel</span>
                           </div>
                         </div>
                       ))}
@@ -283,25 +283,25 @@ export default function MemberDashboard() {
                   )}
                   {searchTopics.length > 0 && (
                     <div className="mb-2">
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">Topik Forum</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-wider">Topik Forum</h4>
                       {searchTopics.slice(0, 5).map(t => (
                         <div key={t._id} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group">
                           <p className="text-xs font-bold text-gray-900 truncate">{t.title}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${t.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : t.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>{t.status}</span>
-                            <span className="text-[9px] text-gray-400 font-medium">Forum</span>
+                            <span className="text-[9px] text-gray-500 font-medium">Forum</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                   {totalSearchCount === 0 && (
-                    <div className="p-8 text-center text-xs text-gray-400">Tidak ada hasil ditemukan.</div>
+                    <div className="p-8 text-center text-xs text-gray-500">Tidak ada hasil ditemukan.</div>
                   )}
                 </div>
                 {totalSearchCount > 0 && (
                   <div className="p-3 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between">
-                    <span className="text-[10px] text-gray-400 font-medium italic">Hasil teratas ditampilkan</span>
+                    <span className="text-[10px] text-gray-500 font-medium italic">Hasil teratas ditampilkan</span>
                     <button onClick={() => setShowSearchResults(false)} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">Tutup</button>
                   </div>
                 )}
@@ -368,7 +368,7 @@ export default function MemberDashboard() {
                 {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
             ) : filteredReviews.length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-400">Belum ada review.</div>
+              <div className="p-8 text-center text-sm text-gray-500">Belum ada review.</div>
             ) : (
               <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
                 {filteredReviews.map((r) => (
@@ -376,7 +376,7 @@ export default function MemberDashboard() {
                     <div className="flex items-center justify-between gap-3 mb-1">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{r.title}</p>
-                        <p className="text-xs text-gray-400">Review Parfum · {formatDate(r.createdAt)}</p>
+                        <p className="text-xs text-gray-500">Review Parfum · {formatDate(r.createdAt)}</p>
                       </div>
                       <StatusBadge status={r.status} />
                     </div>
@@ -466,7 +466,7 @@ export default function MemberDashboard() {
                 {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
             ) : filteredArticles.length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-400">Belum ada artikel.</div>
+              <div className="p-8 text-center text-sm text-gray-500">Belum ada artikel.</div>
             ) : (
               <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
                 {filteredArticles.map((a) => (
@@ -474,7 +474,7 @@ export default function MemberDashboard() {
                     <div className="flex items-center justify-between gap-3 mb-1">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{a.title}</p>
-                        <p className="text-xs text-gray-400">{a.category} · {formatDate(a.createdAt)}</p>
+                        <p className="text-xs text-gray-500">{a.category} · {formatDate(a.createdAt)}</p>
                       </div>
                       <StatusBadge status={a.status} />
                     </div>
@@ -563,7 +563,7 @@ export default function MemberDashboard() {
                 {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />)}
               </div>
             ) : filteredTopics.length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-400">Belum ada topik.</div>
+              <div className="p-8 text-center text-sm text-gray-500">Belum ada topik.</div>
             ) : (
               <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
                 {filteredTopics.map((t) => (
@@ -571,7 +571,7 @@ export default function MemberDashboard() {
                     <div className="flex items-center justify-between gap-3 mb-1">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{t.title}</p>
-                        <p className="text-xs text-gray-400">{t.category} · {formatDate(t.createdAt)}</p>
+                        <p className="text-xs text-gray-500">{typeof t.category === 'object' ? t.category.name : t.category} · {formatDate(t.createdAt)}</p>
                       </div>
                       <StatusBadge status={t.status} />
                     </div>

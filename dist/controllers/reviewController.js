@@ -5,6 +5,7 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { filterBadWords } = require('../utils/moderation');
 const { getUploadedUrl } = require('../utils/uploadedMediaUrl');
+const mongoose = require('mongoose');
 
 // @desc    Get semua review (approved only untuk public)
 // @route   GET /api/reviews
@@ -43,10 +44,14 @@ const getReviews = async (req, res) => {
 // @access  Public
 const getReviewById = async (req, res) => {
   try {
-    const review = await Review.findOne({
-      _id: req.params.id,
-      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
-    }).populate('author', 'username avatar');
+    const review = await Review.findOneAndUpdate(
+      { 
+        _id: req.params.id,
+        $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
+      },
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate('author', 'username avatar');
 
     if (!review) {
       return res.status(404).json({ message: 'Review tidak ditemukan' });
@@ -300,18 +305,30 @@ const dislikeComment = async (req, res) => {
   }
 };
 
-// @desc    Get top categories review (occasion)
+// @desc    Get top categories review (occasion + season)
 // @route   GET /api/reviews/meta/top-categories
 // @access  Public
 const getTopCategories = async (req, res) => {
   try {
     const categories = await Review.aggregate([
       { $match: { $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }] } },
-      { $group: { _id: '$occasion', count: { $sum: 1 } } },
+      { 
+        $project: { 
+          all: { 
+            $concatArrays: [
+              { $map: { input: { $ifNull: ["$occasion", []] }, as: "o", in: { name: "$$o", type: "occasion" } } },
+              { $map: { input: { $ifNull: ["$season", []] }, as: "s", in: { name: "$$s", type: "season" } } }
+            ] 
+          } 
+        } 
+      },
+      { $unwind: "$all" },
+      { $group: { _id: { name: "$all.name", type: "$all.type" }, count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $limit: 10 }
+      { $limit: 10 },
+      { $project: { _id: 0, name: "$_id.name", type: "$_id.type", count: 1 } }
     ]);
-    res.json(categories.map(c => ({ name: c._id, count: c.count })));
+    res.json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengambil kategori', error: error.message });
   }
@@ -376,7 +393,109 @@ const deleteReviewComment = async (req, res) => {
   }
 };
 
+// @desc    Like review
+// @route   POST /api/reviews/:id/like
+// @access  Private
+const likeReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+
+    if (!review) return res.status(404).json({ message: "Review tidak ditemukan" });
+
+    const userId = req.user._id;
+    const author = await User.findById(review.author);
+
+    let repChange = 0;
+    let reactChange = 0;
+
+    if (review.dislikes.includes(userId)) {
+      review.dislikes = review.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    }
+
+    if (review.likes.includes(userId)) {
+      review.likes = review.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    } else {
+      review.likes.push(userId);
+      repChange += 1;
+      reactChange += 1;
+    }
+
+    await review.save();
+
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
+    res.json({ likes: review.likes, dislikes: review.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal menyukai review", error: error.message });
+  }
+};
+
+// @desc    Dislike review
+// @route   POST /api/reviews/:id/dislike
+// @access  Private
+const dislikeReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+
+    if (!review) return res.status(404).json({ message: "Review tidak ditemukan" });
+
+    const userId = req.user._id;
+    const author = await User.findById(review.author);
+
+    let repChange = 0;
+    let reactChange = 0;
+
+    if (review.likes.includes(userId)) {
+      review.likes = review.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    }
+
+    if (review.dislikes.includes(userId)) {
+      review.dislikes = review.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    } else {
+      review.dislikes.push(userId);
+      repChange -= 1;
+    }
+
+    await review.save();
+
+    res.json({ likes: review.likes, dislikes: review.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal tidak menyukai review", error: error.message });
+  }
+};
+
+// @desc    Get top reviews (trending)
+// @route   GET /api/reviews/meta/top-titles
+// @access  Public
+const getTopReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
+    })
+    .sort({ views: -1 })
+    .limit(5)
+    .select('title views');
+
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil review terpopuler', error: error.message });
+  }
+};
+
 module.exports = { 
   getReviews, getReviewById, createReview, updateReview, deleteReview, addReviewComment, getMyReviews, deleteReviewComment,
-  likeComment, dislikeComment, getTopCategories, getRelatedReviews
+  likeComment, dislikeComment, getTopCategories, getRelatedReviews,
+  likeReview, dislikeReview, getTopReviews
 };

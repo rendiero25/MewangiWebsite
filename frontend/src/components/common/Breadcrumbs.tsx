@@ -29,7 +29,7 @@ export default function Breadcrumbs() {
         <li className="inline-flex items-center">
           <Link
             to="/"
-            className="inline-flex items-center text-gray-500 hover:text-primary transition-colors"
+            className="inline-flex items-center text-black hover:text-primary transition-colors"
           >
             <MdHome className="mr-2.5 w-4 h-4" />
             Home
@@ -45,7 +45,7 @@ export default function Breadcrumbs() {
           return (
             <li key={name}>
               <div className="flex items-center">
-                <MdChevronRight className="w-5 h-5 text-gray-400" />
+                <MdChevronRight className="w-5 h-5 text-black" />
                 {isLast ? (
                   <span className="ml-1 md:ml-2 text-primary font-bold">
                     {displayName}
@@ -53,7 +53,7 @@ export default function Breadcrumbs() {
                 ) : (
                   <Link
                     to={routeTo}
-                    className="ml-1 md:ml-2 text-gray-400 hover:text-primary transition-colors whitespace-nowrap"
+                    className="ml-1 md:ml-2 text-black hover:text-primary transition-colors whitespace-nowrap"
                   >
                     {displayName}
                   </Link>

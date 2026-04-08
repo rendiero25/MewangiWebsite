@@ -246,8 +246,8 @@ export default function ReviewDetail() {
               <div className="px-8 py-4 sm:px-12 sm:py-8">
                 <div className="flex flex-col md:flex-row gap-5 items-stretch">
                   {/* Left: Image */}
-                  <div className="w-full md:w-[320px] shrink-0">
-                    <div className="h-full relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
+                  <div className="w-full md:w-[280px] shrink-0">
+                    <div className="aspect-square relative overflow-hidden shadow-2xl ring-1 ring-black/5 rounded-xl">
                       <img 
                         src={review.image?.startsWith('http') ? review.image : `${API_URL.replace(/\/api$/, '').replace(/\/api\/$/, '')}${review.image?.startsWith('/') ? review.image : `/${review.image}`}`} 
                         alt={review.title} 
@@ -443,7 +443,7 @@ export default function ReviewDetail() {
                       />
                     ))}
                     {!user && comments.length > 5 && (
-                      <div className="text-center py-8 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 mt-4">
+                      <div className="text-center py-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 mt-4">
                         <p className="text-sm text-gray-500 mb-3 font-medium">
                           Hanya 5 komentar terbaru yang ditampilkan.
                         </p>

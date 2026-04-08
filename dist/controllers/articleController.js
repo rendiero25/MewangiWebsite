@@ -243,17 +243,20 @@ const addArticleComment = async (req, res) => {
 
     await comment.populate('author', 'username avatar');
 
-    console.log(`[Notification] Triggered for article: ${article._id}. Author: ${article.author}. Commenter: ${req.user._id}`);
-    const notification = await Notification.create({
-      recipient: article.author,
-      sender: req.user._id,
-      type: 'comment_article',
-      message: `${req.user.username} mengomentari artikel Anda: "${article.title}"`,
-      link: `/blog/${article.slug}`
-    });
+    // Notify article author (if not the commenter)
+    if (article.author.toString() !== req.user._id.toString()) {
+      console.log(`[Notification] Triggered for article: ${article._id}. Author: ${article.author}. Commenter: ${req.user._id}`);
+      const notification = await Notification.create({
+        recipient: article.author,
+        sender: req.user._id,
+        type: 'comment_article',
+        message: `${req.user.username} mengomentari artikel Anda: "${article.title}"`,
+        link: `/blog/${article.slug}`
+      });
 
-    const socket = require('../socket');
-    socket.getIO().to(article.author.toString()).emit('new_notification', notification);
+      const socket = require('../socket');
+      socket.getIO().to(article.author.toString()).emit('new_notification', notification);
+    }
 
     res.status(201).json(comment);
   } catch (error) {
@@ -373,8 +376,116 @@ const deleteArticleComment = async (req, res) => {
   }
 };
 
+// @desc    Like artikel
+// @route   POST /api/articles/:id/like
+// @access  Private
+const likeArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const article = await Article.findById(id);
+
+    if (!article) return res.status(404).json({ message: "Artikel tidak ditemukan" });
+
+    const userId = req.user._id;
+    const author = await User.findById(article.author);
+
+    let repChange = 0;
+    let reactChange = 0;
+
+    if (article.dislikes.includes(userId)) {
+      article.dislikes = article.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    }
+
+    if (article.likes.includes(userId)) {
+      article.likes = article.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    } else {
+      article.likes.push(userId);
+      repChange += 1;
+      reactChange += 1;
+    }
+
+    await article.save();
+
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
+    res.json({ likes: article.likes, dislikes: article.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal menyukai artikel", error: error.message });
+  }
+};
+
+// @desc    Dislike artikel
+// @route   POST /api/articles/:id/dislike
+// @access  Private
+const dislikeArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const article = await Article.findById(id);
+
+    if (!article) return res.status(404).json({ message: "Artikel tidak ditemukan" });
+
+    const userId = req.user._id;
+    const author = await User.findById(article.author);
+
+    let repChange = 0;
+    let reactChange = 0;
+
+    if (article.likes.includes(userId)) {
+      article.likes = article.likes.filter(id => id.toString() !== userId.toString());
+      repChange -= 1;
+      reactChange -= 1;
+    }
+
+    if (article.dislikes.includes(userId)) {
+      article.dislikes = article.dislikes.filter(id => id.toString() !== userId.toString());
+      repChange += 1;
+    } else {
+      article.dislikes.push(userId);
+      repChange -= 1;
+    }
+
+    await article.save();
+
+    if (author) {
+      author.statistik.reputation += repChange;
+      author.statistik.reactions += reactChange;
+      await author.save();
+    }
+
+    res.json({ likes: article.likes, dislikes: article.dislikes });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal tidak menyukai artikel", error: error.message });
+  }
+};
+
+// @desc    Get top articles (trending)
+// @route   GET /api/articles/meta/top-titles
+// @access  Public
+const getTopArticles = async (req, res) => {
+  try {
+    const articles = await Article.find({
+      $or: [{ status: 'approved' }, { status: 'pending', hasBeenApproved: true }]
+    })
+    .sort({ views: -1 })
+    .limit(5)
+    .select('title slug views createdAt');
+
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil artikel terpopuler', error: error.message });
+  }
+};
+
 module.exports = { 
   getArticles, getArticleBySlug, getArticleById, createArticle, updateArticle, deleteArticle, 
   getMyArticles, addArticleComment, deleteArticleComment,
-  likeComment, dislikeComment, getTopCategories, getRelatedArticles
+  likeComment, dislikeComment, getTopCategories, getRelatedArticles,
+  likeArticle, dislikeArticle, getTopArticles
 };

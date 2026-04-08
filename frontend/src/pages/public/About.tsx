@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import ScrollSmoother from 'gsap/ScrollSmoother';
@@ -7,22 +7,10 @@ import ScrollSmoother from 'gsap/ScrollSmoother';
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 export default function About() {
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      ScrollSmoother.create({
-        wrapper: '#smooth-wrapper',
-        content: '#smooth-content',
-        smooth: 1.5,
-        effects: true,
-      });
-    });
-
-    return () => ctx.revert();
-  }, []);
-
   const [activeFeature, setActiveFeature] = useState(0);
 
   const features = [
+// ... (rest of features stays the same)
     {
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,9 +84,8 @@ export default function About() {
     },
   ];
   return (
-    <div id="smooth-wrapper" className="bg-white">
-      <div id="smooth-content">
-        <style>{`
+    <div className="bg-white">
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-15px) rotate(2deg); }
@@ -122,13 +109,13 @@ export default function About() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full text-sm font-medium text-primary mb-6 animate-fade-in">
             Tentang Mewangi
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight leading-tight">
             Membangun Komunitas <br />
             <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
               Pencinta Parfum Indonesia
             </span>
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-black max-w-2xl mx-auto leading-relaxed">
             Mewangi hadir sebagai wadah bagi para enthusiast parfum di Indonesia untuk saling berbagi, 
             berdiskusi, dan mengeksplorasi dunia wewangian yang tak terbatas.
           </p>
@@ -340,7 +327,6 @@ export default function About() {
           </Link>
         </div>
       </section>
-      </div>
     </div>
   );
 }

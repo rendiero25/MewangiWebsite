@@ -170,6 +170,7 @@ const getPendingTopics = async (req, res) => {
   try {
     const topics = await ForumTopic.find({ status: { $in: ['pending', 'rejected'] } })
       .populate('author', 'username email avatar')
+      .populate('category', 'name')
       .sort({ createdAt: 1 });
     res.json(topics);
   } catch (error) {
@@ -184,6 +185,7 @@ const getOnlineTopics = async (req, res) => {
   try {
     const topics = await ForumTopic.find({ status: 'approved' })
       .populate('author', 'username email avatar')
+      .populate('category', 'name')
       .sort({ createdAt: -1 })
       .limit(100);
     res.json(topics);

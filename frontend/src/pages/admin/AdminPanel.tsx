@@ -27,7 +27,7 @@ interface Stats {
 interface PendingReview { _id: string; title: string; content: string; image?: string; occasion?: string[]; season?: string[]; author: { username: string; email: string };
   rating: { overall: number; longevity: number; sillage: number; valueForMoney: number }; createdAt: string; status: string; rejectionReason?: string; }
 interface PendingArticle { _id: string; slug: string; title: string; content: string; excerpt?: string; coverImage?: string; category: string; tags?: string[]; author: { username: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
-interface PendingTopic { _id: string; title: string; content: string; category: string; author: { username: string; avatar?: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
+interface PendingTopic { _id: string; title: string; content: string; category: string | { _id: string; name: string }; author: { username: string; avatar?: string; email: string }; createdAt: string; status: string; rejectionReason?: string; }
 interface UserData { _id: string; username: string; email: string; avatar?: string; role: string; isVerified: boolean; isBanned?: boolean; banExpires?: string; createdAt: string }
 
 function formatDate(d: string) {
@@ -231,7 +231,7 @@ export default function AdminPanel() {
           {/* Global Search */}
           <div className="relative w-full md:w-96">
             <div className="relative group">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -254,13 +254,13 @@ export default function AdminPanel() {
                   {/* User Results */}
                   {users.filter(u => u.username.toLowerCase().includes(adminSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
                     <div className="mb-2">
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Users</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.1em]">Users</h4>
                       {users.filter(u => u.username.toLowerCase().includes(adminSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(u => (
                         <button key={u._id} onClick={() => { setActiveTab('users'); setShowSearchResults(false); }} className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-xl transition-colors text-left cursor-pointer">
                           <Avatar src={u.avatar} size="xs" alt={u.username} />
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-900 truncate">{u.username}</p>
-                            <p className="text-[10px] text-gray-400 truncate">{u.email}</p>
+                            <p className="text-[10px] text-gray-500 truncate">{u.email}</p>
                           </div>
                         </button>
                       ))}
@@ -270,7 +270,7 @@ export default function AdminPanel() {
                   {/* Review Results */}
                   {onlineReviews.concat(pendingReviews).filter(r => r.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
                     <div className="mb-2">
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Reviews</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.1em]">Reviews</h4>
                       {onlineReviews.concat(pendingReviews).filter(r => r.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(r => (
                         <button key={r._id} onClick={() => { 
                           setActiveTab('reviews'); 
@@ -278,7 +278,7 @@ export default function AdminPanel() {
                           setShowSearchResults(false);
                         }} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group cursor-pointer">
                           <p className="text-xs font-bold text-gray-900 group-hover:text-primary transition-colors truncate">{r.title}</p>
-                          <p className="text-[10px] text-gray-400">Oleh {r.author?.username}</p>
+                          <p className="text-[10px] text-gray-500">Oleh {r.author?.username}</p>
                         </button>
                       ))}
                     </div>
@@ -287,7 +287,7 @@ export default function AdminPanel() {
                   {/* Article Results */}
                   {onlineArticles.concat(pendingArticles).filter(a => a.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
                     <div className="mb-2">
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Artikel</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.1em]">Artikel</h4>
                       {onlineArticles.concat(pendingArticles).filter(a => a.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(a => (
                         <button key={a._id} onClick={() => { 
                           setActiveTab('articles'); 
@@ -295,7 +295,7 @@ export default function AdminPanel() {
                           setShowSearchResults(false);
                         }} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group cursor-pointer">
                           <p className="text-xs font-bold text-gray-900 group-hover:text-primary transition-colors truncate">{a.title}</p>
-                          <p className="text-[10px] text-gray-400">Oleh {a.author?.username}</p>
+                          <p className="text-[10px] text-gray-500">Oleh {a.author?.username}</p>
                         </button>
                       ))}
                     </div>
@@ -304,7 +304,7 @@ export default function AdminPanel() {
                   {/* Topic Results */}
                   {onlineTopics.concat(pendingTopics).filter(t => t.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length > 0 && (
                     <div>
-                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">Topik Forum</h4>
+                      <h4 className="px-3 py-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.1em]">Topik Forum</h4>
                       {onlineTopics.concat(pendingTopics).filter(t => t.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).slice(0, 5).map(t => (
                         <button key={t._id} onClick={() => { 
                           setActiveTab('topics'); 
@@ -312,7 +312,7 @@ export default function AdminPanel() {
                           setShowSearchResults(false);
                         }} className="w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left group cursor-pointer">
                           <p className="text-xs font-bold text-gray-900 group-hover:text-primary transition-colors truncate">{t.title}</p>
-                          <p className="text-[10px] text-gray-400">Oleh {t.author?.username}</p>
+                          <p className="text-[10px] text-gray-500">Oleh {t.author?.username}</p>
                         </button>
                       ))}
                     </div>
@@ -324,12 +324,12 @@ export default function AdminPanel() {
                    onlineArticles.concat(pendingArticles).filter(a => a.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length === 0 &&
                    onlineTopics.concat(pendingTopics).filter(t => t.title.toLowerCase().includes(adminSearchQuery.toLowerCase())).length === 0 && (
                     <div className="p-8 text-center">
-                      <p className="text-xs text-gray-400">Tidak ada hasil ditemukan.</p>
+                      <p className="text-xs text-gray-500">Tidak ada hasil ditemukan.</p>
                     </div>
                    )}
                 </div>
                 <div className="p-3 bg-gray-50/50 border-t border-gray-50 flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 font-medium italic">Hasil teratas ditampilkan</span>
+                  <span className="text-[10px] text-gray-500 font-medium italic">Hasil teratas ditampilkan</span>
                   <button onClick={() => setShowSearchResults(false)} className="text-[10px] font-bold text-primary hover:underline cursor-pointer">Tutup</button>
                 </div>
               </div>
@@ -349,7 +349,7 @@ export default function AdminPanel() {
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === tab.key
                   ? 'bg-primary text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  : 'text-black hover:bg-gray-50'
               }`}
             >
               {tab.label}
@@ -382,10 +382,10 @@ export default function AdminPanel() {
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-xl">{stat.icon}</span>
-                  <p className="text-xs text-gray-400 font-medium">{stat.label}</p>
+                  <span className="text-3xl">{stat.icon}</span>
+                  <p className="text-xl text-black font-medium">{stat.label}</p>
                 </div>
-                <p className={`text-3xl font-bold bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
+                <p className={`text-5xl font-bold bg-linear-to-r ${stat.color} bg-clip-text text-transparent`}>
                   {loading ? '—' : stat.value ?? 0}
                 </p>
               </div>
@@ -403,7 +403,7 @@ export default function AdminPanel() {
               {loading ? (
                 <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : pendingReviews.length === 0 ? (
-                <div className="p-10 text-center text-sm text-gray-400">Tidak ada review dalam antrean.</div>
+                <div className="p-10 text-center text-sm text-gray-500">Tidak ada review dalam antrean.</div>
               ) : (
                 <div className="divide-y divide-gray-50">
                   {pendingReviews.map((r) => (
@@ -414,7 +414,7 @@ export default function AdminPanel() {
                             {r.status === 'rejected' ? <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Revisi</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Pending</span>}
                             <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
                           </div>
-                          <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · {formatDate(r.createdAt)}</p>
+                          <p className="text-xs text-gray-500">Oleh {r.author?.username || 'User Terhapus'} · {formatDate(r.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <button onClick={() => setViewingItem({ type: 'review', data: r })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
@@ -451,14 +451,14 @@ export default function AdminPanel() {
               {loading ? (
                 <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : onlineReviews.length === 0 ? (
-                <div className="p-10 text-center text-sm text-gray-400">Belum ada review yang disetujui.</div>
+                <div className="p-10 text-center text-sm text-gray-500">Belum ada review yang disetujui.</div>
               ) : (
                 <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
                   {onlineReviews.map((r) => (
                     <div key={r._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50 transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">{r.title}</p>
-                        <p className="text-xs text-gray-400">Oleh {r.author?.username || 'User Terhapus'} · Disetujui {formatDate(r.createdAt)}</p>
+                        <p className="text-xs text-gray-500">Oleh {r.author?.username || 'User Terhapus'} · Disetujui {formatDate(r.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <a href={`/review/${r._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
@@ -486,7 +486,7 @@ export default function AdminPanel() {
               {loading ? (
                 <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : pendingArticles.length === 0 ? (
-                <div className="p-10 text-center text-sm text-gray-400">Tidak ada artikel dalam antrean.</div>
+                <div className="p-10 text-center text-sm text-gray-500">Tidak ada artikel dalam antrean.</div>
               ) : (
                 <div className="divide-y divide-gray-50">
                   {pendingArticles.map((a) => (
@@ -497,7 +497,7 @@ export default function AdminPanel() {
                             {a.status === 'rejected' ? <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Revisi</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Pending</span>}
                             <p className="text-sm font-semibold text-gray-900 truncate">{a.title}</p>
                           </div>
-                          <p className="text-xs text-gray-400">{a.category} · Oleh {a.author?.username || 'User Terhapus'} · {formatDate(a.createdAt)}</p>
+                          <p className="text-xs text-gray-500">{a.category} · Oleh {a.author?.username || 'User Terhapus'} · {formatDate(a.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <button onClick={() => setViewingItem({ type: 'article', data: a })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
@@ -534,14 +534,14 @@ export default function AdminPanel() {
               {loading ? (
                 <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : onlineArticles.length === 0 ? (
-                <div className="p-10 text-center text-sm text-gray-400">Belum ada artikel yang disetujui.</div>
+                <div className="p-10 text-center text-sm text-gray-500">Belum ada artikel yang disetujui.</div>
               ) : (
                 <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
                   {onlineArticles.map((a) => (
                     <div key={a._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50 transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">{a.title}</p>
-                        <p className="text-xs text-gray-400">Oleh {a.author?.username || 'User Terhapus'} · Disetujui {formatDate(a.createdAt)}</p>
+                        <p className="text-xs text-gray-500">Oleh {a.author?.username || 'User Terhapus'} · Disetujui {formatDate(a.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
@@ -569,7 +569,7 @@ export default function AdminPanel() {
               {loading ? (
                 <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : pendingTopics.length === 0 ? (
-                <div className="p-10 text-center text-sm text-gray-400">Tidak ada topik dalam antrean.</div>
+                <div className="p-10 text-center text-sm text-gray-500">Tidak ada topik dalam antrean.</div>
               ) : (
                 <div className="divide-y divide-gray-50">
                   {pendingTopics.map((t) => (
@@ -580,7 +580,7 @@ export default function AdminPanel() {
                             {t.status === 'rejected' ? <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-600">Revisi</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Pending</span>}
                             <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
                           </div>
-                          <p className="text-xs text-gray-400">{t.category} · Oleh {t.author?.username || 'User Terhapus'} · {formatDate(t.createdAt)}</p>
+                          <p className="text-xs text-gray-500">{typeof t.category === 'object' ? t.category.name : t.category} · Oleh {t.author?.username || 'User Terhapus'} · {formatDate(t.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <button onClick={() => setViewingItem({ type: 'topic', data: t })} className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors cursor-pointer">
@@ -617,14 +617,14 @@ export default function AdminPanel() {
               {loading ? (
                 <div className="p-6 space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
               ) : onlineTopics.length === 0 ? (
-                <div className="p-10 text-center text-sm text-gray-400">Belum ada topik yang disetujui.</div>
+                <div className="p-10 text-center text-sm text-gray-500">Belum ada topik yang disetujui.</div>
               ) : (
                 <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
                   {onlineTopics.map((t) => (
                     <div key={t._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 hover:bg-gray-50 transition-colors">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">{t.title}</p>
-                        <p className="text-xs text-gray-400">Oleh {t.author?.username || 'User Terhapus'} · Disetujui {formatDate(t.createdAt)}</p>
+                        <p className="text-xs text-gray-500">Oleh {t.author?.username || 'User Terhapus'} · Disetujui {formatDate(t.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <a href={`/forum/${t._id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors">
@@ -672,7 +672,7 @@ export default function AdminPanel() {
                               <Link to={`/profile/${u._id}`} className="font-bold text-gray-900 truncate hover:text-primary transition-colors">
                                 {u.username}
                               </Link>
-                              <p className="text-[10px] text-gray-400 truncate">{u.email}</p>
+                              <p className="text-[10px] text-gray-500 truncate">{u.email}</p>
                             </div>
                           </div>
                         </td>
@@ -691,7 +691,7 @@ export default function AdminPanel() {
                           {u.isVerified ? (
                             <span className="text-emerald-500 text-xs font-medium">✓ Verified</span>
                           ) : (
-                            <span className="text-gray-400 text-xs">Belum</span>
+                            <span className="text-gray-500 text-xs">Belum</span>
                           )}
                         </td>
                         <td className="px-6 py-3 text-gray-500 text-xs">{formatDate(u.createdAt)}</td>
@@ -739,7 +739,7 @@ export default function AdminPanel() {
               <h3 className="font-bold text-lg text-gray-900">
                 Detail {viewingItem.type === 'review' ? 'Review' : viewingItem.type === 'article' ? 'Artikel' : 'Topik'}
               </h3>
-              <button onClick={() => setViewingItem(null)} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              <button onClick={() => setViewingItem(null)} className="text-gray-500 hover:text-gray-600 transition-colors cursor-pointer">
                 ✕
               </button>
             </div>
@@ -777,7 +777,7 @@ export default function AdminPanel() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                        {(['overall', 'longevity', 'sillage', 'valueForMoney'] as const).map((key) => (
                          <div key={key} className="bg-gray-50 p-2 rounded-xl text-center">
-                           <p className="text-[10px] text-gray-400 uppercase tracking-wider">{key}</p>
+                           <p className="text-[10px] text-gray-500 uppercase tracking-wider">{key}</p>
                            <p className="font-bold text-amber-500">{viewingItem.data.rating?.[key] || 0}/5</p>
                          </div>
                        ))}
@@ -829,7 +829,7 @@ export default function AdminPanel() {
                 <div className="space-y-6">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-xl">{(viewingItem.data as PendingTopic).category}</span>
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-xl">{typeof (viewingItem.data as PendingTopic).category === 'object' ? ((viewingItem.data as PendingTopic).category as any).name : (viewingItem.data as PendingTopic).category}</span>
                     </div>
                     <h4 className="text-2xl font-bold text-gray-900">{viewingItem.data.title}</h4>
                     <p className="text-sm text-gray-500 mt-1">Oleh {viewingItem.data.author?.username || 'User Terhapus'} · {formatDate(viewingItem.data.createdAt)}</p>

@@ -48,7 +48,7 @@ export default function ImageWithLazyLoad({
   };
 
   return (
-    <div ref={imgRef} className={`${!isLoaded ? placeholderClassName : ''} overflow-hidden`}>
+    <div ref={imgRef} className={`w-full h-full ${!isLoaded ? placeholderClassName : ''} overflow-hidden`}>
       {!isLoaded && <LoadingSkeleton className={placeholderClassName} />}
       {imageSrc && (
         <img

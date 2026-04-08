@@ -5,24 +5,26 @@ const {
   getTopics, getTopicById, createTopic, updateTopic, deleteTopic, 
   addComment, deleteComment, getMyTopics, getTopicForEdit,
   likeComment, dislikeComment, getTopCategories, getRelatedTopics,
-  likeTopic, dislikeTopic
+  likeTopic, dislikeTopic, getTopTopics
 } = require('../controllers/forumController');
 
 // Public
 router.get('/', getTopics);
 router.get('/meta/top-categories', getTopCategories);
+router.get('/meta/top-titles', getTopTopics);
 router.get('/:id', getTopicById);
+
 router.get('/:id/related', getRelatedTopics);
 
 // Protected
-router.post('/', protect, verified, createTopic);
+const upload = require('../middleware/upload');
+router.post('/', protect, verified, upload.single('image'), upload.cloudinaryUpload('forum'), createTopic);
 router.get('/my/list', protect, getMyTopics);
 router.get('/edit/:id', protect, getTopicForEdit);
 router.put('/:id', protect, verified, updateTopic);
 router.delete('/:id', protect, deleteTopic);
 
 // Comments
-const upload = require('../middleware/upload');
 router.post(
   '/:id/comments',
   protect,
