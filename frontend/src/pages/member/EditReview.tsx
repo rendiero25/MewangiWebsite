@@ -67,8 +67,10 @@ export default function EditReview() {
   useEffect(() => {
     const fetchReview = async () => {
       try {
-        const { data } = await axios.get(`${API_URL}/reviews/${id}`);
-        const rev = data.review;
+        const { data } = await axios.get(`${API_URL}/reviews/edit/${id}`, {
+          headers: { Authorization: `Bearer ${user?.token}` }
+        });
+        const rev = data;
         setTitle(rev.title || '');
         setContent(rev.content || '');
         setRating({
@@ -91,8 +93,8 @@ export default function EditReview() {
         setLoading(false);
       }
     };
-    fetchReview();
-  }, [id]);
+    if (user?.token && id) fetchReview();
+  }, [id, user?.token]);
 
   const toggleTag = (tag: string, list: string[], setter: (v: string[]) => void) => {
     setter(list.includes(tag) ? list.filter((t) => t !== tag) : [...list, tag]);
@@ -148,7 +150,13 @@ export default function EditReview() {
     }
   };
 
-  if (loading) return <div className="text-center p-12 text-gray-400">Memuat...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -162,20 +170,21 @@ export default function EditReview() {
         </Link>
         
         {status === 'rejected' && (
-           <div className="mb-6 px-5 py-4 bg-red-50 border-l-4 border-red-500 rounded-xl-r-xl shadow-sm text-red-800">
-             <div className="flex items-center gap-2 mb-1">
-               <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-               </svg>
-               <h3 className="font-bold">Review Ditolak Admin</h3>
-             </div>
-             <p className="text-sm ml-7">
-               <strong>Catatan / Alasan:</strong> {rejectionReason || 'Tidak ada alasan spesifik.'}
-             </p>
-             <p className="text-xs text-red-600 mt-2 ml-7 italic">
-               Silakan edit kolom di bawah ini berdasarkan masukan dari admin, lalu klik 'Simpan Revisi'.
-             </p>
-           </div>
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-6">
+            <div className="flex items-start gap-4 text-red-800">
+              <span className="text-2xl mt-0.5">⚠️</span>
+              <div>
+                <h3 className="font-bold text-lg mb-1">Review Ditolak Admin</h3>
+                <div className="text-sm opacity-90 leading-relaxed bg-white border border-red-100 rounded-xl p-3 mt-2">
+                  <span className="font-semibold block mb-1">Catatan Revisi:</span>
+                  {rejectionReason || 'Tidak ada alasan spesifik.'}
+                </div>
+                <p className="text-xs font-medium mt-3 text-red-700/80">
+                  Silakan perbaiki tulisan Anda sesuai catatan di atas, kemudian klik "Simpan Revisi" di bawah untuk diperiksa kembali.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

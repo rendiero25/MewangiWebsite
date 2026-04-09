@@ -78,11 +78,9 @@ export default function ForumList() {
       setTopics(data.topics);
       setTotalPages(data.totalPages);
       setTotal(data.total);
-    } catch (err) {
-      const errorMsg =
-        (err as any)?.response?.data?.message || "Gagal memuat topik";
+    } catch (err: any) {
       console.error("Gagal memuat topik:", err);
-      setError(errorMsg);
+      setError(err?.response?.data?.message || "Gagal menghubungkan ke server. Pastikan backend berjalan.");
     } finally {
       setLoading(false);
     }

@@ -17,6 +17,7 @@ export default function EditTopic() {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Diskusi Umum');
   const [content, setContent] = useState('');
+  const [status, setStatus] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   
   const [loading, setLoading] = useState(true);
@@ -31,9 +32,8 @@ export default function EditTopic() {
       setTitle(data.title);
       setCategory(data.category);
       setContent(data.content);
-      if (data.status === 'rejected' && data.rejectionReason) {
-        setRejectionReason(data.rejectionReason);
-      }
+      setStatus(data.status || '');
+      setRejectionReason(data.rejectionReason || '');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal memuat topik.';
       setError(msg || 'Terjadi kesalahan sistem.');
@@ -43,8 +43,8 @@ export default function EditTopic() {
   }, [id, user?.token]);
 
   useEffect(() => {
-    fetchTopic();
-  }, [fetchTopic]);
+    if (user?.token && id) fetchTopic();
+  }, [fetchTopic, user?.token, id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,18 +88,18 @@ export default function EditTopic() {
           Kembali ke Dashboard
         </Link>
 
-        {rejectionReason && (
+        {status === 'rejected' && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-6">
             <div className="flex items-start gap-4 text-red-800">
               <span className="text-2xl mt-0.5">⚠️</span>
               <div>
                 <h3 className="font-bold text-lg mb-1">Topik Ditolak Admin</h3>
-                <p className="text-sm opacity-90 leading-relaxed bg-white border border-red-100 rounded-xl p-3 mt-2">
+                <div className="text-sm opacity-90 leading-relaxed bg-white border border-red-100 rounded-xl p-3 mt-2">
                   <span className="font-semibold block mb-1">Catatan Revisi:</span>
-                  {rejectionReason}
-                </p>
+                  {rejectionReason || 'Tidak ada alasan spesifik.'}
+                </div>
                 <p className="text-xs font-medium mt-3 text-red-700/80">
-                  Perbaiki tulisan Anda sesuai catatan di atas, kemudian klik "Simpan Revisi" di bawah untuk diperiksa kembali.
+                  Silakan perbaiki tulisan Anda sesuai catatan di atas, kemudian klik "Simpan Revisi" di bawah untuk diperiksa kembali.
                 </p>
               </div>
             </div>

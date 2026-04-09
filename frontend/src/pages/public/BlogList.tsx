@@ -38,10 +38,12 @@ export default function BlogList() {
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState("");
   const [total, setTotal] = useState(0);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const params: Record<string, string | number> = { page, limit: 25 };
       if (activeCategory !== "Semua") params.category = activeCategory;
@@ -51,8 +53,9 @@ export default function BlogList() {
       setArticles(data.articles);
       setTotalPages(data.totalPages);
       setTotal(data.total);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal memuat artikel:", err);
+      setError(err?.response?.data?.message || "Gagal menghubungkan ke server. Pastikan backend berjalan.");
     } finally {
       setLoading(false);
     }
@@ -152,6 +155,16 @@ export default function BlogList() {
             ))}
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 animate-pulse">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        )}
 
         {/* Result count */}
         {!loading && (

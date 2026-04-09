@@ -3,7 +3,7 @@ const router = express.Router();
 const { protect, verified } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { 
-  getReviews, getReviewById, createReview, updateReview, deleteReview, 
+  getReviews, getReviewById, getReviewForEdit, createReview, updateReview, deleteReview, 
   addReviewComment, getMyReviews, deleteReviewComment,
   likeComment, dislikeComment, getTopCategories, getRelatedReviews,
   likeReview, dislikeReview, getTopReviews
@@ -14,6 +14,7 @@ router.get('/', getReviews);
 router.get('/meta/top-categories', getTopCategories);
 router.get('/meta/top-titles', getTopReviews);
 router.get('/:id', getReviewById);
+router.get('/edit/:id', protect, getReviewForEdit);
 router.get('/:id/related', getRelatedReviews);
 
 // Reactions

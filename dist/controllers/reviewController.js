@@ -71,6 +71,29 @@ const getReviewById = async (req, res) => {
   }
 };
 
+// @desc    Get review for editing (author / admin only, ignores status)
+// @route   GET /api/reviews/edit/:id
+// @access  Private
+const getReviewForEdit = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id)
+      .populate('author', 'username avatar');
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review tidak ditemukan' });
+    }
+
+    // Check ownership
+    if (review.author._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Tidak memiliki izin untuk mengedit review ini' });
+    }
+
+    res.json(review);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil data review', error: error.message });
+  }
+};
+
 // @desc    Buat review baru (perlu approval admin)
 // @route   POST /api/reviews
 // @access  Private (verified member)
@@ -495,7 +518,7 @@ const getTopReviews = async (req, res) => {
 };
 
 module.exports = { 
-  getReviews, getReviewById, createReview, updateReview, deleteReview, addReviewComment, getMyReviews, deleteReviewComment,
+  getReviews, getReviewById, getReviewForEdit, createReview, updateReview, deleteReview, addReviewComment, getMyReviews, deleteReviewComment,
   likeComment, dislikeComment, getTopCategories, getRelatedReviews,
   likeReview, dislikeReview, getTopReviews
 };
