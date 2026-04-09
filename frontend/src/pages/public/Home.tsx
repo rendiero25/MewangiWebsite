@@ -7,9 +7,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TextPlugin } from "gsap/TextPlugin";
 
-import sitiAvatar from "../../assets/sitinurhaliza.jpg";
-import raraAvatar from "../../assets/rarajonggrang.jpg";
-import dwiAvatar from "../../assets/dwisasongko.jpg";
+// import sitiAvatar from "../../assets/sitinurhaliza.jpg";
+// import raraAvatar from "../../assets/rarajonggrang.jpg";
+// import dwiAvatar from "../../assets/dwisasongko.jpg";
 
 import Avatar from "../../components/common/Avatar";
 
@@ -25,6 +25,7 @@ interface Review { _id: string; title: string; image?: string; author: { usernam
 
 interface Topic { _id: string; title: string; slug: string; category: { name: string }; author: { username: string; avatar?: string }; replyCount: number; createdAt: string; }
 interface Stats { totalUsers: number; totalReviews: number; totalTopics: number; totalArticles: number; totalPerfumes: number; }
+interface LeaderboardUser { _id: string; username: string; avatar?: string; totalActivity: number; rank: number; }
 
 export default function Home() {
   const navigate = useNavigate();
@@ -34,23 +35,26 @@ export default function Home() {
   const heroDescRef = useRef<HTMLParagraphElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const showcaseStatsRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
+  // const featuresRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
+  const leaderboardRef = useRef<HTMLDivElement>(null);
 
   const [latestArticles, setLatestArticles] = useState<Article[]>([]);
   const [latestReviews, setLatestReviews] = useState<Review[]>([]);
   const [latestTopics, setLatestTopics] = useState<Topic[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const [artRes, revRes, topicRes, statsRes] = await Promise.allSettled([
+        const [artRes, revRes, topicRes, statsRes, leadRes] = await Promise.allSettled([
           axios.get(`${API_URL}/articles?limit=3&status=approved`),
           axios.get(`${API_URL}/reviews?limit=3&status=approved`),
           axios.get(`${API_URL}/forum?limit=5&status=approved`),
           axios.get(`${API_URL}/stats`),
+          axios.get(`${API_URL}/leaderboard?type=activity&limit=5`),
         ]);
         if (artRes.status === 'fulfilled') setLatestArticles(artRes.value.data.articles || artRes.value.data || []);
         if (revRes.status === 'fulfilled') setLatestReviews(revRes.value.data.reviews || revRes.value.data || []);
@@ -60,6 +64,9 @@ export default function Home() {
           setStats(statsRes.value.data);
         } else {
           console.error('Stats fetch failed:', statsRes.reason);
+        }
+        if (leadRes.status === 'fulfilled') {
+          setLeaderboard(leadRes.value.data.data || []);
         }
       } catch (err) {
         console.error('Failed to fetch latest content:', err);
@@ -148,9 +155,7 @@ export default function Home() {
         );
       }
 
-      // Note: Hero stats animation moved to a separate useEffect to handle dynamic data
-
-      // ScrollTrigger - Parallax effect untuk decorative elements
+      // Parallax effect untuk decorative elements
       const decoratives = document.querySelectorAll(".decorative-circle");
       decoratives.forEach((el) => {
         gsap.to(el, {
@@ -194,26 +199,16 @@ export default function Home() {
             },
           }
         );
-
         // Hover animation
         card.addEventListener("mouseenter", () => {
-          gsap.to(card, {
-            scale: 1.05,
-            duration: 0.3,
-            overwrite: "auto",
-          });
+          gsap.to(card, { scale: 1.05, duration: 0.3, overwrite: "auto" });
         });
-
         card.addEventListener("mouseleave", () => {
-          gsap.to(card, {
-            scale: 1,
-            duration: 0.3,
-            overwrite: "auto",
-          });
+          gsap.to(card, { scale: 1, duration: 0.3, overwrite: "auto" });
         });
       });
 
-      // Step cards animation with Flip-like effect
+      // Step cards animation
       gsap.utils.toArray<HTMLElement>(".step-card").forEach((card, i) => {
         gsap.fromTo(
           card,
@@ -229,7 +224,6 @@ export default function Home() {
               start: "top 85%",
               end: "top 55%",
               scrub: 0.3,
-              markers: false,
             },
           }
         );
@@ -250,13 +244,33 @@ export default function Home() {
               start: "top 80%",
               end: "top 50%",
               scrub: 0.3,
-              markers: false,
             },
           }
         );
       });
 
-      // CTA Section - ScrollTrigger reveal
+      // Leaderboard Animation
+      gsap.utils.toArray<HTMLElement>(".leaderboard-card").forEach((card, i) => {
+        gsap.fromTo(
+          card,
+          { opacity: 0, scale: 0.9, y: 30 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.8,
+            delay: i * 0.1,
+            scrollTrigger: {
+              trigger: leaderboardRef.current,
+              start: "top 80%",
+              end: "top 50%",
+              scrub: 0.5,
+            },
+          }
+        );
+      });
+
+      // CTA Section reveal
       gsap.fromTo(
         ".cta-section",
         { opacity: 0, scale: 0.95, y: 40 },
@@ -271,14 +285,12 @@ export default function Home() {
             start: "top 75%",
             end: "top 45%",
             scrub: 0.5,
-            markers: false,
           },
         }
       );
 
       // Highlight text animation
       gsap.utils.toArray<HTMLElement>(".highlight-text").forEach((text) => {
-        // text.textContent for reference
         gsap.fromTo(
           text,
           { color: "currentColor" },
@@ -292,7 +304,6 @@ export default function Home() {
               start: "top center",
               end: "center center",
               scrub: 1,
-              markers: false,
             },
           }
         );
@@ -340,7 +351,7 @@ export default function Home() {
       }
 
       ScrollTrigger.refresh();
-    }); // Scope is global or can be refined later if needed
+    });
 
     return () => ctx.revert();
   }, [stats]);
@@ -378,7 +389,7 @@ export default function Home() {
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(0,149,69,0.05) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-24 lg:pb-36">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-24">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge dengan animation */}
             <div
@@ -478,13 +489,101 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section dengan ScrollTrigger */}
+      {/* Top Contributors Leaderboard */}
       <section
+        ref={leaderboardRef}
+        className="py-24 bg-linear-to-b from-white to-gray-50 overflow-hidden"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 px-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-100 rounded-full text-[10px] font-bold text-amber-600 mb-4 uppercase tracking-widest">
+              🏆 Hall of Fame
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-bold text-black mb-4 tracking-tighter">
+              Kontributor <span className="text-primary">Teraktif</span>
+            </h2>
+            <p className="text-black max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+              Apresiasi untuk para member yang paling aktif berbagi pengalaman,
+              menulis artikel, dan berinteraksi di komunitas Mewangi.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 blur-[100px] -z-10 rounded-full" />
+
+            {leaderboard.length > 0 ? (
+              leaderboard.map((user, idx) => (
+                <div
+                  key={user._id}
+                  className="leaderboard-card group relative p-6 rounded-2xl bg-white border border-gray-100 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 cursor-pointer backdrop-blur-sm"
+                  onClick={() => navigate(`/profile/${user.username}`)}
+                >
+                  <div className={`absolute -top-3 -right-3 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-lg rotate-12 group-hover:rotate-0 transition-transform duration-300 z-10
+                    ${idx === 0 ? 'bg-linear-to-br from-yellow-300 to-amber-500 text-white' :
+                      idx === 1 ? 'bg-linear-to-br from-gray-200 to-gray-400 text-white' :
+                      idx === 2 ? 'bg-linear-to-br from-orange-300 to-orange-500 text-white' :
+                      'bg-white border border-gray-200 text-gray-400'}`}
+                  >
+                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                  </div>
+
+                  <div className="flex flex-col items-center text-center">
+                    <div className="relative mb-4">
+                      <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-0 group-hover:scale-110 transition-transform duration-500" />
+                      <Avatar
+                        src={user.avatar}
+                        username={user.username}
+                        size="2xl"
+                        className="relative z-10 border-2 border-white group-hover:border-primary/10 transition-all"
+                        disableLink={true}
+                      />
+                    </div>
+
+                    <h3 className="font-bold text-gray-900 group-hover:text-primary transition-colors truncate w-full px-2">
+                      @{user.username}
+                    </h3>
+
+                    <div className="mt-4 w-full pt-4 border-t border-gray-50 flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aktivitas</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-lg font-black text-primary group-hover:scale-110 transition-transform inline-block">
+                          {user.totalActivity?.toLocaleString() || 0}
+                        </span>
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 h-1 bg-linear-to-r from-primary to-secondary w-0 group-hover:w-full transition-all duration-500 rounded-b-2xl" />
+                </div>
+              ))
+            ) : (
+              [1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-64 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />
+              ))
+            )}
+          </div>
+
+          {/* <div className="mt-16 text-center">
+            <Link
+              to="/leaderboard"
+              className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:text-secondary transition-all group"
+            >
+              LIHAT LEADERBOARD LENGKAP
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div> */}
+        </div>
+      </section>
+
+      {/* Features Section dengan ScrollTrigger */}
+      {/* <section
         ref={featuresRef}
         className="py-20 bg-third/25"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Title dengan animation */}
+          
           <div className="text-center mb-20">
             <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
               <span className="highlight-text text-secondary">Kenapa Mewangi?</span>
@@ -650,12 +749,12 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works - The Perfect Journey */}
-      <section className="py-20 bg-white">
+      {/* <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Title */}
+          
           <div className="text-center mb-20">
             <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
               <span className="highlight-text text-black">
@@ -667,7 +766,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Steps with Flip-like animation */}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
             {[
               {
@@ -709,7 +808,7 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* Icon emoji */}
+                
                 <div className="text-4xl mb-3 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300">
                   {item.icon}
                 </div>
@@ -721,7 +820,7 @@ export default function Home() {
                   {item.desc}
                 </p>
 
-                {/* Details reveal on hover */}
+                
                 <div className="pt-4 border-t border-gray-300 dark:border-gray-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <p className="text-xs dark:text-black italic">
                     {item.details}
@@ -731,13 +830,13 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Visual connector lines */}
+          
           <div className="hidden lg:block relative mt-12 h-1 bg-linear-to-r from-transparent via-primary/20 to-transparent"></div>
         </div>
-      </section>
+      </section> */}
 
       {/* Testimonials Section dengan scroll animation */}
-      <section className="pb-20 bg-linear-to-b from-white to-third/25">
+      {/* <section className="pb-20 bg-linear-to-b from-white to-third/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
@@ -783,7 +882,7 @@ export default function Home() {
                 key={testimonial.author}
                 className="feature-card p-8 rounded-2xl bg-white border border-primary hover:border-secondary hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
               >
-                {/* Rating Stars */}
+                
                 <div className="flex items-center gap-1 mb-4">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
                     <span key={i} className="text-lg">
@@ -792,12 +891,12 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Quote */}
+                
                 <p className="text-black italic mb-6 font-medium">
                   &quot;{testimonial.content}&quot;
                 </p>
 
-                {/* Author */}
+                
                 <div className="flex items-center gap-4 pt-6 border-t border-gray-200">
                   <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 shrink-0">
                     <img 
@@ -820,7 +919,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ===== LATEST CONTENT SECTIONS ===== */}
 

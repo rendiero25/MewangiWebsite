@@ -99,7 +99,7 @@ const getReviewForEdit = async (req, res) => {
 // @access  Private (verified member)
 const createReview = async (req, res) => {
   try {
-    const { title, content, occasion, season, perfume } = req.body;
+    const { title, content, occasion, season, perfume, status } = req.body;
     let rating = req.body.rating;
     
     // Parse rating fields bracket notation if form-data didn't map them
@@ -112,6 +112,9 @@ const createReview = async (req, res) => {
       };
     }
 
+    // Set status: draft if user wants to save draft, otherwise pending
+    const reviewStatus = status === 'draft' ? 'draft' : 'pending';
+
     const review = await Review.create({
       title: filterBadWords(title),
       content: filterBadWords(content),
@@ -121,25 +124,31 @@ const createReview = async (req, res) => {
       occasion,
       season,
       image: req.file ? getUploadedUrl(req) : '',
-      status: 'pending',
+      status: reviewStatus,
     });
 
     await review.populate('author', 'username avatar');
 
-    // Notify admins
-    const admins = await User.find({ role: 'admin' });
-    await Promise.all(admins.map(admin => 
-      Notification.create({
-        recipient: admin._id,
-        sender: req.user._id,
-        type: 'new_review_admin',
-        message: `Review baru pending: "${review.title}" oleh ${req.user.username}`,
-        link: `/admin`
-      })
-    ));
+    // Notify admins only if status is pending AND author is not an admin themselves
+    if (reviewStatus === 'pending' && req.user.role !== 'admin') {
+      const admins = await User.find({ role: 'admin' });
+      await Promise.all(admins.map(admin => 
+        Notification.create({
+          recipient: admin._id,
+          sender: req.user._id,
+          type: 'new_review_admin',
+          message: `Review baru pending: "${review.title}" oleh ${req.user.username}`,
+          link: `/admin`
+        })
+      ));
+    }
+
+    const message = reviewStatus === 'draft' 
+      ? 'Review disimpan sebagai draft. Anda bisa mengeditnya nanti.'
+      : 'Review berhasil dikirim! Menunggu approval admin.';
 
     res.status(201).json({
-      message: 'Review berhasil dikirim! Menunggu approval admin.',
+      message,
       review,
     });
   } catch (error) {
@@ -179,28 +188,30 @@ const updateReview = async (req, res) => {
     review.occasion = occasion || review.occasion;
     review.season = season || review.season;
     if (req.file) review.image = getUploadedUrl(req);
-    review.status = 'pending';
+    review.status = req.body.status || 'pending';
     review.rejectionReason = '';
 
     await review.save();
     await review.populate('author', 'username avatar');
 
-    // Notify admins
-    try {
-      const admins = await User.find({ role: 'admin' });
-      const socket = require('../socket');
-      await Promise.all(admins.map(async (admin) => {
-        const notification = await Notification.create({
-          recipient: admin._id,
-          sender: req.user._id,
-          type: 'new_review_admin',
-          message: `Review diedit (pending): "${review.title}" oleh ${req.user.username}`,
-          link: `/admin`
-        });
-        socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
-      }));
-    } catch (notifyErr) {
-      console.error('Notification Error (Update Review):', notifyErr);
+    // Notify admins if not draft
+    if (review.status === 'pending') {
+      try {
+        const admins = await User.find({ role: 'admin' });
+        const socket = require('../socket');
+        await Promise.all(admins.map(async (admin) => {
+          const notification = await Notification.create({
+            recipient: admin._id,
+            sender: req.user._id,
+            type: 'new_review_admin',
+            message: `Review diedit (pending): "${review.title}" oleh ${req.user.username}`,
+            link: `/admin`
+          });
+          socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
+        }));
+      } catch (notifyErr) {
+        console.error('Notification Error (Update Review):', notifyErr);
+      }
     }
 
     res.json(review);

@@ -162,6 +162,7 @@ const createTopic = async (req, res) => {
       tags,
       prefix,
       type,
+      status: requestStatus,
       isAnnouncement,
       isFeatured,
     } = req.body;
@@ -172,8 +173,13 @@ const createTopic = async (req, res) => {
       return res.status(429).json({ message: 'Anda mengirim topik terlalu cepat. Tunggu sebentar.' });
     }
 
-    // Admin auto-approval, others pending
-    const status = req.user.role === 'admin' ? 'approved' : 'pending';
+    // Determine status: draft if requested, otherwise pending (same for admin and member)
+    let status;
+    if (requestStatus === 'draft') {
+      status = 'draft';
+    } else {
+      status = 'pending';
+    }
 
     const topic = await ForumTopic.create({
       title: filterBadWords(title),
@@ -191,8 +197,8 @@ const createTopic = async (req, res) => {
 
     await topic.populate("author", "username avatar");
 
-    // Notify admins if pending (wrapped in try-catch to avoid 500 on main flow)
-    if (status === 'pending') {
+    // Notify admins only if status is pending AND the author is not an admin themselves
+    if (status === 'pending' && req.user.role !== 'admin') {
       try {
         const admins = await User.find({ role: "admin" });
         const socket = require('../socket');
@@ -259,6 +265,7 @@ const updateTopic = async (req, res) => {
     topic.category = category || topic.category;
     topic.tags = tags || topic.tags;
     topic.prefix = prefix || topic.prefix;
+    if (req.file) topic.image = getUploadedUrl(req);
 
     if (req.user.role === "admin") {
       topic.isPinned = isPinned !== undefined ? isPinned : topic.isPinned;
@@ -268,28 +275,30 @@ const updateTopic = async (req, res) => {
       topic.isFeatured =
         isFeatured !== undefined ? isFeatured : topic.isFeatured;
     }
-    topic.status = "pending";
+    topic.status = req.body.status || "pending";
     topic.rejectionReason = "";
 
     await topic.save();
     await topic.populate("author", "username avatar");
 
-    // Notify admins
-    try {
-      const admins = await User.find({ role: "admin" });
-      const socket = require('../socket');
-      await Promise.all(admins.map(async (admin) => {
-        const notification = await Notification.create({
-          recipient: admin._id,
-          sender: req.user._id,
-          type: "system",
-          message: `Topik diedit (pending): "${topic.title}" oleh ${req.user.username || 'Member'}`,
-          link: `/admin`
-        });
-        socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
-      }));
-    } catch (notifyErr) {
-      console.error('Notification Error (Update Topic):', notifyErr);
+    // Notify admins if not draft
+    if (topic.status === "pending") {
+      try {
+        const admins = await User.find({ role: "admin" });
+        const socket = require('../socket');
+        await Promise.all(admins.map(async (admin) => {
+          const notification = await Notification.create({
+            recipient: admin._id,
+            sender: req.user._id,
+            type: "system",
+            message: `Topik diedit (pending): "${topic.title}" oleh ${req.user.username || 'Member'}`,
+            link: `/admin`
+          });
+          socket.getIO().to(admin._id.toString()).emit('new_notification', notification);
+        }));
+      } catch (notifyErr) {
+        console.error('Notification Error (Update Topic):', notifyErr);
+      }
     }
 
     res.json(topic);

@@ -21,7 +21,7 @@ const upload = require('../middleware/upload');
 router.post('/', protect, verified, upload.single('image'), upload.cloudinaryUpload('forum'), createTopic);
 router.get('/my/list', protect, getMyTopics);
 router.get('/edit/:id', protect, getTopicForEdit);
-router.put('/:id', protect, verified, updateTopic);
+router.put('/:id', protect, verified, upload.single('image'), upload.cloudinaryUpload('forum'), updateTopic);
 router.delete('/:id', protect, deleteTopic);
 
 // Comments

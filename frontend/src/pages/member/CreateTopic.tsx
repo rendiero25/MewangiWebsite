@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -45,7 +46,7 @@ export default function CreateTopic() {
     fetchCategories();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, asDraft = false) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
       setError('Judul dan konten wajib diisi.');
@@ -61,6 +62,7 @@ export default function CreateTopic() {
       formData.append('category', category);
       formData.append('prefix', prefix);
       formData.append('type', type);
+      formData.append('status', asDraft ? 'draft' : 'pending');
       tagArray.forEach((t) => formData.append('tags', t));
       if (image) formData.append('image', image);
 
@@ -74,6 +76,7 @@ export default function CreateTopic() {
           } 
         }
       );
+      toast.success(asDraft ? 'Draft berhasil disimpan!' : 'Topik berhasil dikirim!');
       navigate('/dashboard?tab=forum');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal membuat topik.';
@@ -260,6 +263,14 @@ export default function CreateTopic() {
                 className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer bg-white"
               >
                 Batal
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                disabled={submitting}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                {submitting ? 'Menyimpan...' : 'Simpan Draft'}
               </button>
               <button
                 type="submit"

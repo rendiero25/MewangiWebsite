@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -68,7 +69,7 @@ export default function CreateReview() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, asDraft = false) => {
     e.preventDefault();
     setError('');
 
@@ -94,6 +95,7 @@ export default function CreateReview() {
       formData.append('rating[sillage]', String(rating.sillage));
       formData.append('rating[valueForMoney]', String(rating.valueForMoney));
       formData.append('rating[overall]', String(rating.overall));
+      formData.append('status', asDraft ? 'draft' : 'pending');
       selectedOccasions.forEach((o) => formData.append('occasion', o));
       selectedSeasons.forEach((s) => formData.append('season', s));
       if (image) formData.append('image', image);
@@ -104,6 +106,7 @@ export default function CreateReview() {
           'Content-Type': 'multipart/form-data',
         },
       });
+      toast.success(asDraft ? 'Draft berhasil disimpan!' : 'Review berhasil dikirim!');
       navigate('/dashboard');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal membuat review.';
@@ -264,6 +267,14 @@ export default function CreateReview() {
                 className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer bg-white"
               >
                 Batal
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                disabled={submitting}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-200 rounded-xl hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                {submitting ? 'Menyimpan...' : 'Simpan Draft'}
               </button>
               <button
                 type="submit"

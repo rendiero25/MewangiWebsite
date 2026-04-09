@@ -343,6 +343,7 @@ export default function MemberDashboard() {
                   <option value="approved">Disetujui</option>
                   <option value="pending">Pending</option>
                   <option value="rejected">Ditolak</option>
+                  <option value="draft">Draft</option>
                 </select>
                 <select 
                   value={reviewFilters.sort}
@@ -394,6 +395,16 @@ export default function MemberDashboard() {
                             🗑️ Hapus
                           </button>
                         </div>
+                      </div>
+                    )}
+                    {r.status === 'draft' && (
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <Link to={`/review/edit/${r._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
+                          ✏️ Edit
+                        </Link>
+                        <button onClick={() => handleDeleteReview(r._id)} className="text-xs font-semibold px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
                       </div>
                     )}
                     {r.status === 'pending' && (
@@ -494,6 +505,16 @@ export default function MemberDashboard() {
                         </div>
                       </div>
                     )}
+                    {a.status === 'draft' && (
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
+                          ✏️ Edit
+                        </Link>
+                        <button onClick={() => handleDeleteArticle(a._id)} className="text-xs font-semibold px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                    )}
                     {a.status === 'pending' && (
                       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                         <Link to={`/blog/edit/${a._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
@@ -537,7 +558,8 @@ export default function MemberDashboard() {
                   <option value="all">Semua Status</option>
                   <option value="approved">Disetujui</option>
                   <option value="pending">Pending</option>
-                  <option value="rejected">Ditolak</option>
+                   <option value="rejected">Ditolak</option>
+                  <option value="draft">Draft</option>
                 </select>
                 <select 
                   value={topicFilters.sort}
@@ -589,6 +611,16 @@ export default function MemberDashboard() {
                             🗑️ Hapus
                           </button>
                         </div>
+                      </div>
+                    )}
+                    {t.status === 'draft' && (
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <Link to={`/forum/edit/${t._id}`} className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors">
+                          ✏️ Edit
+                        </Link>
+                        <button onClick={() => handleDeleteTopic(t._id)} className="text-xs font-semibold px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 transition-colors cursor-pointer">
+                          🗑️ Hapus
+                        </button>
                       </div>
                     )}
                     {t.status === 'pending' && (

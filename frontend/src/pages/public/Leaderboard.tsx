@@ -15,10 +15,11 @@ interface LeaderboardUser {
     followersCount: number;
     totalLikes: number;
   };
+  totalActivity?: number;
   rank: number;
 }
 
-type LeaderboardType = 'reputation' | 'posts' | 'followers' | 'helpful';
+type LeaderboardType = 'reputation' | 'posts' | 'followers' | 'helpful' | 'activity';
 
 /**
  * Leaderboard Page
@@ -62,6 +63,8 @@ function Leaderboard() {
         return '👥 Pengikut';
       case 'helpful':
         return '👍 Membantu';
+      case 'activity':
+        return '🔥 Teraktif';
       default:
         return 'Leaderboard';
     }
@@ -91,6 +94,8 @@ function Leaderboard() {
         return user.statistics?.followersCount || 0;
       case 'helpful':
         return user.statistics?.totalLikes || 0;
+      case 'activity':
+        return user.totalActivity || 0;
       default:
         return user.reputation;
     }
@@ -116,6 +121,11 @@ function Leaderboard() {
       type: 'helpful',
       icon: <FiThumbsUp className="w-5 h-5" />,
       label: 'Membantu',
+    },
+    {
+      type: 'activity',
+      icon: <FiTrendingUp className="w-5 h-5" />,
+      label: 'Teraktif',
     },
   ];
 
@@ -198,7 +208,7 @@ function Leaderboard() {
                         user.avatar
                           ? user.avatar.startsWith('http')
                             ? user.avatar
-                            : `http://localhost:3000${user.avatar}`
+                            : `${API_URL.replace('/api', '')}${user.avatar}`
                           : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
                       }
                       alt={user.username}
@@ -249,6 +259,9 @@ function Leaderboard() {
               </li>
               <li>
                 <strong>Membantu:</strong> Jumlah like yang diterima dari posts Anda
+              </li>
+              <li>
+                <strong>Teraktif:</strong> Total semua aktivitas (posting, komentar, like/dislike yang diberikan)
               </li>
             </ul>
           </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -108,7 +109,7 @@ export default function EditReview() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, asDraft = false) => {
     e.preventDefault();
     setError('');
 
@@ -116,8 +117,8 @@ export default function EditReview() {
       setError('Judul dan konten wajib diisi.');
       return;
     }
-    if (rating.longevity === 0 || rating.sillage === 0 || rating.valueForMoney === 0 || rating.overall === 0) {
-      setError('Semua rating wajib diisi (minimal 1 bintang).');
+    if (!asDraft && (rating.longevity === 0 || rating.sillage === 0 || rating.valueForMoney === 0 || rating.overall === 0)) {
+      setError('Semua rating wajib diisi (minimal 1 bintang) untuk mengirim review.');
       return;
     }
 
@@ -130,6 +131,7 @@ export default function EditReview() {
       formData.append('rating[sillage]', String(rating.sillage));
       formData.append('rating[valueForMoney]', String(rating.valueForMoney));
       formData.append('rating[overall]', String(rating.overall));
+      formData.append('status', asDraft ? 'draft' : 'pending');
       selectedOccasions.forEach((o) => formData.append('occasion', o));
       selectedSeasons.forEach((s) => formData.append('season', s));
       // Only append new image if selected
@@ -141,6 +143,7 @@ export default function EditReview() {
           'Content-Type': 'multipart/form-data',
         },
       });
+      toast.success(asDraft ? 'Draft review berhasil diperbarui!' : 'Review berhasil dikirim ulang!');
       navigate('/dashboard');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal mengubah review.';
@@ -194,10 +197,11 @@ export default function EditReview() {
               <p className="text-sm text-gray-500 mt-1">Perbarui ulasan Anda sebelum diajukan kembali.</p>
             </div>
             {status === 'pending' && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-xl uppercase tracking-wider">Menunggu Info</span>}
+            {status === 'draft' && <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl uppercase tracking-wider">Draft Disimpan</span>}
             {status === 'approved' && <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl uppercase tracking-wider">Approved</span>}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+          <form onSubmit={(e) => handleSubmit(e, false)} className="p-6 sm:p-8 space-y-6">
             {/* Image upload */}
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Foto Parfum Terkait</p>
@@ -308,16 +312,24 @@ export default function EditReview() {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <Link to="/dashboard" className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-end gap-3 pt-2 w-full mt-auto">
+              <Link to="/dashboard" className="mr-auto px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                 Batal
               </Link>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                disabled={submitting}
+                className="px-5 py-2.5 text-sm font-medium text-amber-600 border border-amber-200 rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer bg-white"
+              >
+                Simpan Draft
+              </button>
               <button
                 type="submit"
                 disabled={submitting}
                 className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-amber-500 to-orange-500 rounded-xl hover:shadow-lg hover:shadow-amber-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                {submitting ? 'Menyimpan...' : 'Simpan Revisi'}
+                {submitting ? 'Mengirim...' : status === 'draft' ? 'Kirim Review' : 'Simpan Revisi'}
               </button>
             </div>
           </form>

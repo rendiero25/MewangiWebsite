@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -91,6 +92,7 @@ export default function EditArticle() {
           'Content-Type': 'multipart/form-data',
         },
       });
+      toast.success(asDraft ? 'Draft artikel berhasil diperbarui!' : 'Artikel berhasil dikirim ulang!');
       navigate('/dashboard');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal mengubah artikel.';
@@ -270,7 +272,7 @@ export default function EditArticle() {
                 disabled={submitting}
                 className="px-6 py-2.5 text-sm font-semibold text-white bg-linear-to-r from-indigo-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                {submitting ? 'Mengirim...' : 'Kirim Ulang Artikel'}
+                {submitting ? 'Mengirim...' : status === 'draft' ? 'Kirim Artikel' : 'Simpan Revisi'}
               </button>
             </div>
           </form>

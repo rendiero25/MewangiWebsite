@@ -112,19 +112,19 @@ const getTopMembers = async (req, res) => {
       counts[id] = (counts[id] || 0) + item.count;
     });
 
-    // Sort and take top 5
-    const topIds = Object.keys(counts)
-      .sort((a, b) => counts[b] - counts[a])
-      .slice(0, 5);
+    // Fetch users in the count list who are NOT admins
+    const users = await User.find({ 
+      _id: { $in: Object.keys(counts) },
+      role: 'member'
+    }).select('username avatar');
 
-    const users = await User.find({ _id: { $in: topIds } })
-      .select('username avatar');
-
-    // Add count back to user objects
+    // Add count back to user objects and take top 5
     const result = users.map(u => ({
       ...u.toObject(),
       commentCount: counts[u._id.toString()]
-    })).sort((a, b) => b.commentCount - a.commentCount);
+    }))
+    .sort((a, b) => b.commentCount - a.commentCount)
+    .slice(0, 5);
 
     res.json(result);
   } catch (error) {

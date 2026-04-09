@@ -1,6 +1,11 @@
 const User = require('../models/User');
 const ForumTopic = require('../models/ForumTopic');
 const ForumComment = require('../models/ForumComment');
+const Article = require('../models/Article');
+const ArticleComment = require('../models/ArticleComment');
+const Review = require('../models/Review');
+const ReviewComment = require('../models/ReviewComment');
+const mongoose = require('mongoose');
 
 /**
  * Get leaderboard data based on different metrics
@@ -10,32 +15,154 @@ exports.getLeaderboard = async (req, res) => {
   try {
     const { type = 'reputation', period = 'alltime', limit = 50 } = req.query;
 
-    let query = { role: { $ne: 'banned' } };
+    if (type === 'activity') {
+      // Activity = (Topics + Articles + Reviews) + (Comments) + (Likes + Dislikes Given)
+      // We use aggregation for accuracy
+      const leaderboardData = await User.aggregate([
+        { $match: { role: { $ne: 'admin' }, isBanned: { $ne: true } } },
+        // Content Created
+        {
+          $lookup: {
+            from: 'forumtopics',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'topics'
+          }
+        },
+        {
+          $lookup: {
+            from: 'articles',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'articles'
+          }
+        },
+        {
+          $lookup: {
+            from: 'reviews',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'reviews'
+          }
+        },
+        // Comments
+        {
+          $lookup: {
+            from: 'forumcomments',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'fComments'
+          }
+        },
+        {
+          $lookup: {
+            from: 'articlecomments',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'aComments'
+          }
+        },
+        {
+          $lookup: {
+            from: 'reviewcomments',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'rComments'
+          }
+        },
+        // Likes Given (User ID in the likes array of any content)
+        {
+          $lookup: {
+            from: 'forumtopics',
+            let: { userId: '$_id' },
+            pipeline: [{ $match: { $expr: { $in: ['$$userId', { $ifNull: ['$likes', []] }] } } }],
+            as: 'topicLikes'
+          }
+        },
+        {
+          $lookup: {
+            from: 'articles',
+            let: { userId: '$_id' },
+            pipeline: [{ $match: { $expr: { $in: ['$$userId', { $ifNull: ['$likes', []] }] } } }],
+            as: 'articleLikes'
+          }
+        },
+        {
+          $lookup: {
+            from: 'reviews',
+            let: { userId: '$_id' },
+            pipeline: [{ $match: { $expr: { $in: ['$$userId', { $ifNull: ['$likes', []] }] } } }],
+            as: 'reviewLikes'
+          }
+        },
+        // Dislikes Given
+        {
+          $lookup: {
+            from: 'forumtopics',
+            let: { userId: '$_id' },
+            pipeline: [{ $match: { $expr: { $in: ['$$userId', { $ifNull: ['$dislikes', []] }] } } }],
+            as: 'topicDislikes'
+          }
+        },
+        // Calculate Total
+        {
+          $project: {
+            username: 1,
+            avatar: 1,
+            reputation: 1,
+            'statistik.reputation': 1,
+            totalActivity: {
+              $add: [
+                { $size: '$topics' },
+                { $size: '$articles' },
+                { $size: '$reviews' },
+                { $size: '$fComments' },
+                { $size: '$aComments' },
+                { $size: '$rComments' },
+                { $size: '$topicLikes' },
+                { $size: '$articleLikes' },
+                { $size: '$reviewLikes' },
+                { $size: '$topicDislikes' }
+              ]
+            }
+          }
+        },
+        { $sort: { totalActivity: -1 } },
+        { $limit: Number(limit) }
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        type: 'activity',
+        period,
+        count: leaderboardData.length,
+        data: leaderboardData.map((u, i) => ({ ...u, rank: i + 1 }))
+      });
+    }
+
+    let query = { role: { $nin: ['admin', 'banned'] } };
     let sortBy = {};
 
     switch (type) {
       case 'reputation':
-        // Reputation/Karma score
-        sortBy = { reputation: -1 };
+        sortBy = { 'statistik.reputation': -1 };
         break;
 
       case 'posts':
-        // Most active posters
-        sortBy = { 'statistics.topicsCount': -1 };
+        sortBy = { 'statistik.posts': -1 };
         break;
 
       case 'followers':
         // Most followers
-        sortBy = { 'statistics.followersCount': -1 };
+        sortBy = { 'followers': -1 };
         break;
 
       case 'helpful':
-        // Most helpful posts (based on likes)
-        sortBy = { 'statistics.totalLikes': -1 };
+        // Most helpful posts (based on reactions/reputation)
+        sortBy = { 'statistik.reactions': -1 };
         break;
 
       case 'active':
-        // Most active in period
         if (period === 'monthly') {
           const oneMonthAgo = new Date();
           oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
@@ -49,21 +176,34 @@ exports.getLeaderboard = async (req, res) => {
         break;
 
       default:
-        sortBy = { reputation: -1 };
+        sortBy = { 'statistik.reputation': -1 };
     }
 
     const leaderboard = await User.find(query)
       .select(
-        'username avatar bio reputation statistics role joinDate lastActive'
+        'username avatar bio statistik role joinDate lastActive followers'
       )
       .sort(sortBy)
       .limit(Number(limit))
       .lean();
 
-    // Calculate rank
+    // mapping fields to what the frontend expects
     const rankedLeaderboard = leaderboard.map((user, index) => ({
-      ...user,
+      _id: user._id,
+      username: user.username,
+      avatar: user.avatar,
+      bio: user.bio,
+      reputation: user.statistik?.reputation || 0,
+      joinDate: user.joinDate,
+      lastActive: user.lastActive,
+      role: user.role,
       rank: index + 1,
+      statistics: {
+        topicsCount: user.statistik?.threads || 0,
+        followersCount: user.followers?.length || 0,
+        totalLikes: user.statistik?.reactions || 0
+      },
+      totalActivity: (user.statistik?.posts || 0) + (user.statistik?.threads || 0) + (user.statistik?.reactions || 0)
     }));
 
     res.status(200).json({
@@ -100,24 +240,24 @@ exports.getUserRank = async (req, res) => {
 
     switch (type) {
       case 'reputation':
-        sortBy = { reputation: -1 };
-        value = user.reputation || 0;
+        sortBy = { 'statistik.reputation': -1 };
+        value = user.statistik?.reputation || 0;
         break;
       case 'posts':
-        sortBy = { 'statistics.topicsCount': -1 };
-        value = user.statistics?.topicsCount || 0;
+        sortBy = { 'statistik.threads': -1 };
+        value = user.statistik?.threads || 0;
         break;
       case 'followers':
-        sortBy = { 'statistics.followersCount': -1 };
-        value = user.statistics?.followersCount || 0;
+        sortBy = { 'followers': -1 };
+        value = user.followers?.length || 0;
         break;
       case 'helpful':
-        sortBy = { 'statistics.totalLikes': -1 };
-        value = user.statistics?.totalLikes || 0;
+        sortBy = { 'statistik.reactions': -1 };
+        value = user.statistik?.reactions || 0;
         break;
       default:
-        sortBy = { reputation: -1 };
-        value = user.reputation || 0;
+        sortBy = { 'statistik.reputation': -1 };
+        value = user.statistik?.reputation || 0;
     }
 
     // Count how many users rank higher

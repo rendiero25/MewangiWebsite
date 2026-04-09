@@ -100,8 +100,8 @@ const createArticle = async (req, res) => {
 
     await article.populate('author', 'username avatar');
 
-    // Notify admins (only if not draft)
-    if (article.status === 'pending') {
+    // Notify admins only if not draft AND author is not an admin themselves
+    if (article.status === 'pending' && req.user.role !== 'admin') {
       const admins = await User.find({ role: 'admin' });
       await Promise.all(admins.map(admin => 
         Notification.create({
