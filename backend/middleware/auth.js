@@ -53,7 +53,7 @@ const admin = (req, res, next) => {
 
 // Middleware: Hanya member yang sudah verifikasi
 const verified = (req, res, next) => {
-  if (req.user && req.user.isVerified) {
+  if (req.user && (req.user.isVerified || req.user.role === 'admin')) {
     next();
   } else {
     return res.status(403).json({ message: 'Akun belum diverifikasi. Cek email Anda.' });

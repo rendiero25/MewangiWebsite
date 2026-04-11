@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -10,7 +9,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const categories = ['Tips & Trik', 'Edukasi', 'Berita', 'Interview', 'Event', 'Lainnya'];
 
 export default function CreateArticle() {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
@@ -53,12 +51,7 @@ export default function CreateArticle() {
       }
       if (coverImage) formData.append('coverImage', coverImage);
 
-      await axios.post(`${API_URL}/articles`, formData, {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await axios.post(`${API_URL}/articles`, formData);
       navigate('/dashboard');
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.message : 'Gagal membuat artikel.';

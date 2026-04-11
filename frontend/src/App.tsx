@@ -29,6 +29,8 @@ import BlogList from './pages/public/BlogList';
 import BlogDetail from './pages/public/BlogDetail';
 import About from './pages/public/About';
 import Leaderboard from './pages/public/Leaderboard';
+import Contact from './pages/public/Contact';
+import PrivacyPolicy from './pages/public/PrivacyPolicy';
 import NotFoundPage from './pages/public/NotFound';
 import ServerErrorPage from './pages/public/ServerError';
 import SkipToMain from './components/layout/SkipToMain';
@@ -173,6 +175,8 @@ function App() {
                       <Route path="/blog/:slug" element={<BlogDetail />} />
                       <Route path="/tentang" element={<About />} />
                       <Route path="/leaderboard" element={<Leaderboard />} />
+                      <Route path="/kontak" element={<Contact />} />
+                      <Route path="/kebijakan-privasi" element={<PrivacyPolicy />} />
   
                       {/* Protected Routes */}
                       <Route path="/dashboard" element={

@@ -1,6 +1,6 @@
 "use client";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import gsap from "gsap";
@@ -28,7 +28,6 @@ interface Stats { totalUsers: number; totalReviews: number; totalTopics: number;
 interface LeaderboardUser { _id: string; username: string; avatar?: string; totalActivity: number; rank: number; }
 
 export default function Home() {
-  const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const heroTitleRef = useRef<HTMLHeadingElement>(null);
   const heroBadgeRef = useRef<HTMLDivElement>(null);
@@ -513,10 +512,10 @@ export default function Home() {
 
             {leaderboard.length > 0 ? (
               leaderboard.map((user, idx) => (
-                <div
+                <Link
                   key={user._id}
-                  className="leaderboard-card group relative p-6 rounded-2xl bg-white border border-gray-100 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 cursor-pointer backdrop-blur-sm"
-                  onClick={() => navigate(`/profile/${user.username}`)}
+                  to={`/profile/${user.username}`}
+                  className="leaderboard-card group relative p-6 rounded-2xl bg-white border border-gray-100 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 cursor-pointer backdrop-blur-sm block"
                 >
                   <div className={`absolute -top-3 -right-3 w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-lg rotate-12 group-hover:rotate-0 transition-transform duration-300 z-10
                     ${idx === 0 ? 'bg-linear-to-br from-yellow-300 to-amber-500 text-white' :
@@ -554,7 +553,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 h-1 bg-linear-to-r from-primary to-secondary w-0 group-hover:w-full transition-all duration-500 rounded-b-2xl" />
-                </div>
+                </Link>
               ))
             ) : (
               [1, 2, 3, 4, 5].map(i => (
@@ -944,8 +943,8 @@ export default function Home() {
           {latestReviews.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestReviews.slice(0, 3).map((review, idx) => (
-                <div key={review._id} 
-                  onClick={() => navigate(`/review/${review._id}`)}
+                <Link key={review._id}
+                  to={`/review/${review._id}`}
                   className="group flex flex-col bg-white border border-gray-100 rounded-2xl hover:shadow-2xl hover:shadow-amber-100/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer"
                 >
                   {/* Review Image */}
@@ -996,7 +995,7 @@ export default function Home() {
                     </div>
 
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
@@ -1087,9 +1086,9 @@ export default function Home() {
           {latestArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestArticles.slice(0, 3).map((article) => (
-                <div key={article._id}
-                  onClick={() => navigate(`/blog/${article.slug}`)}
-                  className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                <Link key={article._id}
+                  to={`/blog/${article.slug}`}
+                  className="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer block"
                 >
                   <div className="h-44 overflow-hidden bg-gradient-to-br from-indigo-500/10 to-blue-500/10 relative">
                     {article.coverImage ? (
@@ -1124,7 +1123,7 @@ export default function Home() {
                       <p className="text-xs text-primary">{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
@@ -1162,12 +1161,13 @@ export default function Home() {
               </svg>
             </div>
 
+            {/* CTA Banner */}
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
                 Siap Menemukan Parfum Impianmu?
               </h2>
               <p className="text-white/90 max-w-2xl mx-auto mb-10 text-lg leading-relaxed">
-                Bergabung dengan 1,250+ member komunitas Mewangi. Gratis
+                Bergabung dengan {stats?.totalUsers ? `${stats.totalUsers.toLocaleString('id-ID')}+` : '1.250+'} member komunitas Mewangi. Gratis
                 selamanya, tanpa biaya tersembunyi. Mulai perjalanan olfactory
                 journey-mu sekarang juga.
               </p>
