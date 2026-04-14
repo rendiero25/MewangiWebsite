@@ -324,7 +324,7 @@ export default function About() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-lg leading-relaxed text-gray-600">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Cerita Kami</h2>
           <p className="mb-6">
-            Mewangi didirikan pada tahun 2024 oleh sekelompok pencinta parfum yang merasa sulit menemukan 
+            Mewangi didirikan pada tahun 2026 oleh sekelompok pencinta parfum yang merasa sulit menemukan 
             referensi parfum yang relevan dengan konteks Indonesia (iklim tropis, preferensi lokal, dll).
           </p>
           <p className="mb-10">

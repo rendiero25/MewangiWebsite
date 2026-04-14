@@ -135,6 +135,11 @@ export default function CreateTopic() {
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error('Ukuran gambar terlalu besar. Maksimal 5MB.');
+                        e.target.value = '';
+                        return;
+                      }
                       setImage(file);
                       setImagePreview(URL.createObjectURL(file));
                     }

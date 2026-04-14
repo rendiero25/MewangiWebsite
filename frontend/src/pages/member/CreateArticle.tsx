@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -24,6 +25,11 @@ export default function CreateArticle() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Ukuran gambar terlalu besar. Maksimal 5MB.');
+        e.target.value = '';
+        return;
+      }
       setCoverImage(file);
       setImagePreview(URL.createObjectURL(file));
     }

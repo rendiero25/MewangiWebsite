@@ -334,14 +334,14 @@ export default function ForumDetail() {
                   )}
                 </div>
 
-                <h1 className="text-3xl font-bold text-gray-900 mb-6 leading-[1.3]">
+                <h1 className="text-3xl font-bold text-gray-900 mb-6 leading-[1.3] text-center md:text-left">
                   {topic.title}
                 </h1>
 
                 {showFullContent && (
                   <div className="border-t border-gray-50 animate-fadeIn">
                     <div
-                      className="prose prose-sm max-w-none text-gray-700 ql-editor"
+                      className="prose prose-sm max-w-none text-gray-700 article-body"
                       dangerouslySetInnerHTML={{ __html: topic.content }}
                     />
                   </div>

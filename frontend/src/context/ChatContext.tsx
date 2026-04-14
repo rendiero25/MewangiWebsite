@@ -60,7 +60,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       fetchConversations();
 
       if (!socketRef.current) {
-        const socket = io(SOCKET_URL);
+        const socket = io(SOCKET_URL, {
+          withCredentials: true,
+          transports: ['websocket', 'polling'],
+          reconnectionAttempts: 5,
+          reconnectionDelay: 2000,
+          timeout: 20000,
+        });
         socket.emit('join', user._id);
         
         socket.on('new_message', () => {

@@ -268,7 +268,7 @@ export default function ReviewDetail() {
                         ))}
                       </div>
                       
-                      <h1 className="text-3xl font-bold text-gray-900 leading-[1.3]">
+                      <h1 className="text-3xl font-bold text-gray-900 leading-[1.3] text-center md:text-left">
                         {review.title}
                       </h1>
 
@@ -299,7 +299,7 @@ export default function ReviewDetail() {
               {/* Body: Full Width Content */}
               <div className="px-8 py-4 sm:px-12">
                 <div 
-                  className="prose prose-lg max-w-none text-black leading-[1.8] ql-editor p-0!"
+                  className="prose prose-lg max-w-none text-black leading-[1.8] article-body"
                   dangerouslySetInnerHTML={{ __html: review.content }}
                 />
               </div>

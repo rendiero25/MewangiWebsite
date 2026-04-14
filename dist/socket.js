@@ -11,6 +11,10 @@ module.exports = {
         methods: ['GET', 'POST'],
         credentials: true,
       },
+      pingInterval: 25000,
+      pingTimeout: 20000,
+      upgradeTimeout: 10000,
+      transports: ['websocket', 'polling'],
     });
 
     console.log('[Socket] Initialized');

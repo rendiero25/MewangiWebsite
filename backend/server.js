@@ -119,17 +119,29 @@ if (process.env.NODE_ENV === 'production') {
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error('[Global Error Handler]:', err.stack);
-  
-  // Specific handling for CORS errors to avoid generic 500
+
+  // CORS errors
   if (err.message && err.message.includes('CORS Error')) {
-    return res.status(403).json({ 
-      message: 'Akses Ditolak (CORS)', 
+    return res.status(403).json({
+      message: 'Akses Ditolak (CORS)',
       error: err.message,
       tip: 'Pastikan FRONTEND_URL di Hostinger sudah sesuai dengan domain yang Anda gunakan saat ini.'
     });
   }
 
-  res.status(500).json({ message: 'Something broke!', error: err.message });
+  // Multer file upload errors
+  const multer = require('multer');
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'Ukuran file terlalu besar. Maksimal 5MB.' });
+    }
+    return res.status(400).json({ message: `Kesalahan upload file: ${err.message}` });
+  }
+  if (err.message && err.message.toLowerCase().includes('file gambar')) {
+    return res.status(400).json({ message: err.message });
+  }
+
+  res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: err.message });
 });
 
 // Start Server

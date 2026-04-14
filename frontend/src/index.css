@@ -108,3 +108,85 @@ html.dark .hover\:bg-gray-100:hover {
   color: #4b5563;
   margin-bottom: 1.25em !important;
 }
+
+/* Display-only class for rendering Quill HTML content (no editor CSS side-effects) */
+.article-body {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  min-width: 0;
+}
+/* Apply word wrapping to all child elements (Quill wraps text in <span> with inline styles) */
+.article-body * {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+.article-body p {
+  margin-bottom: 1.25em;
+  line-height: 1.6;
+}
+/* Quill stores all lists as <ol> with data-list attribute, not <ul> */
+.article-body ol,
+.article-body ul {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
+}
+.article-body ol {
+  list-style-type: none;
+  counter-reset: ql-ol-counter;
+}
+.article-body ul {
+  list-style-type: disc;
+}
+/* Quill bullet list: <ol><li data-list="bullet"> */
+.article-body li[data-list="bullet"] {
+  list-style-type: none;
+  position: relative;
+  padding-left: 0.3em;
+}
+.article-body li[data-list="bullet"]::before {
+  content: '•';
+  position: absolute;
+  left: -1.2em;
+}
+/* Quill ordered list: <ol><li data-list="ordered"> */
+.article-body li[data-list="ordered"] {
+  list-style-type: none;
+  position: relative;
+  counter-increment: ql-ol-counter;
+  padding-left: 0.3em;
+}
+.article-body li[data-list="ordered"]::before {
+  content: counter(ql-ol-counter) '. ';
+  position: absolute;
+  left: -1.8em;
+}
+/* Hide Quill's ql-ui span — bullet/number marker only works inside .ql-editor */
+.article-body .ql-ui {
+  display: none;
+}
+.article-body h1, .article-body h2, .article-body h3 {
+  font-weight: bold;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.article-body blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  font-style: italic;
+  color: #4b5563;
+  margin-bottom: 1.25em;
+}
+.article-body pre,
+.article-body code {
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
