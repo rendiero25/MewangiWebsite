@@ -12,6 +12,17 @@ import "react-quill-new/dist/quill.snow.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
+// Quill sometimes inserts zero-width spaces (U+200B) when formatting is applied/removed
+// mid-word. Browsers treat U+200B as a valid line-break point, causing words to split.
+function sanitizeQuillHtml(html: string): string {
+  return html
+    .replace(/&nbsp;/g, ' ')  // non-breaking space HTML entity → regular space
+    .replace(/\u00a0/g, ' ')  // non-breaking space unicode → regular space
+    .replace(/\u200b/g, '')   // zero-width space
+    .replace(/\u200c/g, '')   // zero-width non-joiner
+    .replace(/\u200d/g, '');  // zero-width joiner
+}
+
 const categoryColors: Record<string, string> = {
   Berita: "bg-blue-100 text-blue-700",
   Review: "bg-emerald-100 text-emerald-700",
@@ -226,7 +237,7 @@ export default function BlogDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-5">
+          <div className="lg:col-span-3 space-y-5 min-w-0">
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               {/* Header section: Image & Data (1 Row) */}
               <div className="px-8 py-4 sm:px-12 sm:py-8">
@@ -291,10 +302,10 @@ export default function BlogDetail() {
               </div>
 
               {/* Body: Full Width Content */}
-              <div className="px-8 py-4 sm:px-12">
+              <div className="px-8 py-4 sm:px-12 overflow-hidden">
                 <div
                   className="prose prose-lg max-w-none text-black leading-[1.8] article-body"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeQuillHtml(article.content) }}
                 />
               </div>
 

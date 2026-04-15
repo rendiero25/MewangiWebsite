@@ -16,6 +16,15 @@ gsap.registerPlugin(ScrollSmoother);
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+function sanitizeQuillHtml(html: string): string {
+  return html
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\u200b/g, '')
+    .replace(/\u200c/g, '')
+    .replace(/\u200d/g, '');
+}
+
 function StarRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between group">
@@ -240,7 +249,7 @@ export default function ReviewDetail() {
          <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-5">
+          <div className="lg:col-span-3 space-y-5 min-w-0">
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               {/* Header section: Image & Data (1 Row) */}
               <div className="px-8 py-4 sm:px-12 sm:py-8">
@@ -300,7 +309,7 @@ export default function ReviewDetail() {
               <div className="px-8 py-4 sm:px-12">
                 <div 
                   className="prose prose-lg max-w-none text-black leading-[1.8] article-body"
-                  dangerouslySetInnerHTML={{ __html: review.content }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeQuillHtml(review.content) }}
                 />
               </div>
 

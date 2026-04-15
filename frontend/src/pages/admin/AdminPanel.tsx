@@ -10,6 +10,15 @@ import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+function sanitizeQuillHtml(html: string): string {
+  return html
+    .replace(/&nbsp;/g, ' ')  // non-breaking space → regular space
+    .replace(/\u00a0/g, ' ')
+    .replace(/\u200b/g, '')
+    .replace(/\u200c/g, '')
+    .replace(/\u200d/g, '');
+}
+
 type Tab = 'overview' | 'reviews' | 'articles' | 'topics' | 'users' | 'reports' | 'settings';
 
 interface Stats { 
@@ -792,7 +801,7 @@ export default function AdminPanel() {
                   <div>
                     <p className="text-xs font-semibold text-gray-500 mb-2">Konten</p>
                     {/* The content rendering for react-quill HTML content */}
-                    <div className="prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm ql-editor" dangerouslySetInnerHTML={{ __html: viewingItem.data.content }} />
+                    <div className="article-body prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm" dangerouslySetInnerHTML={{ __html: sanitizeQuillHtml(viewingItem.data.content) }} />
                   </div>
                 </div>
               )}
@@ -820,7 +829,7 @@ export default function AdminPanel() {
                   )}
                   <div>
                     <p className="text-xs font-semibold text-gray-500 mb-2">Konten</p>
-                    <div className="prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm ql-editor" dangerouslySetInnerHTML={{ __html: viewingItem.data.content }} />
+                    <div className="article-body prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm" dangerouslySetInnerHTML={{ __html: sanitizeQuillHtml(viewingItem.data.content) }} />
                   </div>
                   {(viewingItem.data as PendingArticle).tags && (viewingItem.data as PendingArticle).tags!.length > 0 && (
                     <div className="flex gap-2 flex-wrap pt-4 border-t border-gray-100">
@@ -841,7 +850,7 @@ export default function AdminPanel() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-500 mb-2">Konten Diskusi</p>
-                    <div className="prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm ql-editor" dangerouslySetInnerHTML={{ __html: viewingItem.data.content }} />
+                    <div className="article-body prose prose-sm max-w-none text-gray-800 bg-white border border-gray-100 p-4 rounded-xl shadow-sm" dangerouslySetInnerHTML={{ __html: sanitizeQuillHtml(viewingItem.data.content) }} />
                   </div>
                 </div>
               )}

@@ -19,6 +19,15 @@ gsap.registerPlugin(ScrollSmoother);
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
+function sanitizeQuillHtml(html: string): string {
+  return html
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\u200b/g, '')
+    .replace(/\u200c/g, '')
+    .replace(/\u200d/g, '');
+}
+
 const categoryColors: Record<string, string> = {
   "Diskusi Umum": "bg-blue-100 text-blue-700",
   Rekomendasi: "bg-emerald-100 text-emerald-700",
@@ -281,7 +290,7 @@ export default function ForumDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-3 space-y-8 min-w-0">
             <article className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-8">
                 <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -342,7 +351,7 @@ export default function ForumDetail() {
                   <div className="border-t border-gray-50 animate-fadeIn">
                     <div
                       className="prose prose-sm max-w-none text-gray-700 article-body"
-                      dangerouslySetInnerHTML={{ __html: topic.content }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeQuillHtml(topic.content) }}
                     />
                   </div>
                 )}

@@ -111,15 +111,11 @@ html.dark .hover\:bg-gray-100:hover {
 
 /* Display-only class for rendering Quill HTML content (no editor CSS side-effects) */
 .article-body {
+  word-break: normal;
   overflow-wrap: break-word;
-  word-break: break-word;
-  white-space: normal;
   min-width: 0;
 }
-/* Apply word wrapping to all child elements (Quill wraps text in <span> with inline styles) */
 .article-body * {
-  overflow-wrap: break-word;
-  word-break: break-word;
   max-width: 100%;
 }
 .article-body p {
@@ -187,6 +183,8 @@ html.dark .hover\:bg-gray-100:hover {
 }
 .article-body pre,
 .article-body code {
-  white-space: pre-wrap;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
   overflow-x: auto;
 }
